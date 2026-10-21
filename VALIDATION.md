@@ -4,6 +4,12 @@ Chạy trong workspace Linux ngày **21/10/2026**, trên repository hiện có. 
 
 ## Kết quả v0.2
 
+### Cập nhật tốc độ và log khởi động frontend (21/10/2026)
+
+Đã thay npm wrapper ở bước chạy dev bằng gọi Vite trực tiếp qua Node; giữ điều kiện bỏ qua cài đặt khi fingerprint lockfile khớp. Khi cần cài, npm ưu tiên cache, bỏ network audit ở startup và in trạng thái mỗi 15 giây; không thay đổi TLS/integrity. npm CLI được gọi trực tiếp qua Node để hỗ trợ đường dẫn có khoảng trắng, không qua shell Windows.
+
+Xác minh thực tế trên Linux: `node --check scripts/frontend.mjs` đạt; bootstrap với dependencies có sẵn báo chuẩn bị 0,0 giây và Vite Ready sau 172 ms. Cài sạch 174 packages trong thư mục tạm có khoảng trắng, dùng cache và bật npm offline, đạt sau 3,7 giây; chạy lại bỏ qua install. Cố ý tạo dependency không có trong offline cache: script trả exit 1 và không ghi stamp thành công. Gửi SIGINT tới launcher đã dừng cả launcher và Vite child. Hai browser regression tests cho navigation/chart và offline runtime đạt **2/2**. Không chạy lại toàn bộ backend/browser suite vì thay đổi chỉ ở launcher và tài liệu; kết quả đầy đủ v0.2 bên dưới là lượt xác minh trước đó. Chưa đo thời gian hoặc chạy launcher trên Windows thật; số đo Linux không phải cam kết tốc độ máy người dùng.
+
 | Kiểm tra | Kết quả thực tế |
 |---|---|
 | Backend: `.venv/bin/python -m pytest -q` | **45 passed**, không failed/skipped/xfail |

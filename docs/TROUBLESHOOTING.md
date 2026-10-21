@@ -1,5 +1,17 @@
 # Xử lý lỗi v0.2
 
+## Frontend khởi động lâu
+
+Backend in `Application startup complete` và địa chỉ `127.0.0.1:8000` nghĩa là đã chạy xong; cửa sổ đó tiếp tục mở để phục vụ API.
+
+Frontend lần đầu cần tải/cài dependencies. Script hiện in bước đang chạy ngay từ đầu và nhắc tiến độ mỗi 15 giây trong lúc npm cài. Khi lockfile không đổi và lần cài trước hoàn tất, các lần sau bỏ qua npm install và gọi Vite trực tiếp. Giữ nguyên `frontend/node_modules` và `.cache/npm` giữa các lần chạy; tải ZIP/thư mục mới sẽ không có bản cài cũ. npm ưu tiên cache và không chờ audit trong bước khởi động; vẫn kiểm tra package integrity/TLS như bình thường. Có thể chạy `npm audit` riêng trong `frontend/`.
+
+Nếu vẫn chờ lâu, xem dòng cuối trong cửa sổ frontend. Với lỗi mạng npm, kiểm tra VPN/proxy/firewall và kết nối `https://registry.npmjs.org`; không tắt TLS. Có thể chạy `npm ping` từ thư mục `frontend` để chẩn đoán kết nối. Nếu thư viện đã sẵn sàng nhưng Vite chưa hiện Ready, chạy `node --version` và `npm --version`, ghi lại log để xác định bước chậm. Không xóa `node_modules` để thử tăng tốc vì sẽ buộc cài lại toàn bộ.
+
+Sau khi thấy `Local: http://127.0.0.1:5173/`, mở địa chỉ đó bằng trình duyệt. Terminal không tự đóng khi server chạy bình thường. Muốn dừng, nhấn Ctrl+C.
+
+## Các lỗi khác
+
 | Triệu chứng | Hành động |
 |---|---|
 | Không có kho khóa/secure_storage_unavailable | Windows: chạy bằng tài khoản cá nhân có Credential Manager; kiểm tra keyring/pywin32-ctypes đã được script cài. Linux headless cần Secret Service/KWallet được hỗ trợ; không dùng plaintext keyring. Demo và SQLite vẫn hoạt động. |
