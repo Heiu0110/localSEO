@@ -4,6 +4,10 @@ Chạy trong workspace Linux ngày **21/10/2026**, trên repository hiện có. 
 
 ## Kết quả v0.2
 
+### Bảng màu theo ảnh tham chiếu (21/10/2026)
+
+Chỉ thay CSS tokens, favicon và browser theme-color: kem/be/nâu đồng/espresso trên Dashboard, Settings và GSC Analytics. Không sửa layout, frontend logic hoặc backend. Đã chạy `npm run build` thành công và toàn bộ **26 Playwright tests passed** trên dev server; đã xem browser screenshots desktop/mobile và focus state. Những cặp chữ chính đã kiểm tra đạt tương phản tối thiểu 4,5:1. Chi tiết phạm vi và ảnh nội bộ trong [design-qa.md](design-qa.md). Backend tests không chạy lại trong lần đổi màu này.
+
 ### Cập nhật tốc độ và log khởi động frontend (21/10/2026)
 
 Đã thay npm wrapper ở bước chạy dev bằng gọi Vite trực tiếp qua Node; giữ điều kiện bỏ qua cài đặt khi fingerprint lockfile khớp. Khi cần cài, npm ưu tiên cache, bỏ network audit ở startup và in trạng thái mỗi 15 giây; không thay đổi TLS/integrity. npm CLI được gọi trực tiếp qua Node để hỗ trợ đường dẫn có khoảng trắng, không qua shell Windows.
