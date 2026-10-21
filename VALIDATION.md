@@ -1,5 +1,11 @@
 # Validation evidence · v0.1
 
+## Cập nhật giao diện tiếng Việt và bảng màu
+
+Đã chạy lại `npm run build` (bao gồm TypeScript) và toàn bộ **18 Playwright tests: 18 passed**, không skipped/failed. Test tương tác dùng nhãn tiếng Việt và đối chiếu KPI với API theo định dạng `vi-VN`; CSV tiếp tục xuất đủ dữ liệu khớp bộ lọc với tiêu đề tiếng Việt. Đã kiểm tra bố cục ở 1366/1024/768/390 px và xem giao diện desktop/màn hình hẹp. Phát hiện và sửa việc Radix Tooltip chuyển callback `className` của NavLink thành chuỗi khi sidebar thu gọn; test kiểm tra nhãn ẩn và active class sau khi thu gọn.
+
+Màu được quản lý tập trung bằng CSS variables: nền trắng/xám, đường nét bạc, nhấn vàng đậm, nâu đất và sidebar nâu sẫm. Backend/API contracts và mock dataset không thay đổi trong lần cập nhật này.
+
 Chạy thực tế trong workspace Linux ngày 21/10/2026. Không suy diễn rằng đã chạy trên Windows hoặc đã publish/restore môi trường mới.
 
 ## Môi trường

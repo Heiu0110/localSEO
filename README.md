@@ -46,7 +46,7 @@ npm run dev
 | Vấn đề | Cách xử lý |
 |---|---|
 | Không tìm thấy Python/Node/npm | Cài runtime ở trên, mở terminal mới; kiểm tra `python --version`/`py -3 --version` và `node --version`. |
-| Dashboard báo không gọi được API hoặc lỗi 500 proxy | Khởi chạy backend trước; kiểm tra `/api/health` và log terminal backend. Bấm **Try again**. |
+| Dashboard báo không gọi được API hoặc lỗi 500 proxy | Khởi chạy backend trước; kiểm tra `/api/health` và log terminal backend. Bấm **Thử lại**. |
 | Port 8000 hoặc 5173 đã được dùng | Dừng bản ứng dụng cũ. Vite dùng strict port để không tự đổi sang cổng ngoài cấu hình CORS. |
 | Cài dependency thất bại | Kiểm tra Internet, quyền ghi vào thư mục project và log package manager. Không bỏ TLS hoặc integrity verification. |
 | Đã đổi `.env` nhưng chưa có tác dụng | Khởi động lại Vite. Chỉ `frontend/.env.local` được Vite đọc cho cấu hình frontend. |
@@ -56,6 +56,7 @@ npm run dev
 
 ## Chức năng v0.1
 
+- Giao diện tiếng Việt, giữ tên sản phẩm và thuật ngữ SEO phù hợp. Màu chủ đạo: trắng, xám, bạc, vàng đậm, nâu đất và nâu sẫm; bảng màu dùng chung qua CSS variables. Số hiển thị theo `vi-VN`, ngày `dd/mm/yyyy`; dữ liệu API và giá trị số trong CSV giữ định dạng máy đọc được.
 - Hai website minh họa: `xuongmaybalogiare.com` và `congtymaybalotuixach.com`.
 - Báo cáo 7/28/90 ngày; kỳ liền trước có cùng số ngày, không chồng lấn. Website/ngày lưu trong URL để refresh hoặc bookmark.
 - Clicks, impressions, CTR, position, so sánh và sparkline từ cùng dataset.

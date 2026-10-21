@@ -9,10 +9,10 @@ export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
     response = await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api'}${path}`, { signal });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new ApiError('Cannot reach the local API. Start the backend and try again.', 0);
+    throw new ApiError('Không thể kết nối API cục bộ. Hãy khởi động backend và thử lại.', 0);
   }
   if (!response.ok) {
-    throw new ApiError(response.status === 404 ? 'The requested demo site or page was not found.' : `API request failed (${response.status}). Please try again.`, response.status);
+    throw new ApiError(response.status === 404 ? 'Không tìm thấy website hoặc trang mô phỏng đã yêu cầu.' : `Yêu cầu API thất bại (${response.status}). Vui lòng thử lại.`, response.status);
   }
   return response.json() as Promise<T>;
 }

@@ -4,10 +4,10 @@ import { metric, signed } from '../../lib/format';
 import { Tooltip } from '../ui/tooltip';
 
 const config = {
-  clicks: { label: 'Total Clicks', icon: MousePointer2, info: 'Organic Google Search clicks in this mock dataset. Clicks are not GA4 sessions.' },
-  impressions: { label: 'Total Impressions', icon: Eye, info: 'Times a result appeared in Google Search, simulated here. Not advertising impressions.' },
-  ctr: { label: 'Average CTR', icon: Percent, info: 'Total clicks ÷ total impressions × 100. Comparison is in percentage points.' },
-  position: { label: 'Average Position', icon: ListOrdered, info: 'Impression-weighted average position. Lower usually means better visibility; query mix can also affect this metric.' },
+  clicks: { label: 'Tổng lượt nhấp', icon: MousePointer2, info: 'Lượt nhấp tự nhiên từ Google Search trong dữ liệu mô phỏng. Clicks không phải Sessions của GA4.' },
+  impressions: { label: 'Tổng lượt hiển thị', icon: Eye, info: 'Số lần kết quả xuất hiện trên Google Search, được mô phỏng. Không phải lượt hiển thị quảng cáo.' },
+  ctr: { label: 'CTR trung bình', icon: Percent, info: 'Tổng lượt nhấp ÷ tổng lượt hiển thị × 100. Chênh lệch được tính bằng điểm phần trăm (đpt).' },
+  position: { label: 'Vị trí trung bình', icon: ListOrdered, info: 'Vị trí trung bình có trọng số theo lượt hiển thị. Giá trị giảm thường là cải thiện; cơ cấu truy vấn cũng có thể ảnh hưởng.' },
 };
 
 export function Sparkline({ values, positive = true }: { values: number[]; positive?: boolean }) {
@@ -21,9 +21,9 @@ export function MetricCard({ name, overview, points, compare }: { name: MetricKe
   const change = overview.changes[name];
   const good = name === 'position' ? change.delta <= 0 : change.delta >= 0;
   const Direction = change.delta >= 0 ? ArrowUpRight : ArrowDownRight;
-  const delta = name === 'ctr' ? `${signed(change.delta, 2)} pp` : name === 'position' ? `${signed(change.delta)} places` : change.percent === null ? 'No prior data' : `${signed(change.percent)}%`;
-  return <section className="card metric-card" aria-label={label}><div className="metric-top"><span className="metric-label"><Icon size={15} />{label}</span><Tooltip text={info}><button className="help-button" aria-label={`About ${label}`}><CircleHelp size={14} /></button></Tooltip></div>
+  const delta = name === 'ctr' ? `${signed(change.delta, 2)} đpt` : name === 'position' ? `${signed(change.delta)} bậc` : change.percent === null ? 'Chưa có dữ liệu kỳ trước' : `${signed(change.percent)}%`;
+  return <section className="card metric-card" aria-label={label}><div className="metric-top"><span className="metric-label"><Icon size={15} />{label}</span><Tooltip text={info}><button className="help-button" aria-label={`Giải thích: ${label}`}><CircleHelp size={14} /></button></Tooltip></div>
     <div className="metric-value-row"><strong className="metric-value" data-testid={`metric-${name}`}>{metric(overview.current[name], name)}</strong><Sparkline values={points.map(p => p.metrics[name])} positive={good} /></div>
-    <div className="metric-bottom">{compare ? <><span className={`trend ${good ? 'positive' : 'negative'}`}><Direction size={14} />{delta}</span><span>vs. previous period</span></> : <span>Selected reporting period</span>}</div>
+    <div className="metric-bottom">{compare ? <><span className={`trend ${good ? 'positive' : 'negative'}`}><Direction size={14} />{delta}</span><span>so với kỳ trước</span></> : <span>Kỳ báo cáo đã chọn</span>}</div>
   </section>;
 }
