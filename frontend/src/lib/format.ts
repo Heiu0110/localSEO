@@ -14,4 +14,7 @@ export function date(value: string, short = false) {
   return short ? `${day}/${month}` : `${day}/${month}/${year}`;
 }
 export const signed = (n: number, digits = 1) => `${n > 0 ? '+' : ''}${decimal(n, digits)}`;
+export const timestamp = (value: string) => new Date(value).toLocaleString('vi-VN', {
+  timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+}) + ' (UTC+7)';
 export const metricNames: Record<MetricKey, string> = { clicks: 'Lượt nhấp', impressions: 'Lượt hiển thị', ctr: 'CTR', position: 'Vị trí TB' };

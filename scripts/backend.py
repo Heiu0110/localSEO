@@ -27,7 +27,9 @@ def main() -> int:
         subprocess.run([str(python), "-m", "pip", "install", "-r", "requirements.txt", "--cache-dir", str(ROOT / ".cache" / "pip")], cwd=BACKEND, check=True)
         stamp.write_text(digest)
     if args.run:
-        command = [str(python), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"]
+        subprocess.run([str(python), "-m", "app.db.database"], cwd=BACKEND, check=True)
+        print("SEO Local Workspace: SQLite ready; Google OAuth is optional for demo/cached reports.", flush=True)
+        command = [str(python), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--no-access-log"]
         if not args.no_reload:
             command.append("--reload")
         return subprocess.call(command, cwd=BACKEND)

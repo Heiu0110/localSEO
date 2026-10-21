@@ -183,6 +183,6 @@ test('interactive API documentation works without a CDN', async ({ page }) => {
   await health.locator('.opblock-summary').click();
   await health.getByRole('button', { name: 'Try it out', exact: true }).click();
   await health.getByRole('button', { name: 'Execute', exact: true }).click();
-  await expect(health.locator('.live-responses-table')).toContainText('"provider": "mock"');
+  await expect(health.locator('.live-responses-table')).toContainText('"provider": "hybrid"');
   expect(external).toEqual([]);
 });

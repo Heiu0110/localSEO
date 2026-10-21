@@ -1,6 +1,29 @@
-# SEO Local Workspace · v0.1
+# SEO Local Workspace · v0.2
 
-Ứng dụng phân tích SEO chạy local cho một người dùng, gồm React Dashboard và FastAPI. Dữ liệu **hoàn toàn là mock**, không truy cập hai website demo, Google Search Console hoặc bất kỳ tài khoản thật nào. Không cần đăng nhập, database, API key hay Docker.
+Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Giữ nguyên hai website demo qua Mock Provider; properties Google dùng SQLite Analytics Provider riêng sau khi được cấp quyền. Có bộ thử nghiệm SQLite để kiểm tra toàn luồng mà không cần Google. Không có login ứng dụng, Docker hoặc cloud deployment. Dữ liệu Google thật chỉ xuất hiện sau khi chính bạn kết nối và đồng bộ; không tự truy cập các domain demo.
+
+
+## v0.2: Google Search Console và SQLite
+
+1. **Cài đặt → Tích hợp Google Search Console**: nhập Desktop OAuth JSON, kết nối Google, làm mới properties và thêm property vào workspace. Token ở kho khóa hệ điều hành; không vào SQLite/browser.
+2. Chọn property và lịch sử 28/90/180 ngày hoặc tối đa khoảng 16 tháng; xem khối lượng ước tính rồi nhấn **Bắt đầu đồng bộ**. Có initial, incremental (refresh 7 ngày gần nhất), manual refresh, hủy và tiếp tục job.
+3. **Phân tích GSC**: Tổng quan, URL, Truy vấn, Quốc gia, Thiết bị; lọc ngày/search type, so sánh kỳ bằng nhau, tìm kiếm/sort/server pagination và CSV mọi dòng đã lưu khớp bộ lọc.
+4. **Tổng quan**: chọn `[DEMO]`, `[THỬ NGHIỆM SQLITE]` hoặc `[GSC]`. Website/ngày vẫn lưu qua URL; không fallback sang demo khi property thật chưa có dữ liệu.
+
+KPI chỉ dùng site dataset **byProperty**. Page dataset **byPage**, queries/countries/devices là các tập độc lập; không ép tổng chi tiết khớp tổng property. Ngày thiếu là khoảng trống `null`, không phải 0. Kỳ thiếu hoặc chưa có lịch sử có cảnh báo, không dựng phần trăm so sánh giả. Bảng real trong Dashboard là Top 100 đã lưu; Phân tích GSC có pagination/export đầy đủ **dữ liệu SQLite**, vẫn không bảo đảm mọi dòng Google đã bị ẩn/lọc/giới hạn.
+
+Không cần OAuth để kiểm thử: **Cài đặt → Tạo bộ thử nghiệm SQLite**, thêm property `.example`, chọn lịch sử và Sync. Fixture dùng cùng engine sync/database/API, luôn ghi nhãn thử nghiệm, riêng với hai demo v0.1. Sau cài dependency, báo cáo cached/demo và API docs chạy offline; kết nối/lấy dữ liệu mới cần Internet.
+
+SQLite mặc định ở `backend/data/seo_workspace.db`, Git ignore. Migrations Alembic tự chạy khi startup. Backup nhất quán kể cả WAL: `python scripts/backup_database.py`. Không có API xóa lịch sử; bỏ property khỏi workspace chỉ ẩn nó.
+
+- [Hướng dẫn Google Cloud và Desktop OAuth](docs/GOOGLE_GSC_SETUP.md)
+- [Đồng bộ, retry, checkpoint và giới hạn dữ liệu](docs/DATA_SYNC.md)
+- [Schema, migration, backup/restore](docs/DATA_MODEL.md)
+- [Xử lý lỗi](docs/TROUBLESHOOTING.md)
+
+**Nâng cấp từ v0.1:** dừng cả hai server, lấy source mới, chạy lại hai `.bat`. Bootstrap cập nhật dependencies khi lock thay đổi và migrate SQLite. Mock dataset và theme giữ nguyên. Với database v0.2 đã có, backup trước lần nâng cấp tiếp theo. Không sửa mã nguồn để kết nối Google.
+
+**Pending Live Verification:** các kiểm thử tự động không dùng credentials thật hoặc quota Google. Bạn cần thực hiện OAuth/live sync trên cùng máy Windows với trình duyệt, không dùng loopback của cloud container. Tệp credentials được nhập qua UI, không dán token vào chat.
 
 ## Chạy trên Windows 10/11
 
@@ -54,7 +77,7 @@ npm run dev
 | `node_modules` bị xóa một phần | Dừng frontend, xóa `frontend/node_modules` rồi chạy lại script. |
 | Ngày dữ liệu không chạy theo ngày hôm nay | Đây là fixture 200 ngày cố định, kết thúc **20/10/2026**. “Last N days” tính từ ngày cuối fixture, được ghi trên Dashboard. |
 
-## Chức năng v0.1
+## Dashboard được giữ từ v0.1
 
 - Giao diện tiếng Việt, giữ tên sản phẩm và thuật ngữ SEO phù hợp. Màu chủ đạo: trắng, xám, bạc, vàng đậm, nâu đất và nâu sẫm; bảng màu dùng chung qua CSS variables. Số hiển thị theo `vi-VN`, ngày `dd/mm/yyyy`; dữ liệu API và giá trị số trong CSV giữ định dạng máy đọc được.
 - Hai website minh họa: `xuongmaybalogiare.com` và `congtymaybalotuixach.com`.
@@ -68,7 +91,7 @@ npm run dev
 - Data Sources ghi rõ trạng thái thực tế. Sidebar thu gọn lưu ở local storage.
 - Loading skeleton, empty state, error/retry, keyboard navigation, tooltip và panel có focus trap/Escape.
 - Responsive: bảng cuộn riêng khi cần, không làm trang tràn ngang.
-- Các module GSC Analytics, Technical SEO, Keyword Tracking, Topical Map, Internal Links, SEO Reports và Settings là route placeholder, chưa có tính năng thật.
+- Technical SEO, Keyword Tracking, Topical Map, Internal Links và SEO Reports vẫn là placeholder. Settings và Phân tích GSC đã được triển khai ở v0.2.
 
 ## Kiểm thử
 
@@ -105,7 +128,10 @@ Xem [VALIDATION.md](VALIDATION.md) để biết các lệnh và kết quả ch�
 backend/
   app/api/routes.py             REST endpoints và validation
   app/models.py                 Pydantic response contracts
-  app/providers/                DataProvider protocol + MockProvider
+  app/providers/                MockProvider + SQLiteAnalyticsProvider
+  app/gsc/                      Desktop OAuth, OS vault, Google/fixture clients, sync queue
+  app/db/                       SQLite engine và SQLAlchemy models
+  migrations/                   Alembic schema revisions
   app/services/                 Aggregation và reporting
   tests/                        API + consistency tests
 frontend/
@@ -114,6 +140,8 @@ frontend/
   src/components/dashboard/     KPI/chart/table/panel/country/sources
   src/components/ui/            shadcn-style owned primitives (Radix + CVA)
   src/features/dashboard/       Report orchestration + CSV utility
+  src/features/settings/        OAuth, property membership và đồng bộ
+  src/features/gsc/             GSC Analytics, coverage và server reports
   src/services/                 Typed REST client + TanStack Query options
   src/types/                    TypeScript response contracts
   src/styles/                   Tailwind CSS 4 + theme/component styles
@@ -129,8 +157,8 @@ React 19, React Router 7 (declarative data router), Vite 7, TypeScript 5.9, Tail
 
 `package-lock.json` khóa frontend; `backend/requirements.txt` khóa phiên bản Python runtime và test dependencies đã kiểm chứng. FastAPI 0.156.4, Pydantic 2.14.1 và Uvicorn 0.54.0 không thay đổi stack yêu cầu. Các thư viện được kiểm chứng trên Linux/Python 3.12/Node 24; batch launchers Windows được cung cấp nhưng **chưa được chạy trên máy Windows thật**.
 
-Không có ảnh tham chiếu trong tệp nhận được; giao diện dựa trên mô tả thiết kế của Master Prompt. Không có real GSC/GA4, crawling, backlinks, AI, OAuth hay lưu trữ lâu dài. Không dùng dữ liệu này để kết luận về hiệu quả SEO của các domain thật. Position là trung bình theo impressions, không phải thứ hạng cố định. CTR là clicks/impressions, không phải trung bình các CTR con.
+Giao diện giữ thiết kế tiếng Việt và bảng màu trắng–xám–bạc–vàng đậm–nâu của v0.1. Không triển khai GA4, crawling, backlinks hoặc AI. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
 
-## Tiếp theo: v0.2
+## Bước tiếp theo
 
-Google OAuth và GSC properties; provider thật với coverage rõ ràng; SQLite migrations và lịch sử sync; incremental sync, freshness và trạng thái lỗi/quota. Xem [ARCHITECTURE.md](ARCHITECTURE.md) trước khi tích hợp để tránh ghép các mức tổng hợp GSC không tương thích.
+Thực hiện live OAuth và một lần sync thật trên Windows theo hướng dẫn Google Cloud, đối chiếu số liệu site-level trong cùng kỳ/search type với GSC và kiểm tra reconnect/revoke. Chỉ mở rộng phân tích sau khi luồng này được xác minh.

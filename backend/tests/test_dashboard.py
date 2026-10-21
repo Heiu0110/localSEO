@@ -11,7 +11,7 @@ from app.services.dashboard_service import aggregate, change, get_service
 
 @pytest.fixture(scope="module")
 def client():
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1:8000") as client:
         yield client
 
 
@@ -111,7 +111,7 @@ def test_only_supported_date_ranges(client, days):
 
 
 def test_health_sites_schema_sources_and_validation(client):
-    assert client.get("/api/health").json() == {"status": "ok", "provider": "mock", "version": "0.1.0"}
+    assert client.get("/api/health").json() == {"status": "ok", "provider": "hybrid", "version": "0.2.0"}
     assert [site["domain"] for site in client.get("/api/sites").json()] == ["xuongmaybalogiare.com", "congtymaybalotuixach.com"]
     assert client.get("/api/dashboard/pages/missing", params={"site_id": "xuong-may"}).status_code == 404
     assert client.get("/api/dashboard/overview").status_code == 422

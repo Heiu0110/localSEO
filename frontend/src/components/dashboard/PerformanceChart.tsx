@@ -4,18 +4,18 @@ import { ChartNoAxesCombined } from 'lucide-react';
 import { compact, date, decimal, metric, metricNames } from '../../lib/format';
 import type { MetricKey, PerformancePoint } from '../../types/api';
 
-interface PlotPoint { date: string; previousDate: string; current: number; previous: number }
+interface PlotPoint { date: string; previousDate: string; current: number | null; previous: number | null }
 function ChartTooltip({ active, payload, name, current, previous }: { active?: boolean; payload?: ReadonlyArray<{ payload: PlotPoint }>; name: MetricKey; current: boolean; previous: boolean }) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
-  return <div className="chart-tooltip"><strong>{metricNames[name]}</strong>{current && <div><span>{date(row.date)}</span><b>{metric(row.current, name)}</b></div>}{previous && <div><span>{date(row.previousDate)} · kỳ trước</span><b>{metric(row.previous, name)}</b></div>}</div>;
+  return <div className="chart-tooltip"><strong>{metricNames[name]}</strong>{current && <div><span>{date(row.date)}</span><b>{row.current === null ? 'Chưa có số liệu' : metric(row.current, name)}</b></div>}{previous && <div><span>{date(row.previousDate)} · kỳ trước</span><b>{row.previous === null ? 'Chưa có số liệu' : metric(row.previous, name)}</b></div>}</div>;
 }
 
 export function PerformanceChart({ points, compare, simple = false }: { points: PerformancePoint[]; compare: boolean; simple?: boolean }) {
   const [name, setName] = useState<MetricKey>('clicks');
   const [showCurrent, setCurrent] = useState(true);
   const [showPrevious, setPrevious] = useState(true);
-  const plot = points.map(p => ({ date: p.date, previousDate: p.previous_date, current: p.metrics[name], previous: p.previous_metrics[name] }));
+  const plot = points.map(p => ({ date: p.date, previousDate: p.previous_date, current: p.metrics?.[name] ?? null, previous: p.previous_metrics?.[name] ?? null }));
   return <section className={`card performance-card ${simple ? 'simple-chart' : ''}`} aria-label={`Biểu đồ ${metricNames[name]}`} data-metric={name}>
     <div className="card-heading"><div><h2>{!simple && <ChartNoAxesCombined size={17} />}Hiệu suất tìm kiếm</h2><p>{simple ? 'Lượt nhấp theo ngày của trang này' : 'Theo dõi khả năng hiển thị tự nhiên theo thời gian.'}</p></div>{!simple && <div className="metric-tabs" aria-label="Chỉ số biểu đồ">{(Object.keys(metricNames) as MetricKey[]).map(key => <button key={key} aria-pressed={key === name} onClick={() => setName(key)}>{metricNames[key]}</button>)}</div>}</div>
     <div className="chart-legend"><button aria-pressed={showCurrent} onClick={() => setCurrent(v => !v)} className={!showCurrent ? 'series-off' : ''}><span className="legend-line" />Kỳ hiện tại</button>{compare && <button aria-pressed={showPrevious} onClick={() => setPrevious(v => !v)} className={!showPrevious ? 'series-off' : ''}><span className="legend-line previous" />Kỳ trước</button>}<span className="chart-unit">{name === 'ctr' ? 'CTR (%)' : name === 'position' ? 'Vị trí TB · thấp hơn thường tốt hơn' : metricNames[name]}</span></div>

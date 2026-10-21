@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 import { EmptyState } from '../ui/states';
 import { downloadPages } from '../../features/dashboard/utils/csv';
 
-export function PerformanceTable({ kind, rows, compare, onSelect, filename }: { kind: 'pages' | 'queries'; rows: DimensionRow[]; compare: boolean; onSelect: (row: DimensionRow) => void; filename?: string }) {
+export function PerformanceTable({ kind, rows, compare, onSelect, filename, partial = false }: { kind: 'pages' | 'queries'; rows: DimensionRow[]; compare: boolean; onSelect: (row: DimensionRow) => void; filename?: string; partial?: boolean }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<MetricKey>('clicks');
   const [asc, setAsc] = useState(false);
@@ -14,7 +14,7 @@ export function PerformanceTable({ kind, rows, compare, onSelect, filename }: { 
   const [pageSize, setPageSize] = useState(5);
   const [exported, setExported] = useState(false);
   const isPages = kind === 'pages';
-  const filtered = useMemo(() => rows.filter(r => r.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => (a.metrics[sort] - b.metrics[sort]) * (asc ? 1 : -1) || a.id.localeCompare(b.id)), [rows, search, sort, asc]);
+  const filtered = useMemo(() => rows.filter(r => r.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(a.current_available === false) - Number(b.current_available === false) || (a.metrics[sort] - b.metrics[sort]) * (asc ? 1 : -1) || a.id.localeCompare(b.id)), [rows, search, sort, asc]);
   const pageCount = Math.ceil(filtered.length / pageSize);
   const currentPage = Math.min(page, Math.max(0, pageCount - 1));
   const visible = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
@@ -22,7 +22,7 @@ export function PerformanceTable({ kind, rows, compare, onSelect, filename }: { 
   const Icon = isPages ? FileText : SearchCheck;
   return <section className="card table-card" aria-label={isPages ? 'Trang nổi bật' : 'Truy vấn nổi bật'}>
     <div className="card-heading"><div><h2><Icon size={17} />{isPages ? 'Trang có hiệu suất nổi bật' : 'Truy vấn tìm kiếm nổi bật'}</h2><p>{isPages ? 'Những trang mang người dùng đến website.' : 'Những truy vấn giúp người dùng tìm thấy website.'}</p></div>{isPages && <Button variant="outline" size="sm" disabled={!filtered.length} title="Xuất mọi trang khớp bộ lọc theo thứ tự sắp xếp hiện tại" onClick={() => { downloadPages(filtered, filename!); setExported(true); }}><Download size={14} />Xuất CSV</Button>}</div>
-    <div className="table-toolbar"><div className="search-input"><Search size={15} /><input aria-label={isPages ? 'Tìm URL' : 'Tìm truy vấn'} placeholder={isPages ? 'Tìm URL trang…' : 'Tìm truy vấn…'} value={search} onChange={e => { setSearch(e.target.value); setPage(0); setExported(false); }} />{search && <button aria-label={`Xóa tìm kiếm ${isPages ? 'trang' : 'truy vấn'}`} onClick={() => { setSearch(''); setPage(0); }}><X size={14} /></button>}</div><span className="dataset-note">Bộ dữ liệu mô phỏng đầy đủ</span></div>
+    <div className="table-toolbar"><div className="search-input"><Search size={15} /><input aria-label={isPages ? 'Tìm URL' : 'Tìm truy vấn'} placeholder={isPages ? 'Tìm URL trang…' : 'Tìm truy vấn…'} value={search} onChange={e => { setSearch(e.target.value); setPage(0); setExported(false); }} />{search && <button aria-label={`Xóa tìm kiếm ${isPages ? 'trang' : 'truy vấn'}`} onClick={() => { setSearch(''); setPage(0); }}><X size={14} /></button>}</div><span className="dataset-note">{partial ? 'Top 100 đã lưu · có thể thiếu' : 'Bộ dữ liệu mô phỏng đầy đủ'}</span></div>
     <div className="table-scroll"><table><thead><tr><th scope="col">{isPages ? 'URL trang' : 'Truy vấn tìm kiếm'}</th>{(['clicks', 'impressions', 'ctr', 'position'] as MetricKey[]).map(key => <th key={key} scope="col" aria-sort={sort === key ? asc ? 'ascending' : 'descending' : 'none'}><button onClick={() => setOrder(key)} aria-label={`Sắp xếp ${isPages ? 'trang' : 'truy vấn'} theo ${metricNames[key]}`}>{metricNames[key]}{sort === key ? asc ? <ArrowUp size={12} /> : <ArrowDown size={12} /> : <ArrowUpDown size={12} />}</button></th>)}{compare && <th scope="col" title="Thay đổi lượt nhấp so với kỳ trước có cùng số ngày">Thay đổi</th>}</tr></thead>
       <tbody>{visible.map(row => <tr key={row.id}><td><button className="table-link" title={row.label} onClick={() => onSelect(row)}>{isPages ? new URL(row.label).pathname : row.label}</button></td>{(['clicks', 'impressions', 'ctr', 'position'] as MetricKey[]).map(key => <td key={key} className={key === 'clicks' ? 'emphasis' : ''}>{metric(row.metrics[key], key)}</td>)}{compare && <td><span className={`change-chip ${(row.click_change_pct ?? 0) >= 0 ? 'positive' : 'negative'}`}>{row.click_change_pct === null ? '—' : `${signed(row.click_change_pct)}%`}</span></td>}</tr>)}</tbody>
     </table></div>{!filtered.length && <EmptyState />}

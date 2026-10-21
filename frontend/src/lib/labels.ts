@@ -4,12 +4,18 @@ import type { DataSource } from '../types/api';
 export const countryNames: Record<string, string> = {
   VN: 'Việt Nam', US: 'Hoa Kỳ', SG: 'Singapore', TH: 'Thái Lan', MY: 'Malaysia',
 };
+export function countryName(code: string, fallback: string) {
+  try { return countryNames[code] ?? new Intl.DisplayNames(['vi'], { type: 'region' }).of(code) ?? fallback; }
+  catch { return fallback; }
+}
 
 export const sourceStatuses: Record<DataSource['status'], string> = {
   'Mock Mode': 'Dữ liệu mô phỏng',
   'Not Connected': 'Chưa kết nối',
   Planned: 'Dự kiến',
   'Not Configured': 'Chưa cấu hình',
+  Connected: 'Đã kết nối', Syncing: 'Đang đồng bộ', 'Up to Date': 'Đã cập nhật', Stale: 'Dữ liệu cũ',
+  'Reauthorization Required': 'Cần xác thực lại', Error: 'Lỗi', Fixture: 'Thử nghiệm SQLite',
 };
 
 export const sourceDetails: Record<string, { name: string; detail: string }> = {

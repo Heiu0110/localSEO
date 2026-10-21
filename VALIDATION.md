@@ -1,4 +1,39 @@
-# Validation evidence · v0.1
+# Validation evidence · v0.2
+
+Chạy trong workspace Linux ngày **21/10/2026**, trên repository hiện có. Trước khi thay đổi, baseline v0.1 tại `f7a0a25` đạt **28 backend tests, 18 browser tests và production build**. Mock Provider và DashboardService v0.1 được giữ nguyên mã nguồn. Dashboard tiếp tục dùng giao diện tiếng Việt và bảng màu đã thống nhất.
+
+## Kết quả v0.2
+
+| Kiểm tra | Kết quả thực tế |
+|---|---|
+| Backend: `.venv/bin/python -m pytest -q` | **45 passed**, không failed/skipped/xfail |
+| Backend: `.venv/bin/python -m pip check` | No broken requirements found |
+| Frontend: `npm run build` | **Passed**, bao gồm TypeScript và Vite production build |
+| Frontend: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e` | **26 passed** trên production preview, không failed/skipped; suite cũng đã đạt 26/26 trên dev server |
+| Bootstrap `python scripts/backend.py`, migration CLI, `node scripts/frontend.mjs` | Thành công; chạy lại dùng dependencies đã cài khi fingerprint không đổi |
+| SQLite backup script | Backup cả dữ liệu trong WAL, integrity check thành công, từ chối ghi đè file đích |
+| Live OAuth / Google API với tài khoản thật | **Not executed — Pending Live Verification** |
+| Windows `.bat` và Windows Credential Manager trên máy thật | **Not executed — Pending Live Verification** |
+
+Backend tests dùng SQLite tạm riêng và test-only MemoryVault, không đọc credentials thật. Bao phủ migrations/WAL/foreign keys/persistence; property identifiers và chống trùng; sync idempotent/initial/incremental/resume/refresh/cancel/recovery; rollback giữa trang; phân trang 25.000 và giới hạn 50.000; retry/quota/timeout; Google SDK request shape; PKCE/state một lần; token refresh/revoke giả lập; chống ghi token vào SQLite; từ chối plaintext keyring; CSRF/origin; upload cấu hình Desktop JSON; server search/sort/pagination; CSV và backup. KPI được đối chiếu với site facts độc lập, không bằng tổng queries; kiểm tra CTR/weighted position, search type, khoảng thiếu và không dựng mức giảm 100% từ detail row vắng mặt.
+
+Browser suite giữ toàn bộ 18 regression tests cũ và thêm 8 tests: tạo property thử nghiệm SQLite, đồng bộ 14 ngày với tiến độ thực, đổi Mock/SQLite mà không lẫn KPI, 5 tab analytics, server pagination/search/sort, page detail, bốn CSV exports, cached reports khi chặn mạng ngoài loopback, thiếu kỳ so sánh, lỗi OAuth/reauthorization qua API giả lập và responsive. Kiểm tra overflow ở 1366/1024/768/390 px; đã xem screenshot nội bộ Dashboard, Settings, Analytics để kiểm tra sự nhất quán. Không tạo tài liệu review giao diện riêng.
+
+Trong lượt kiểm tra cuối, một selector test khớp cả link sidebar và link trong nội dung; đã giới hạn vào navigation. Một lượt điều hướng bị gián đoạn vì build lại thư mục production đồng thời với tests; đã chạy lại suite sau khi build kết thúc. Kết quả cuối **26/26 passed**, không còn test failed hoặc skipped. Không vô hiệu hóa assertions, TLS hoặc package integrity để đạt kết quả.
+
+Môi trường giữ Python 3.12.14 / Node 24.19.0 / npm 11.9.0 / Chromium 154 / Playwright 1.64.1 và stack v0.1. Dependencies bổ sung đã khóa trong `backend/requirements.txt`. Có một cảnh báo deprecation Starlette TestClient về httpx và cảnh báo màu terminal NO_COLOR/FORCE_COLOR; không có assertion thất bại.
+
+## Phạm vi chưa xác minh
+
+- Cloud headless hiện không có OS keyring phù hợp. Status API trả trạng thái rõ ràng; Demo, SQLite fixture, cached data và các tests vẫn hoạt động. Không thêm fallback token plaintext.
+- Chưa dùng Google account/property thật, chưa kiểm tra consent/refresh/revoke/quota thật. Cần chạy luồng trong [Google setup](docs/GOOGLE_GSC_SETUP.md) trên máy cá nhân; không sử dụng ADC của môi trường cloud.
+- Chưa chạy native Windows hoặc kiểm tra restore snapshot môi trường trong task mới. Bootstrap Python/Node dùng chung đã chạy trên Linux.
+- Giới hạn có chủ ý: một kết nối Google active, một sync worker, bốn search types `web/image/video/news`, chưa có dataset quan hệ query–page. Google có thể giới hạn/ẩn detail rows dù đã phân trang; CSV chỉ xuất dữ liệu đã lưu.
+- Đã cập nhật và lưu draft `install_script` / `start_skill` cho v0.2. **Chưa publish** snapshot. Để tái sử dụng cấu hình này, mở Environment settings, review/save rồi Publish; đây không phải triển khai ứng dụng lên cloud.
+
+## Lịch sử xác minh v0.1
+
+Các kết quả bên dưới ghi nhận phiên bản trước khi bổ sung GSC/SQLite, không mô tả phạm vi hiện tại của v0.2.
 
 ## Cập nhật giao diện tiếng Việt và bảng màu
 

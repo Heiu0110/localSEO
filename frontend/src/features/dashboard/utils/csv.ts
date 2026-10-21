@@ -7,7 +7,7 @@ export function pagesCsv(rows: DimensionRow[]): string {
     const safe = typeof value === 'string' && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
     return `"${safe.replaceAll('"', '""')}"`;
   };
-  return '\uFEFF' + [['URL trang', 'Lượt nhấp', 'Lượt hiển thị', 'CTR (%)', 'Vị trí trung bình', 'Thay đổi lượt nhấp (%)'], ...rows.map(r => [r.label, r.metrics.clicks, r.metrics.impressions, Number(r.metrics.ctr.toFixed(4)), Number(r.metrics.position.toFixed(4)), r.click_change_pct === null ? '' : Number(r.click_change_pct.toFixed(4))])].map(row => row.map(cell).join(',')).join('\r\n');
+  return '\uFEFF' + [['URL trang', 'Lượt nhấp', 'Lượt hiển thị', 'CTR (%)', 'Vị trí trung bình', 'Thay đổi lượt nhấp (%)'], ...rows.map(r => [r.label, r.current_available === false ? '' : r.metrics.clicks, r.current_available === false ? '' : r.metrics.impressions, r.current_available === false ? '' : Number(r.metrics.ctr.toFixed(4)), r.current_available === false ? '' : Number(r.metrics.position.toFixed(4)), r.click_change_pct === null ? '' : Number(r.click_change_pct.toFixed(4))])].map(row => row.map(cell).join(',')).join('\r\n');
 }
 export function downloadPages(rows: DimensionRow[], filename: string) {
   const url = URL.createObjectURL(new Blob([pagesCsv(rows)], { type: 'text/csv;charset=utf-8;' }));

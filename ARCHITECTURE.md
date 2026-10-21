@@ -1,70 +1,59 @@
-# Architecture · SEO Local Workspace v0.1
+# Architecture · SEO Local Workspace v0.2
 
-## Luồng dữ liệu
+## Hai đường dữ liệu, cùng Dashboard
 
-`MockProvider → DashboardService → FastAPI/Pydantic → REST → TanStack Query → React components`
+```text
+MockProvider → DashboardService ────────────────────────────────┐
+                                                              ├→ FastAPI → TanStack Query → Dashboard
+Google OAuth → GoogleGSCClient → SyncManager → SQLite           │
+                                           ↓                  │
+                                   SQLiteAnalyticsProvider ────┘
+                                           ↓
+                                      GSC Analytics
+```
 
-Ứng dụng gồm hai tiến trình local độc lập. Vite chỉ proxy `/api` tới loopback backend. Không có cloud deployment, database, login hay request đến website demo. Backend không phục vụ static frontend trong v0.1.
+Frontend/backend vẫn là hai tiến trình loopback. Giữ React/TypeScript/Vite/Tailwind/Radix/Recharts, palette trắng–xám–bạc–vàng–nâu, sidebar, card/table/chart và Windows launchers. Không tạo project mới, cloud deployment, login, Redis/Celery hoặc database server.
 
-## Nguồn sự thật và phép tổng hợp
-
-`MockProvider` tạo một fixture có seed cố định cho từng site. Grain của fact là **date × page × query × country**. Mỗi observation có clicks nguyên không âm, impressions nguyên không âm và position. 200 ngày từ **04/04/2026 đến 20/10/2026** bao phủ cả 90 ngày hiện tại và 90 ngày trước. Dataset có weekday seasonality, giai đoạn giảm và tăng trưởng; hai site có quy mô và trend riêng. Timestamp “last updated” là giá trị mock cố định và luôn ghi nhãn.
-
-Mỗi website có 12 pages, 16 queries, 5 countries. Mọi observation liên kết với một URL/query/country cụ thể. Các dimension response mang `coverage: complete`; tổng clicks/impressions của pages, queries, countries và daily series phải khớp overview. Page details chỉ lọc facts của page đó, nên related queries và chuỗi ngày cũng đối chiếu được.
-
-- `clicks = sum(clicks)`
-- `impressions = sum(impressions)`
-- `ctr = sum(clicks) / sum(impressions) × 100`
-- `position = sum(position × impressions) / sum(impressions)`
-- Khi không có impressions, CTR/position = 0, không NaN/Infinity.
-- Phần trăm thay đổi `(current − previous) / previous × 100`; baseline = 0 trả `null` và UI ghi “No prior data”/“—”.
-- UI dùng delta **percentage points** cho CTR, **places** cho position. Position giảm được đánh dấu tốt, có tooltip nhắc ảnh hưởng của query mix.
-- Giữ độ chính xác trong service/API; chỉ làm tròn ở UI hoặc file CSV (4 chữ số thập phân).
-
-Khoảng hiện tại kết thúc ở ngày cuối fixture, bao gồm hai đầu mút. Khoảng trước là N ngày liền trước đó. Performance response gắn `previous_date` với từng điểm để so sánh theo offset; không giả vờ hai kỳ có cùng ngày. Metric selector giữ từng đơn vị trên trục riêng theo lựa chọn; không overlay clicks/impressions/CTR/position trên một Y axis.
+MockProvider và DashboardService v0.1 giữ nguyên. Factory trong api/routes.py chỉ chọn Mock cho hai demo IDs cố định; active property UUID dùng SQLiteAnalyticsProvider. Không fallback từ property thiếu dữ liệu sang Mock. FixtureGSCClient là nguồn thử nghiệm thứ ba ghi SQLite, có nhãn fixture và domain .example, không dùng quyền/quota Google.
 
 ## Ranh giới module
 
-- `providers/base.py`: `DataProvider` Protocol và immutable Observation. Không phụ thuộc FastAPI.
-- `providers/mock_provider.py`: tất cả định nghĩa synthetic fixture, site/page/query labels.
-- `services/dashboard_service.py`: aggregation, period windows, partitions, page detail. Không chứa HTTP routing hoặc UI formatting. Provider được tái sử dụng trong process qua dependency cache.
-- `models.py`: schema response cụ thể, số liệu có đơn vị trong mô tả.
-- `api/routes.py`: endpoint mỏng, site ID validation, enum ngày 7/28/90. Main chuyển lỗi không tồn tại thành 404; validation thành 422 qua FastAPI.
-- Frontend `services/`: typed fetch, cancellation theo AbortSignal, API errors, query keys theo `(report, site, days)`. Cache 5 phút; retry lỗi tạm thời, không retry 4xx cho các report.
-- `DashboardPage`: website/date URL state, query orchestration. Chờ đủ cùng context rồi render report; không trộn overview cũ với bảng mới khi đổi filter. Các query độc lập, data sources lỗi riêng không che số liệu performance.
-- `components/dashboard`: display và UI state: chọn metric, search/sort/pagination, panel. KPI và report data luôn tới từ API, không tạo số liệu trong React.
-- `components/ui`: các primitives có thể tái sử dụng; Radix cung cấp keyboard/focus behavior cho Sheet và Tooltip.
+- db/models.py, db/database.py, migrations/: SQLAlchemy, foreign keys/WAL, versioned Alembic schema. Không lưu token/client JSON trong SQL.
+- gsc/vault.py: OS-backed keyring; từ chối plaintext backends, không có file-key fallback hoặc production memory token store.
+- gsc/oauth.py: Desktop Authorization Code/PKCE, một read-only scope, callback loopback, one-time state 10 phút, refresh/revoke. Không thêm profile scope để lấy email/avatar.
+- gsc/client.py: Sites API, Search Analytics, timeout, safe error normalization và retry/backoff. Google requests chỉ ở backend. Fixture dùng cùng protocol nhưng không được coi là Google thật.
+- gsc/sync.py: một worker, durable queue/checkpoints; dataset/ngày thay atomically sau khi lấy/validate hết trang. Unique constraints chống nhân đôi và active jobs trùng property.
+- gsc/repository.py: exact property identifiers và membership. Bỏ property khỏi workspace không xóa lịch sử.
+- providers/sqlite_provider.py: report-level provider, aggregation cùng scope, SQL server pagination/sort/search, missing-day gaps, coverage và page detail.
+- api/gsc_routes.py: integration/sync/analytics/export endpoints và CSV spooling. api/routes.py giữ Dashboard endpoints, thêm provider resolution.
+- Frontend services/gscApi.ts và types/gsc.ts: typed integration API và cache keys theo property/ngày/type/filter.
+- features/settings, components/gsc/SyncPanel: OAuth file picker/status, property management, fixture creation, progress/cancel/retry; polling chỉ khi active, invalidation sau hoàn tất.
+- features/gsc, components/gsc/AnalyticsTable: năm tabs, server pagination/sort/search và CSV dữ liệu đã lưu. Reuse MetricCard, PerformanceChart, PageDetailPanel và UI primitives hiện có.
 
-Không thêm Redux, event bus, repository layer, hàng đợi job hoặc service rỗng cho các module tương lai. Search/sort/pagination chạy client vì fixture đầy đủ chỉ 12/16 dòng. Khi dữ liệu lớn, chuyển query/filter/pagination sang server và khai báo coverage/top-N trong contract.
+## Data accuracy
 
-## API contract
+Không ép GSC thành cross-product fact cube như synthetic mock. Có 5 independent datasets: site/query/country/device dùng byProperty; page dùng byPage. responseAggregationType phải khớp trước khi commit. Không suy ra URL–query relationship từ hai aggregate tables độc lập.
 
-Swagger `/docs`, OpenAPI `/openapi.json` là contract backend. TypeScript mirror tại `frontend/src/types/api.ts`; khi sửa schema, phải sửa mirror và chạy cả API/browser tests. JSON dùng ISO date `YYYY-MM-DD`, timestamp có timezone, CTR/share phần trăm 0–100 (không dùng fraction 0–1).
+KPI website chỉ đọc site. CTR = tổng clicks/tổng impressions × 100; position = tổng(position×impressions)/tổng impressions trong cùng scope. Kỳ trước có cùng N ngày, liền trước và không chồng lấn. Không cộng Top Queries/Pages làm tổng traffic website.
 
-| Endpoint GET | Response |
-|---|---|
-| `/api/health` | Health (`ok`, provider `mock`, version) |
-| `/api/sites` | Site[] |
-| `/api/dashboard/overview` | Overview (current, previous, changes, periods, provenance) |
-| `/api/dashboard/performance` | Performance (aligned daily points) |
-| `/api/dashboard/pages` | DimensionReport (complete pages) |
-| `/api/dashboard/queries` | DimensionReport (complete queries) |
-| `/api/dashboard/countries` | CountryReport (click share) |
-| `/api/dashboard/pages/{page_id}` | PageDetail (URL, metrics, timeseries, related queries) |
-| `/api/dashboard/sources` | DataSource[] |
+Overview thêm has_data, comparison_available, coverage và warnings. Missing daily metrics = null; API trả rỗng chỉ có checkpoint empty. Thiếu lịch sử thì delta/percent null. Dimension vắng trong một kỳ không đồng nghĩa giảm 100%. Share country/device dùng các dòng cùng dimension đã lưu, có ghi rõ basis.
 
-Report endpoints nhận `site_id` bắt buộc, `days` mặc định 28, chỉ chấp nhận 7/28/90. 404 cho site/page không có, 422 cho query parameters không hợp lệ. CORS chỉ cho `http://127.0.0.1:5173` và `http://localhost:5173`, phương thức GET. Runner bind loopback; không yêu cầu secrets.
+API pagination 25.000 rows/request, cap 50.000/day/type. api_response chỉ nói đã kết thúc truy xuất, không bảo đảm Google cung cấp mọi query/page. api_limited/unknown được lưu và trả metadata. SQLite detail reports luôn coverage partial; Mock vẫn complete và đối chiếu partition như v0.1.
 
-## State, CSV và offline
+## Consistency và state
 
-Server state qua TanStack Query; local UI state qua React; website/date qua URL. Đổi site/date tạo context mới, đóng details và reset table filters để tránh xem nhầm page cùng ID của site khác. Sidebar preference qua localStorage với fallback khi storage không khả dụng. Table search/sort chỉ thay views, không mutate API data.
+Một sync worker, transaction ngắn và SQLite WAL/busy timeout. Shared lock ngăn thay metric facts giữa các truy vấn trong cùng report. Dashboard lấy anchor ngày từ overview và truyền cùng end_date cho chart/table/detail. CSV tạo snapshot trong temporary spool giới hạn RAM, sau đó stream mà không giữ thread-owned lock qua ASGI yields.
 
-CSV được tạo từ các rows đã lọc/sắp xếp của report hiện tại, trước pagination; UTF-8 BOM, CRLF, quote/escape double quotes. Chỉ text không tin cậy có thể bị thêm apostrophe để chống spreadsheet formula injection; số âm vẫn là numeric. Tên file có site, start/end và tiền tố mock. Export không phụ thuộc dịch vụ ngoài.
+TanStack Query giữ API state; URL giữ site/days, GSC thêm start/end/type/tab. Dashboard chống filter updates ghi đè khi route transitions chồng lấn. Sidebar preference vẫn localStorage; không có Google tokens trong browser storage. Sync completion invalidates report/site/property caches, kể cả job xong nhanh trước lần polling đầu.
 
-Sau cài dependencies, runtime không cần Internet. Không có external fonts, CDNs, telemetry hoặc third-party scripts. Start helpers lưu fingerprint và bỏ qua cài đặt nếu lock không thay đổi. Snapshot filesystem giữ dependencies; process phải được chạy lại ở lần mở workspace tiếp theo.
+## API compatibility và security
 
-## Chuyển sang GSC/SQLite ở v0.2
+Swagger /docs dùng assets local; OpenAPI /openapi.json. Site giữ id/domain và thêm source_type. Các endpoint Dashboard cũ giữ shape chính; source enum mở rộng mock/gsc/fixture, PerformancePoint metric nullable khi thiếu, metadata real reports được bổ sung. Demo giữ nguyên số liệu. Health version=0.2.0, provider=hybrid.
 
-Provider abstraction hiện tại mô tả **complete synthetic facts**. GSC có giới hạn row, privacy/anonymized queries và semantics aggregation riêng; không được coi page/query/country reports là các phân hoạch đầy đủ rồi cộng tùy ý. Provider thật cần giữ site-level totals và dimension reports đúng aggregation type, khai báo coverage/freshness, kiểm tra cách weighted position được trả về. Có thể mở rộng provider thành report-level methods lúc tích hợp thực tế; không ép GSC trả một full fact cube không tồn tại.
+Loopback hosts và CORS allowlist; mutations POST cần Origin hợp lệ nếu có và X-CSRF-Token từ GET /api/session. Upload cần Content-Length (cap 128 KB); OAuth JSON tối đa 64 KB, chỉ Desktop config/Google HTTPS endpoints. GET exports không mutate. Sort allowlist, parameterized search, spreadsheet formula escaping, responses/logs không chứa token; callback query auth code được che. Không phục vụ thư mục data/credentials qua HTTP.
 
-SQLite lưu raw responses/normalized records, property identity, aggregation scope, sync watermark và migrations; incremental sync phải xử lý reprocessing các ngày chưa finalized. OAuth credentials chỉ ở backend/local secure settings, không đưa vào frontend build. Các module khác vẫn placeholder cho tới khi có implementation và validation thật.
+## Recovery và giới hạn
+
+Restart chuyển abandoned queued/running thành partial, có thể tiếp tục. Initial/incremental bỏ qua finalized history và refresh 7 ngày gần nhất; refresh toàn kỳ có semantics retry rõ. Quota/auth/network failures giữ data cũ. Nếu disk không ghi được trạng thái lỗi, process hiển thị failure và restart recovery xử lý sau khi sửa quyền/dung lượng.
+
+Một Google connection và nhiều exact properties; web/image/video/news riêng biệt. Chưa có Discover/Google News feed, query–page sync, GA4, crawler, backlinks, AI hoặc multi-user auth. Live OAuth, Windows keyring thực tế và API sync thật còn Pending Live Verification. Xem docs/GOOGLE_GSC_SETUP.md, docs/DATA_SYNC.md, docs/DATA_MODEL.md và docs/TROUBLESHOOTING.md.
