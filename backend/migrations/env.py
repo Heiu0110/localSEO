@@ -1,6 +1,7 @@
 from alembic import context
 
 from app.db.models import Base
+from app.keywords import models as keyword_models
 from app.technical import models  # Register additive models for future autogeneration.
 
 connection = context.config.attributes.get("connection")

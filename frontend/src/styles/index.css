@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./keywords.css";
 
 @theme inline {
   --color-background: var(--background);

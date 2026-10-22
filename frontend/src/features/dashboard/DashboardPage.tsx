@@ -16,6 +16,7 @@ import { PageDetailPanel } from '../../components/dashboard/PageDetailPanel';
 import { Sheet } from '../../components/ui/sheet';
 import { metric, metricNames } from '../../lib/format';
 import { SourceBadge, sourceLabel } from '../../components/dashboard/SourceBadge';
+import { KeywordSummary } from '../keywords/KeywordSummary';
 import { TechnicalSummary } from '../technical/TechnicalSummary';
 
 export function DashboardPage() {
@@ -68,6 +69,7 @@ function DashboardReport({ site, days, compare }: { site: string; days: Days; co
     <div className="report-grid"><PerformanceTable kind="pages" rows={pages.data.rows} compare={canCompare} onSelect={setSelectedPage} filename={filename} partial={partial} /><PerformanceTable kind="queries" rows={queries.data.rows} compare={canCompare} onSelect={setSelectedQuery} partial={partial} /></div>
     <div className="bottom-grid"><CountryPerformance rows={countries.data.rows} partial={partial} /><DataSourceStatus site={site} /></div>
     <TechnicalSummary site={site}/>
+    <KeywordSummary site={site}/>
     <div className="mock-notice"><Info size={15} /><span>{partial ? `Đọc ngoại tuyến từ SQLite · ngày có dữ liệu gần nhất ${date(data.dataset_end)}. ${data.source === 'fixture' ? 'Đây là dữ liệu thử nghiệm, không phải tài khoản Google thật.' : 'Đồng bộ trong Cài đặt để làm mới dữ liệu.'}` : `Bạn đang xem bộ dữ liệu mô phỏng đầy đủ. Kỳ báo cáo kết thúc vào ${date(data.dataset_end)}. Không sử dụng dữ liệu thực từ website hoặc Google.`}</span></div>
     <PageDetailPanel selected={selectedPage} onClose={() => setSelectedPage(null)} site={site} days={days} compare={canCompare} end={data.period.end} />
     <Sheet open={!!selectedQuery} onOpenChange={open => { if (!open) setSelectedQuery(null); }} title="Truy vấn tìm kiếm" description="Chỉ số truy vấn của website và kỳ báo cáo đang chọn; phạm vi theo nguồn dữ liệu.">{selectedQuery && <><h3 className="query-title">{selectedQuery.label}</h3><SourceBadge source={data.source} /><div className="detail-kpis">{(Object.keys(metricNames) as MetricKey[]).map(key => <div key={key}><span>{metricNames[key]}</span><strong>{metric(selectedQuery.metrics[key], key)}</strong>{canCompare && <small>Kỳ trước: {metric(selectedQuery.previous[key], key)}</small>}</div>)}</div><p className="detail-note">Vị trí trung bình thay đổi theo cơ cấu truy vấn. Dữ liệu trung bình này không thể hiện thứ hạng cố định của từ khóa thực tế.</p><Button variant="outline" onClick={() => setSelectedQuery(null)}>Quay lại báo cáo</Button></>}</Sheet>

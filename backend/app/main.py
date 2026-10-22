@@ -17,6 +17,8 @@ from app.gsc.runtime import get_runtime
 from app.gsc.errors import GSCError
 from app.api.technical_routes import router as technical_router
 from app.technical.urls import CrawlError
+from app.api.keyword_routes import router as keyword_router
+from sqlalchemy.exc import IntegrityError
 
 
 @asynccontextmanager
@@ -24,9 +26,11 @@ async def lifespan(app):
     runtime = get_runtime()
     runtime.sync.recover()
     runtime.technical.recover()
+    runtime.keywords.recover()
     yield
     runtime.sync.close()
     runtime.technical.close()
+    runtime.keywords.close()
     get_runtime.cache_clear()
 
 
@@ -41,8 +45,8 @@ class RedactOAuthAccessLog(logging.Filter):
 
 logging.getLogger("uvicorn.access").addFilter(RedactOAuthAccessLog())
 
-app = FastAPI(title="SEO Local Workspace", version="0.3.0", lifespan=lifespan, docs_url=None, redoc_url=None,
-              description="Local SQLite Search Console analytics, read-only Technical SEO audits and isolated demo providers.")
+app = FastAPI(title="SEO Local Workspace", version="0.4.0", lifespan=lifespan, docs_url=None, redoc_url=None,
+              description="Local SQLite Search Console analytics, read-only Technical SEO audits, independent manual keyword ranks and isolated demo providers.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
                    allow_methods=["GET", "POST", "PATCH"], allow_headers=["Accept", "Content-Type", "X-CSRF-Token"])
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
@@ -88,6 +92,11 @@ async def not_found(request: Request, exc: ResourceNotFoundError):
 app.include_router(router)
 app.include_router(gsc_router)
 app.include_router(technical_router)
+app.include_router(keyword_router)
+
+@app.exception_handler(IntegrityError)
+async def integrity_error(request: Request, exc: IntegrityError):
+    return JSONResponse(status_code=409, content={"code":"conflicting_data", "detail":"Dữ liệu trùng hoặc tham chiếu đã thay đổi. Tải lại và kiểm tra bộ, nhóm hoặc từ khóa."})
 
 
 @app.exception_handler(CrawlError)

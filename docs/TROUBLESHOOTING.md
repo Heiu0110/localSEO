@@ -52,3 +52,14 @@ Sau khi thấy `Local: http://127.0.0.1:5173/`, mở địa chỉ đó bằng tr
 Log không chứa token, credentials JSON hoặc auth code; callback query được che trong access log. Khi báo lỗi, chỉ cung cấp mã lỗi/job ID và mô tả; không gửi credentials, refresh token hoặc toàn bộ database chứa dữ liệu riêng tư.
 
 Chưa triển khai GA4, backlink provider, AI hoặc auth đa người dùng. Crawler Technical SEO Core đã có, advanced integrations còn chưa thực hiện. OAuth/live Google trên Windows thật còn **Pending Live Verification** cho đến khi người dùng cấu hình và kiểm tra tài khoản của mình.
+
+
+## Keyword Tracking v0.4
+
+- Ô rank từ chối timestamp: ngày local phải thuộc tuần đã chọn. Nếu chỉ biết tuần lịch sử, chọn “Nhập lịch sử: chỉ biết tuần”; không suy ngày từ kỳ GSC.
+- Không sửa được lịch bộ: đã có observation. Tạo bộ mới và nhập lịch sử có ánh xạ tuần; không xóa database.
+- GSC là —: xem tooltip và nguồn/thời điểm trong drawer; chọn đúng property/kỳ/scope rồi Sync. Demo website không có GSC. No Rows có thể do privacy, không phải 0.
+- Kỳ custom quá cũ hoặc chưa final: chọn vùng dữ liệu final trong khoảng lịch sử GSC hỗ trợ. Cache cũ vẫn đọc được.
+- Import báo lỗi cột: mở Ánh xạ cột, chọn keyword/week tương ứng, xem trước lại; xác nhận bỏ dòng lỗi chỉ khi chấp nhận. Tệp lớn cần chia nhỏ dưới100KiB/1.000dòng.
+- Sáu cột chiếm hết màn hình nhỏ: tại ≤1100px chỉ cột keyword cố định; cuộn ngang để xem phần còn lại. Desktop là trải nghiệm ưu tiên.
+- Sync bị dừng: job interrupted/cancelled có thể chạy lại dùng cache; giữ nguyên dữ liệu đã lưu. Không chạy scraping để thay OAuth.

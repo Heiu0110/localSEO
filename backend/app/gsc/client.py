@@ -19,6 +19,7 @@ DIMENSIONS = {"site": [], "page": ["page"], "query": ["query"], "country": ["cou
 
 class GSCClient(Protocol):
     def sites(self) -> list[dict]: ...
+    def exact_query(self, site_url: str, body: dict) -> dict: ...
     def query(self, site_url: str, day: str, dataset: str, search_type: str, start_row: int, row_limit: int) -> dict: ...
 
 
@@ -77,6 +78,9 @@ class GoogleGSCClient:
                 self.on_retry()
             self.sleep(max(failure.retry_after or 0, 2 ** attempt + random.uniform(0, 0.5)))
 
+    def exact_query(self, site_url: str, body: dict) -> dict:
+        return self._call(lambda service: service.searchanalytics().query(siteUrl=site_url, body=body))
+
     def sites(self) -> list[dict]:
         return self._call(lambda service: service.sites().list()).get("siteEntry", [])
 
@@ -95,6 +99,18 @@ class FixtureGSCClient:
     def sites(self):
         return [{"siteUrl": "sc-domain:fixture.example", "permissionLevel": "siteOwner"},
                 {"siteUrl": "https://fixture.example/", "permissionLevel": "siteFullUser"}]
+
+    def exact_query(self, site_url, body):
+        filters=body['dimensionFilterGroups'][0]['filters']
+        query=filters[0]['expression']
+        if query not in [f'túi xách thử nghiệm {i}' for i in range(1,17)]:
+            return {'rows':[], 'responseAggregationType':body['aggregationType']}
+        page=next((f['expression'] for f in filters if f['dimension']=='page'),None)
+        if page and page!='https://fixture.example/trang-1':
+            return {'rows':[], 'responseAggregationType':body['aggregationType']}
+        days=(date.fromisoformat(body['endDate'])-date.fromisoformat(body['startDate'])).days+1
+        clicks=days*(2 if page else 3);imps=clicks*20
+        return {'rows':[{'keys':['https://fixture.example/trang-1'] if body['dimensions'] else [],'clicks':clicks,'impressions':imps,'ctr':.05,'position':7.5 if page else 6.5}], 'responseAggregationType':body['aggregationType']}
 
     def query(self, site_url, day, dataset, search_type, start_row, row_limit):
         ordinal = date.fromisoformat(day).toordinal()

@@ -18,7 +18,7 @@ export function TechnicalPage(){
   const projects=useQuery(technicalProjectsQuery);const requested=params.get('project');const project=projects.data?.find(row=>row.id===requested)??(!requested?projects.data?.[0]:undefined);
   const runs=useQuery(technicalRunsQuery(project?.id??''));const runId=params.get('audit')||runs.data?.rows[0]?.id||'';const job=useQuery(technicalRunQuery(project?runId:''));
   const run=job.data?.project_id===project?.id?job.data:undefined;const running=activeAudit(run?.status);const report=useQuery(technicalOverviewQuery(run?.id??'',running));
-  const [creating,setCreating]=useState(false);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [urlID,setURL]=useState('');const [issueID,setIssue]=useState('');
+  const [creating,setCreating]=useState(false);const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [urlID,setURL]=useState(params.get('url')||'');const [issueID,setIssue]=useState('');
   const tab=tabs[params.get('tab')??'']?params.get('tab')!:'overview';const completed=useRef('');
   function update(values:Record<string,string>){const next=new URLSearchParams(latestParams.current);Object.entries(values).forEach(([key,value])=>value?next.set(key,value):next.delete(key));latestParams.current=next;setParams(next);setURL('');setIssue('');}
   useEffect(()=>{if(run&&!activeAudit(run.status)&&completed.current!==run.id+run.status){completed.current=run.id+run.status;void client.invalidateQueries({queryKey:['technical']});}},[run,client]);

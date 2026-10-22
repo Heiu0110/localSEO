@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.3 Core
+# Architecture · SEO Local Workspace v0.4 Core
+
+Keyword Tracking thêm đường dữ liệu riêng: `Keyword Set → tuần/profile → MANUAL observations → SQLite → grid/overview/history`. GSC keyword cache dùng exact query và scope property/page qua OAuth/client sẵn có; không ghép query/page totals, không biến Average Position thành rank thủ công. Queue, import preview/commit và các bảng được thêm bằng migration003. Dashboard chỉ thêm thẻ nhỏ; route Keyword Tracking tải riêng. Xem [kiến trúc Keyword Tracking](docs/KEYWORD_TRACKING_ARCHITECTURE.md).
 
 Technical SEO bổ sung một đường dữ liệu độc lập: `Audit Project → safe HTTP crawler → SQLite snapshots → rules / reports / backlog`. Crawler không dùng OAuth; chỉ đọc GSC page facts đã lưu khi project có property phù hợp. Dashboard có thẻ tóm tắt khi đã có audit live khớp website. Không thay MockProvider hoặc DashboardService. Xem [kiến trúc Technical SEO](docs/TECHNICAL_SEO_ARCHITECTURE.md), [crawler](docs/TECHNICAL_CRAWLER.md), [data model](docs/TECHNICAL_DATA_MODEL.md) và [rules](docs/TECHNICAL_RULES.md).
 

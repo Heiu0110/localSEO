@@ -1,4 +1,27 @@
-# Validation evidence · v0.3 Core
+# Validation evidence · v0.4 Core
+
+## v0.4 — kiểm tra ngày 22/10/2026
+
+Baseline trước thay đổi tại `6bd141b`: **92 backend tests và 36 Playwright tests passed**. Đã sao lưu SQLite trước migration003. Không đổi mã nguồn MockProvider/DashboardService hoặc cơ chế OAuth/token.
+
+| Kiểm tra | Kết quả thực tế |
+|---|---|
+| Backend `PYTHONPATH=backend backend/.venv/bin/python -m pytest backend/tests -q` | **130 passed**, không failed/skipped/xfail; gồm 38 test mới |
+| `backend/.venv/bin/python -m pip check` | No broken requirements found |
+| Frontend `npm run build` (TypeScript + Vite) | **Passed**; route Keyword Tracking thành chunk riêng |
+| Toàn bộ Playwright trên production preview | **46 passed**, không failed/skipped; 18 Dashboard + 8 GSC + 10 Keyword + 10 Technical |
+| Keyword browser workflow | Tạo bộ/nhóm/keyword, ghi rank/NA/clear/validation, lịch sử, bàn phím Tab, filter/sort/bulk, paste preview, CSV/XLSX export, CSV import lỗi, GSC fixture worker và scope, responsive |
+| Grid nhiều dòng | 60 keyword lưu thật, trang25/50/10dòng; đo vị trí6cột khi cuộn ngang và header khi cuộn dọc, đều giữ đúng |
+| Migration v0.3→v0.4 | Test nâng từ002, bảo toàn GSC fact values, migrate lại idempotent, FK/integrity hợp lệ |
+| SQLite workspace | **518 GSC facts**, hash key+metric values trước/sau **3d72eb75e463ad84** khớp; integrity_check=ok, foreign_key_check không lỗi |
+| Rank | 1/100, NA, Not Checked, 0/âm/thập phân/range lỗi; append history/clear, timezone boundary, calendar lock, profile/target changes, missing previous week, chuyển bộ không gộp profile riêng |
+| GSC keyword | Equals query/page filters, byProperty/byPage, no rows, cache identity/TTL/reuse, weighted daily cache, thiếu coverage, permission failure giữ cache, recovery và không tạo job trùng |
+| Import/export | CSV và XLSX roundtrip tiếng Việt,35tuần/NA/blank, custom mapping, skip/update/separate model, transaction, formula text, zip/upload limits |
+| Kiểm tra ảnh thực tế | Desktop1440×1000 và mobile390×1000: không overflow trang/không pageerror; bảng, overview, drawer giữ token nâu–kem |
+
+Dữ liệu browser tests là dữ liệu thử nghiệm có tên bộ rõ ràng và website demo/fixture; không có kết quả rank tự động được bịa cho property thật. Request Google trong tests dùng fixture/mock, không dùng credentials thật. Không khẳng định native Windows, keyring/OAuth live, exact-query live hoặc SERP tự động đã được xác minh. Screenshot evidence, lịch chạy định kỳ và SERP provider chưa triển khai.
+
+Một cảnh báo deprecation Starlette TestClient/httpx vẫn xuất hiện như baseline; không có test lỗi. Core giữ giới hạn an toàn:100KiB/1.000dòng import,500ô batch rank,200keyword batch metadata,5.000keyword/sync hoặc export. Chưa benchmark dataset hàng triệu observation.
 
 ## v0.3 — kiểm tra ngày 22/10/2026
 

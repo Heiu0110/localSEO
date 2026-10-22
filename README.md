@@ -1,6 +1,22 @@
-# SEO Local Workspace · v0.3 Core
+# SEO Local Workspace · v0.4 Core
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
+
+## v0.4 Core: Theo dõi từ khóa
+
+Keyword Tracking đã thay placeholder bằng bảng làm việc 35 tuần, dùng SQLite và UI tiếng Việt hiện tại:
+
+- Bộ từ khóa, nhóm/màu, URL đích, Search Profile, ưu tiên, ghi chú, archive, chuyển bộ cùng lịch và xóa có xác nhận.
+- Sáu cột cố định trên desktop, filter/sort/phân trang phía server, nhập inline/NA/clear, dán khối và sửa metadata hàng loạt.
+- Lịch tuần theo ngày bắt đầu + timezone; observation giữ snapshot và lịch sử sửa. Rank số, NA và chưa kiểm tra tách biệt; không ghi GSC Average Position vào rank.
+- Tổng quan, biến động tuần liền trước, biểu đồ đảo trục và drawer; checklist kiểm tra thủ công kèm shortcut Google.
+- Sync exact query qua OAuth hiện có; property scope/page scope, kỳ GSC độc lập, queue/cache và trạng thái thiếu dữ liệu rõ ràng.
+- CSV/XLSX preview, ánh xạ, lỗi/trùng, xác nhận commit, xuất đủ 35 tuần và bảo vệ formula injection. Metric bảng tính không được giả làm GSC live.
+- Thẻ Dashboard nhỏ khi có bộ theo dõi; mở bằng chứng URL Technical SEO đã lưu, không tự crawl.
+
+Bắt đầu: chạy hai launchers → **Theo dõi từ khóa → chọn Website → Bộ từ khóa mới**. Không cần Google để nhập rank/import. Live GSC dùng Settings như trước. Chưa có automatic SERP, scheduled checks hoặc screenshot evidence.
+
+Tài liệu: [Hướng dẫn sử dụng](docs/KEYWORD_TRACKING_USER_GUIDE.md) · [Kiến trúc](docs/KEYWORD_TRACKING_ARCHITECTURE.md) · [Dữ liệu](docs/KEYWORD_TRACKING_DATA_MODEL.md) · [Nhập/xuất](docs/KEYWORD_TRACKING_IMPORT_EXPORT.md) · [GSC](docs/KEYWORD_TRACKING_GSC_INTEGRATION.md) · [Quy tắc rank](docs/KEYWORD_TRACKING_RANK_RULES.md).
 
 ## v0.3 Core: Technical SEO
 
@@ -106,7 +122,7 @@ npm run dev
 - Data Sources ghi rõ trạng thái thực tế. Sidebar thu gọn lưu ở local storage.
 - Loading skeleton, empty state, error/retry, keyboard navigation, tooltip và panel có focus trap/Escape.
 - Responsive: bảng cuộn riêng khi cần, không làm trang tràn ngang.
-- Technical SEO đã có module audit v0.3 Core. Keyword Tracking, Topical Map, Internal Links độc lập và SEO Reports vẫn là placeholder; link graph trong Technical SEO hoạt động riêng. Settings và Phân tích GSC giữ luồng v0.2.
+- Technical SEO đã có module audit v0.3 Core. Keyword Tracking đã có v0.4 Core. Topical Map, Internal Links độc lập và SEO Reports vẫn là placeholder; link graph trong Technical SEO hoạt động riêng. Settings và Phân tích GSC giữ luồng v0.2.
 
 ## Kiểm thử
 
@@ -178,4 +194,4 @@ Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem
 
 ## Bước tiếp theo
 
-Chạy Quick Audit có giới hạn trên một website bạn quản lý, kiểm tra bằng chứng và xác minh một thay đổi bằng snapshot thứ hai. Khi Core được xác nhận với dữ liệu thực, ưu tiên URL Inspection cho một số URL quan trọng; vẫn giữ Google index evidence riêng với local crawl. Live OAuth/sync cần xác minh trên Windows nếu chưa thực hiện.
+Thử một bộ từ khóa nhỏ: nhập bảng lịch sử, kiểm tra một tuần thực tế và đối chiếu exact-query metrics trong hai scope với GSC cùng kỳ. Live Google/Windows cần xác minh trên máy cá nhân. Chạy Quick Audit có giới hạn trên website bạn quản lý để xem bằng chứng Technical SEO. Khi Core được xác nhận với dữ liệu thực, ưu tiên URL Inspection cho một số URL quan trọng; vẫn giữ Google index evidence riêng với local crawl. Live OAuth/sync cần xác minh trên Windows nếu chưa thực hiện.
