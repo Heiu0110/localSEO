@@ -108,8 +108,8 @@ test('comparison, chart series, sidebar, navigation and URL restoration', async 
   await expect(page.getByRole('link', { name: 'Tổng quan', exact: true }).locator('span').first()).toBeHidden();
   await expect(page.getByRole('link', { name: 'Tổng quan', exact: true })).toHaveClass(/nav-item.*active/);
   await page.getByRole('link', { name: 'Technical SEO', exact: true }).click();
-  await expect(page.getByText('Chức năng này dự kiến có trong phiên bản tương lai.')).toBeVisible();
-  await page.getByRole('link', { name: 'Về trang Tổng quan', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /^Technical SEO/, level: 1 })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('link', { name: 'Tổng quan', exact: true }).click();
   await expect(page.getByLabel('Website', { exact: true })).toHaveValue('cong-ty');
   await expect(page.getByLabel('Khoảng thời gian', { exact: true })).toHaveValue('7');
   await page.reload();

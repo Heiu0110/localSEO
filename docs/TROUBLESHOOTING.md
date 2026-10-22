@@ -1,4 +1,20 @@
-# Xử lý lỗi v0.2
+# Xử lý lỗi v0.3
+
+## Technical SEO
+
+| Triệu chứng | Hành động |
+|---|---|
+| unsafe_host / unsafe_network / out_of_scope | Dùng website HTTP/HTTPS công khai, cổng chuẩn và hostname được phép. Private IP/localhost/metadata hoặc DNS có IP riêng bị chặn có chủ ý; không tắt SSRF hoặc TLS để vượt chặn. Dùng bộ thử nghiệm ngoại tuyến nếu chỉ cần kiểm tra UI. |
+| audit_already_active | Một project chỉ có một queued/running run. Chờ hoặc hủy run đó; website khác có thể xếp hàng riêng. |
+| robots unknown hoặc 401/403 | Xem bằng chứng robots; crawler fail closed. Kiểm tra site/robots thực tế, không giả Googlebot hoặc bỏ robots. |
+| Audit lâu | Xem phase, processed và HTTP requests. Giảm max URLs/depth/scope. Redirects/sitemap/retries làm tăng requests; không có thời gian hoàn tất cam kết. OS DNS resolver có thời gian chờ riêng. |
+| partial / interrupted | Kết quả đã lưu còn nguyên. Xem coverage/caps/error; Chạy lại tạo snapshot mới. Core chưa resume frontier trong cùng snapshot. |
+| Check chưa đánh giá | URL có thể bị robots, HTTP lỗi, body giới hạn hoặc không phải HTML. Not Checked không phải Passed; mở URL detail và đọc evidence. |
+| Không xác nhận resolved | Cần hai snapshot cùng project/scope/version, đủ coverage và check được đánh giá lại. Đổi URL intent hoặc config cũng thay scope hash. |
+| Export bị từ chối khi active | Chờ audit dừng hoặc hủy rồi xuất snapshot nhất quán. |
+| CSV import bị từ chối | Chỉ important-URL CSV UTF-8 ≤100 KiB/1.000 URL, đúng header/enum, trong scope và không trùng sau normalization. |
+
+Xem [hướng dẫn Technical SEO](TECHNICAL_AUDIT_USER_GUIDE.md) và [giới hạn Core](TECHNICAL_LIMITATIONS.md). Chưa có rendering, CWV, GSC URL Inspection hoặc log parser để bật bằng cài đặt.
 
 ## Frontend khởi động lâu
 
@@ -35,4 +51,4 @@ Sau khi thấy `Local: http://127.0.0.1:5173/`, mở địa chỉ đó bằng tr
 
 Log không chứa token, credentials JSON hoặc auth code; callback query được che trong access log. Khi báo lỗi, chỉ cung cấp mã lỗi/job ID và mô tả; không gửi credentials, refresh token hoặc toàn bộ database chứa dữ liệu riêng tư.
 
-Chưa triển khai GA4, crawler, backlink provider, AI hoặc auth đa người dùng. OAuth/live Google trên Windows thật còn **Pending Live Verification** cho đến khi người dùng cấu hình và kiểm tra tài khoản của mình.
+Chưa triển khai GA4, backlink provider, AI hoặc auth đa người dùng. Crawler Technical SEO Core đã có, advanced integrations còn chưa thực hiện. OAuth/live Google trên Windows thật còn **Pending Live Verification** cho đến khi người dùng cấu hình và kiểm tra tài khoản của mình.

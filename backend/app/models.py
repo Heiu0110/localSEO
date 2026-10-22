@@ -124,11 +124,11 @@ class PageDetail(BaseModel):
 class DataSource(BaseModel):
     id: str
     name: str
-    status: Literal["Mock Mode", "Not Connected", "Planned", "Not Configured", "Connected", "Syncing", "Up to Date", "Stale", "Reauthorization Required", "Error", "Fixture"]
+    status: Literal["Mock Mode", "Not Connected", "Planned", "Not Configured", "Connected", "Syncing", "Up to Date", "Stale", "Reauthorization Required", "Error", "Fixture", "Not Audited", "Auditing", "Audited", "Partial"]
     detail: str
 
 
 class Health(BaseModel):
     status: Literal["ok"] = "ok"
     provider: Literal["hybrid"] = "hybrid"
-    version: str = "0.2.0"
+    version: str = "0.3.0"

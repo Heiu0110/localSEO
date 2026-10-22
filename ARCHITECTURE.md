@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.2
+# Architecture · SEO Local Workspace v0.3 Core
+
+Technical SEO bổ sung một đường dữ liệu độc lập: `Audit Project → safe HTTP crawler → SQLite snapshots → rules / reports / backlog`. Crawler không dùng OAuth; chỉ đọc GSC page facts đã lưu khi project có property phù hợp. Dashboard có thẻ tóm tắt khi đã có audit live khớp website. Không thay MockProvider hoặc DashboardService. Xem [kiến trúc Technical SEO](docs/TECHNICAL_SEO_ARCHITECTURE.md), [crawler](docs/TECHNICAL_CRAWLER.md), [data model](docs/TECHNICAL_DATA_MODEL.md) và [rules](docs/TECHNICAL_RULES.md).
 
 ## Hai đường dữ liệu, cùng Dashboard
 
@@ -12,7 +14,7 @@ Google OAuth → GoogleGSCClient → SyncManager → SQLite           │
                                       GSC Analytics
 ```
 
-Frontend/backend vẫn là hai tiến trình loopback. Giữ React/TypeScript/Vite/Tailwind/Radix/Recharts, palette trắng–xám–bạc–vàng–nâu, sidebar, card/table/chart và Windows launchers. Không tạo project mới, cloud deployment, login, Redis/Celery hoặc database server.
+Frontend/backend vẫn là hai tiến trình loopback. Giữ React/TypeScript/Vite/Tailwind/Radix/Recharts, palette kem–be–nâu đồng–espresso, sidebar, card/table/chart và Windows launchers. Không tạo project mới, cloud deployment, login, Redis/Celery hoặc database server.
 
 MockProvider và DashboardService v0.1 giữ nguyên. Factory trong api/routes.py chỉ chọn Mock cho hai demo IDs cố định; active property UUID dùng SQLiteAnalyticsProvider. Không fallback từ property thiếu dữ liệu sang Mock. FixtureGSCClient là nguồn thử nghiệm thứ ba ghi SQLite, có nhãn fixture và domain .example, không dùng quyền/quota Google.
 
@@ -48,7 +50,7 @@ TanStack Query giữ API state; URL giữ site/days, GSC thêm start/end/type/ta
 
 ## API compatibility và security
 
-Swagger /docs dùng assets local; OpenAPI /openapi.json. Site giữ id/domain và thêm source_type. Các endpoint Dashboard cũ giữ shape chính; source enum mở rộng mock/gsc/fixture, PerformancePoint metric nullable khi thiếu, metadata real reports được bổ sung. Demo giữ nguyên số liệu. Health version=0.2.0, provider=hybrid.
+Swagger /docs dùng assets local; OpenAPI /openapi.json. Site giữ id/domain và thêm source_type. Các endpoint Dashboard cũ giữ shape chính; source enum mở rộng mock/gsc/fixture, PerformancePoint metric nullable khi thiếu, metadata real reports được bổ sung. Demo giữ nguyên số liệu. Health version=0.3.0, provider=hybrid. Technical routes là bổ sung; trạng thái source Technical SEO có Not Audited/Auditing/Audited/Partial, không giả là đã crawl khi chưa có snapshot.
 
 Loopback hosts và CORS allowlist; mutations POST cần Origin hợp lệ nếu có và X-CSRF-Token từ GET /api/session. Upload cần Content-Length (cap 128 KB); OAuth JSON tối đa 64 KB, chỉ Desktop config/Google HTTPS endpoints. GET exports không mutate. Sort allowlist, parameterized search, spreadsheet formula escaping, responses/logs không chứa token; callback query auth code được che. Không phục vụ thư mục data/credentials qua HTTP.
 
@@ -56,4 +58,4 @@ Loopback hosts và CORS allowlist; mutations POST cần Origin hợp lệ nếu 
 
 Restart chuyển abandoned queued/running thành partial, có thể tiếp tục. Initial/incremental bỏ qua finalized history và refresh 7 ngày gần nhất; refresh toàn kỳ có semantics retry rõ. Quota/auth/network failures giữ data cũ. Nếu disk không ghi được trạng thái lỗi, process hiển thị failure và restart recovery xử lý sau khi sửa quyền/dung lượng.
 
-Một Google connection và nhiều exact properties; web/image/video/news riêng biệt. Chưa có Discover/Google News feed, query–page sync, GA4, crawler, backlinks, AI hoặc multi-user auth. Live OAuth, Windows keyring thực tế và API sync thật còn Pending Live Verification. Xem docs/GOOGLE_GSC_SETUP.md, docs/DATA_SYNC.md, docs/DATA_MODEL.md và docs/TROUBLESHOOTING.md.
+Một Google connection và nhiều exact properties; web/image/video/news riêng biệt. Chưa có Discover/Google News feed, query–page sync, GA4, backlinks, AI hoặc multi-user auth. Crawler Technical SEO Core đã triển khai; URL Inspection, rendering, CWV, log analysis và advanced diagnostics còn chưa thực hiện. Live OAuth, Windows keyring thực tế và API sync thật còn Pending Live Verification. Xem docs/GOOGLE_GSC_SETUP.md, docs/DATA_SYNC.md, docs/DATA_MODEL.md và docs/TROUBLESHOOTING.md.

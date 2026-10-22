@@ -21,7 +21,7 @@ export interface DimensionRow { id: string; label: string; metrics: Metrics; pre
 export interface DimensionReport { site_id: string; period: Period; coverage: 'complete' | 'partial' | 'unknown'; rows: DimensionRow[]; total_rows: number | null; warning?: string | null; page: number; page_size: number; completeness: 'complete' | 'api_response' | 'api_limited' | 'unknown' }
 export interface CountryRow { code: string; name: string; metrics: Metrics; share: number; current_available?: boolean }
 export interface CountryReport { site_id: string; period: Period; rows: CountryRow[]; coverage: 'complete' | 'partial'; share_basis: 'site' | 'returned_rows' }
-export interface DataSource { id: string; name: string; status: 'Mock Mode' | 'Not Connected' | 'Planned' | 'Not Configured' | 'Connected' | 'Syncing' | 'Up to Date' | 'Stale' | 'Reauthorization Required' | 'Error' | 'Fixture'; detail: string }
+export interface DataSource { id: string; name: string; status: 'Mock Mode' | 'Not Connected' | 'Planned' | 'Not Configured' | 'Connected' | 'Syncing' | 'Up to Date' | 'Stale' | 'Reauthorization Required' | 'Error' | 'Fixture' | 'Not Audited' | 'Auditing' | 'Audited' | 'Partial'; detail: string }
 export interface PageDetail {
   id: string; url: string; period: Period; current: Metrics; previous: Metrics;
   performance: PerformancePoint[]; queries: DimensionRow[];

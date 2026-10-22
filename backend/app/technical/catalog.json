@@ -1,0 +1,692 @@
+[
+  {
+    "id": "TECH-CRAWL-001",
+    "category": "CRAWL",
+    "name": "robots.txt accessibility"
+  },
+  {
+    "id": "TECH-CRAWL-002",
+    "category": "CRAWL",
+    "name": "important URLs blocked by robots"
+  },
+  {
+    "id": "TECH-CRAWL-003",
+    "category": "CRAWL",
+    "name": "essential resource blocking"
+  },
+  {
+    "id": "TECH-CRAWL-004",
+    "category": "CRAWL",
+    "name": "important URL HTTP errors"
+  },
+  {
+    "id": "TECH-CRAWL-005",
+    "category": "CRAWL",
+    "name": "broken internal links"
+  },
+  {
+    "id": "TECH-CRAWL-006",
+    "category": "CRAWL",
+    "name": "JavaScript-only content"
+  },
+  {
+    "id": "TECH-CRAWL-007",
+    "category": "CRAWL",
+    "name": "parameter explosion"
+  },
+  {
+    "id": "TECH-CRAWL-008",
+    "category": "CRAWL",
+    "name": "crawl diagnostics"
+  },
+  {
+    "id": "TECH-INDEX-001",
+    "category": "INDEX",
+    "name": "local indexability assessment"
+  },
+  {
+    "id": "TECH-INDEX-002",
+    "category": "INDEX",
+    "name": "unexpected noindex"
+  },
+  {
+    "id": "TECH-INDEX-003",
+    "category": "INDEX",
+    "name": "URL Inspection comparison"
+  },
+  {
+    "id": "TECH-INDEX-004",
+    "category": "INDEX",
+    "name": "Crawled, currently not indexed"
+  },
+  {
+    "id": "TECH-INDEX-005",
+    "category": "INDEX",
+    "name": "Discovered, currently not indexed"
+  },
+  {
+    "id": "TECH-INDEX-006",
+    "category": "INDEX",
+    "name": "potential soft 404"
+  },
+  {
+    "id": "TECH-INDEX-007",
+    "category": "INDEX",
+    "name": "thin content candidates"
+  },
+  {
+    "id": "TECH-INDEX-008",
+    "category": "INDEX",
+    "name": "duplicate content candidates"
+  },
+  {
+    "id": "TECH-INDEX-009",
+    "category": "INDEX",
+    "name": "index intent classification"
+  },
+  {
+    "id": "TECH-INDEX-010",
+    "category": "INDEX",
+    "name": "URL disposition"
+  },
+  {
+    "id": "TECH-CAN-001",
+    "category": "CAN",
+    "name": "declared canonical detection"
+  },
+  {
+    "id": "TECH-CAN-002",
+    "category": "CAN",
+    "name": "missing canonical"
+  },
+  {
+    "id": "TECH-CAN-003",
+    "category": "CAN",
+    "name": "multiple conflicting canonicals"
+  },
+  {
+    "id": "TECH-CAN-004",
+    "category": "CAN",
+    "name": "canonical to error URL"
+  },
+  {
+    "id": "TECH-CAN-005",
+    "category": "CAN",
+    "name": "canonical to redirect"
+  },
+  {
+    "id": "TECH-CAN-006",
+    "category": "CAN",
+    "name": "canonical to noindex"
+  },
+  {
+    "id": "TECH-CAN-007",
+    "category": "CAN",
+    "name": "Google-selected canonical comparison"
+  },
+  {
+    "id": "TECH-CAN-008",
+    "category": "CAN",
+    "name": "host and protocol variants"
+  },
+  {
+    "id": "TECH-CAN-009",
+    "category": "CAN",
+    "name": "trailing slash variants"
+  },
+  {
+    "id": "TECH-CAN-010",
+    "category": "CAN",
+    "name": "parameter and taxonomy duplicates"
+  },
+  {
+    "id": "TECH-CAN-011",
+    "category": "CAN",
+    "name": "Query × Page cannibalization"
+  },
+  {
+    "id": "TECH-SITEMAP-001",
+    "category": "SITEMAP",
+    "name": "sitemap discovery"
+  },
+  {
+    "id": "TECH-SITEMAP-002",
+    "category": "SITEMAP",
+    "name": "sitemap accessibility"
+  },
+  {
+    "id": "TECH-SITEMAP-003",
+    "category": "SITEMAP",
+    "name": "XML validity"
+  },
+  {
+    "id": "TECH-SITEMAP-004",
+    "category": "SITEMAP",
+    "name": "sitemap index support"
+  },
+  {
+    "id": "TECH-SITEMAP-005",
+    "category": "SITEMAP",
+    "name": "URL status validation"
+  },
+  {
+    "id": "TECH-SITEMAP-006",
+    "category": "SITEMAP",
+    "name": "noindex URLs in sitemap"
+  },
+  {
+    "id": "TECH-SITEMAP-007",
+    "category": "SITEMAP",
+    "name": "noncanonical URLs in sitemap"
+  },
+  {
+    "id": "TECH-SITEMAP-008",
+    "category": "SITEMAP",
+    "name": "sitemap versus crawl comparison"
+  },
+  {
+    "id": "TECH-SITEMAP-009",
+    "category": "SITEMAP",
+    "name": "lastmod diagnostics"
+  },
+  {
+    "id": "TECH-SITEMAP-010",
+    "category": "SITEMAP",
+    "name": "GSC sitemap status"
+  },
+  {
+    "id": "TECH-HTTP-001",
+    "category": "HTTP",
+    "name": "status classification"
+  },
+  {
+    "id": "TECH-HTTP-002",
+    "category": "HTTP",
+    "name": "redirect chain"
+  },
+  {
+    "id": "TECH-HTTP-003",
+    "category": "HTTP",
+    "name": "redirect loop"
+  },
+  {
+    "id": "TECH-HTTP-004",
+    "category": "HTTP",
+    "name": "broken target"
+  },
+  {
+    "id": "TECH-HTTP-005",
+    "category": "HTTP",
+    "name": "unnecessary internal redirect"
+  },
+  {
+    "id": "TECH-HTTP-006",
+    "category": "HTTP",
+    "name": "preferred host redirects"
+  },
+  {
+    "id": "TECH-HTTP-007",
+    "category": "HTTP",
+    "name": "HTTP to HTTPS"
+  },
+  {
+    "id": "TECH-HTTP-008",
+    "category": "HTTP",
+    "name": "redirect mapping validation"
+  },
+  {
+    "id": "TECH-HTTP-009",
+    "category": "HTTP",
+    "name": "SSL and DNS errors"
+  },
+  {
+    "id": "TECH-ARCH-001",
+    "category": "ARCH",
+    "name": "crawl depth"
+  },
+  {
+    "id": "TECH-ARCH-002",
+    "category": "ARCH",
+    "name": "important page accessibility"
+  },
+  {
+    "id": "TECH-ARCH-003",
+    "category": "ARCH",
+    "name": "orphan candidates"
+  },
+  {
+    "id": "TECH-ARCH-004",
+    "category": "ARCH",
+    "name": "URL structure"
+  },
+  {
+    "id": "TECH-ARCH-005",
+    "category": "ARCH",
+    "name": "pagination"
+  },
+  {
+    "id": "TECH-ARCH-006",
+    "category": "ARCH",
+    "name": "taxonomy and archive URLs"
+  },
+  {
+    "id": "TECH-ARCH-007",
+    "category": "ARCH",
+    "name": "topic architecture"
+  },
+  {
+    "id": "TECH-ARCH-008",
+    "category": "ARCH",
+    "name": "money page prioritization"
+  },
+  {
+    "id": "TECH-LINK-001",
+    "category": "LINK",
+    "name": "internal link graph"
+  },
+  {
+    "id": "TECH-LINK-002",
+    "category": "LINK",
+    "name": "inbound link counts"
+  },
+  {
+    "id": "TECH-LINK-003",
+    "category": "LINK",
+    "name": "outgoing links"
+  },
+  {
+    "id": "TECH-LINK-004",
+    "category": "LINK",
+    "name": "broken internal links"
+  },
+  {
+    "id": "TECH-LINK-005",
+    "category": "LINK",
+    "name": "redirected internal links"
+  },
+  {
+    "id": "TECH-LINK-006",
+    "category": "LINK",
+    "name": "anchor text"
+  },
+  {
+    "id": "TECH-LINK-007",
+    "category": "LINK",
+    "name": "links to money pages"
+  },
+  {
+    "id": "TECH-LINK-008",
+    "category": "LINK",
+    "name": "breadcrumb extraction"
+  },
+  {
+    "id": "TECH-LINK-009",
+    "category": "LINK",
+    "name": "BreadcrumbList comparison"
+  },
+  {
+    "id": "TECH-LINK-010",
+    "category": "LINK",
+    "name": "crawlable href"
+  },
+  {
+    "id": "TECH-ONPAGE-001",
+    "category": "ONPAGE",
+    "name": "title"
+  },
+  {
+    "id": "TECH-ONPAGE-002",
+    "category": "ONPAGE",
+    "name": "meta description"
+  },
+  {
+    "id": "TECH-ONPAGE-003",
+    "category": "ONPAGE",
+    "name": "H1"
+  },
+  {
+    "id": "TECH-ONPAGE-004",
+    "category": "ONPAGE",
+    "name": "heading hierarchy"
+  },
+  {
+    "id": "TECH-ONPAGE-005",
+    "category": "ONPAGE",
+    "name": "canonical and robots"
+  },
+  {
+    "id": "TECH-ONPAGE-006",
+    "category": "ONPAGE",
+    "name": "raw versus rendered HTML"
+  },
+  {
+    "id": "TECH-ONPAGE-007",
+    "category": "ONPAGE",
+    "name": "JS-dependent navigation"
+  },
+  {
+    "id": "TECH-ONPAGE-008",
+    "category": "ONPAGE",
+    "name": "document language"
+  },
+  {
+    "id": "TECH-ONPAGE-009",
+    "category": "ONPAGE",
+    "name": "encoding"
+  },
+  {
+    "id": "TECH-ONPAGE-010",
+    "category": "ONPAGE",
+    "name": "significant HTML issues"
+  },
+  {
+    "id": "TECH-CWV-001",
+    "category": "CWV",
+    "name": "LCP"
+  },
+  {
+    "id": "TECH-CWV-002",
+    "category": "CWV",
+    "name": "INP"
+  },
+  {
+    "id": "TECH-CWV-003",
+    "category": "CWV",
+    "name": "CLS"
+  },
+  {
+    "id": "TECH-CWV-004",
+    "category": "CWV",
+    "name": "device comparison"
+  },
+  {
+    "id": "TECH-CWV-005",
+    "category": "CWV",
+    "name": "TTFB"
+  },
+  {
+    "id": "TECH-CWV-006",
+    "category": "CWV",
+    "name": "render-blocking resources"
+  },
+  {
+    "id": "TECH-CWV-007",
+    "category": "CWV",
+    "name": "image optimization"
+  },
+  {
+    "id": "TECH-CWV-008",
+    "category": "CWV",
+    "name": "caching and compression"
+  },
+  {
+    "id": "TECH-CWV-009",
+    "category": "CWV",
+    "name": "LCP resource"
+  },
+  {
+    "id": "TECH-MOBILE-001",
+    "category": "MOBILE",
+    "name": "viewport"
+  },
+  {
+    "id": "TECH-MOBILE-002",
+    "category": "MOBILE",
+    "name": "responsive rendering"
+  },
+  {
+    "id": "TECH-MOBILE-003",
+    "category": "MOBILE",
+    "name": "content parity"
+  },
+  {
+    "id": "TECH-MOBILE-004",
+    "category": "MOBILE",
+    "name": "navigation usability"
+  },
+  {
+    "id": "TECH-MOBILE-005",
+    "category": "MOBILE",
+    "name": "interstitials"
+  },
+  {
+    "id": "TECH-MOBILE-006",
+    "category": "MOBILE",
+    "name": "image dimensions"
+  },
+  {
+    "id": "TECH-MOBILE-007",
+    "category": "MOBILE",
+    "name": "lazy loading"
+  },
+  {
+    "id": "TECH-MOBILE-008",
+    "category": "MOBILE",
+    "name": "mobile accessibility indicators"
+  },
+  {
+    "id": "TECH-SCHEMA-001",
+    "category": "SCHEMA",
+    "name": "JSON-LD extraction"
+  },
+  {
+    "id": "TECH-SCHEMA-002",
+    "category": "SCHEMA",
+    "name": "JSON validity"
+  },
+  {
+    "id": "TECH-SCHEMA-003",
+    "category": "SCHEMA",
+    "name": "schema type inventory"
+  },
+  {
+    "id": "TECH-SCHEMA-004",
+    "category": "SCHEMA",
+    "name": "duplicate declarations"
+  },
+  {
+    "id": "TECH-SCHEMA-005",
+    "category": "SCHEMA",
+    "name": "breadcrumb validation"
+  },
+  {
+    "id": "TECH-SCHEMA-006",
+    "category": "SCHEMA",
+    "name": "product/article field diagnostics"
+  },
+  {
+    "id": "TECH-SCHEMA-007",
+    "category": "SCHEMA",
+    "name": "visible-content consistency"
+  },
+  {
+    "id": "TECH-SCHEMA-008",
+    "category": "SCHEMA",
+    "name": "external validation"
+  },
+  {
+    "id": "TECH-SERVER-001",
+    "category": "SERVER",
+    "name": "response latency"
+  },
+  {
+    "id": "TECH-SERVER-002",
+    "category": "SERVER",
+    "name": "repeated 5xx/429"
+  },
+  {
+    "id": "TECH-SERVER-003",
+    "category": "SERVER",
+    "name": "server log import"
+  },
+  {
+    "id": "TECH-SERVER-004",
+    "category": "SERVER",
+    "name": "Googlebot log verification"
+  },
+  {
+    "id": "TECH-SERVER-005",
+    "category": "SERVER",
+    "name": "CMS detection"
+  },
+  {
+    "id": "TECH-SERVER-006",
+    "category": "SERVER",
+    "name": "cache headers"
+  },
+  {
+    "id": "TECH-SERVER-007",
+    "category": "SERVER",
+    "name": "PHP/server diagnostics"
+  },
+  {
+    "id": "TECH-SERVER-008",
+    "category": "SERVER",
+    "name": "CMS/plugin conflicts"
+  },
+  {
+    "id": "TECH-SERVER-009",
+    "category": "SERVER",
+    "name": "backup/update status"
+  },
+  {
+    "id": "TECH-SEC-001",
+    "category": "SEC",
+    "name": "HTTPS availability"
+  },
+  {
+    "id": "TECH-SEC-002",
+    "category": "SEC",
+    "name": "certificate diagnostics"
+  },
+  {
+    "id": "TECH-SEC-003",
+    "category": "SEC",
+    "name": "mixed content candidates"
+  },
+  {
+    "id": "TECH-SEC-004",
+    "category": "SEC",
+    "name": "staging exposure"
+  },
+  {
+    "id": "TECH-SEC-005",
+    "category": "SEC",
+    "name": "unexpected metadata changes"
+  },
+  {
+    "id": "TECH-SEC-006",
+    "category": "SEC",
+    "name": "redirect mapping QA"
+  },
+  {
+    "id": "TECH-SEC-007",
+    "category": "SEC",
+    "name": "suspicious content candidates"
+  },
+  {
+    "id": "TECH-SEC-008",
+    "category": "SEC",
+    "name": "manual security review"
+  },
+  {
+    "id": "TECH-SEC-009",
+    "category": "SEC",
+    "name": "backup/rollback readiness"
+  },
+  {
+    "id": "TECH-LOCAL-001",
+    "category": "LOCAL",
+    "name": "organization information extraction"
+  },
+  {
+    "id": "TECH-LOCAL-002",
+    "category": "LOCAL",
+    "name": "consistency checks"
+  },
+  {
+    "id": "TECH-LOCAL-003",
+    "category": "LOCAL",
+    "name": "LocalBusiness data"
+  },
+  {
+    "id": "TECH-LOCAL-004",
+    "category": "LOCAL",
+    "name": "location landing pages"
+  },
+  {
+    "id": "TECH-LOCAL-005",
+    "category": "LOCAL",
+    "name": "crawlable organization details"
+  },
+  {
+    "id": "TECH-LOCAL-006",
+    "category": "LOCAL",
+    "name": "content accessibility"
+  },
+  {
+    "id": "TECH-LOCAL-007",
+    "category": "LOCAL",
+    "name": "semantic data consistency"
+  },
+  {
+    "id": "TECH-LOCAL-008",
+    "category": "LOCAL",
+    "name": "AI search readiness"
+  },
+  {
+    "id": "TECH-MONITOR-001",
+    "category": "MONITOR",
+    "name": "audit history"
+  },
+  {
+    "id": "TECH-MONITOR-002",
+    "category": "MONITOR",
+    "name": "issue comparison"
+  },
+  {
+    "id": "TECH-MONITOR-003",
+    "category": "MONITOR",
+    "name": "new issues"
+  },
+  {
+    "id": "TECH-MONITOR-004",
+    "category": "MONITOR",
+    "name": "resolved issues"
+  },
+  {
+    "id": "TECH-MONITOR-005",
+    "category": "MONITOR",
+    "name": "recurring issues"
+  },
+  {
+    "id": "TECH-MONITOR-006",
+    "category": "MONITOR",
+    "name": "GSC correlation"
+  },
+  {
+    "id": "TECH-MONITOR-007",
+    "category": "MONITOR",
+    "name": "indexing history"
+  },
+  {
+    "id": "TECH-MONITOR-008",
+    "category": "MONITOR",
+    "name": "technical change QA"
+  },
+  {
+    "id": "TECH-MONITOR-009",
+    "category": "MONITOR",
+    "name": "action backlog"
+  },
+  {
+    "id": "TECH-MONITOR-010",
+    "category": "MONITOR",
+    "name": "manual GSC checks"
+  },
+  {
+    "id": "TECH-MONITOR-011",
+    "category": "MONITOR",
+    "name": "alerts"
+  }
+]

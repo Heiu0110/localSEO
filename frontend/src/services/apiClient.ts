@@ -4,7 +4,7 @@ export class ApiError extends Error {
 
 const base = import.meta.env.VITE_API_BASE_URL || '/api';
 let csrf: string | null = null;
-export async function mutate<T>(path: string, body?: unknown): Promise<T> {
+export async function mutate<T>(path: string, body?: unknown, method: 'POST' | 'PATCH' = 'POST'): Promise<T> {
   if (!csrf) {
     const session = await api<{ csrf_token: string }>('/session');
     csrf = session.csrf_token;
@@ -12,7 +12,7 @@ export async function mutate<T>(path: string, body?: unknown): Promise<T> {
   const form = body instanceof FormData;
   let response: Response;
   try {
-    response = await fetch(`${base}${path}`, { method: 'POST', headers: { 'X-CSRF-Token': csrf, ...(form ? {} : { 'Content-Type': 'application/json' }) }, body: form ? body : JSON.stringify(body ?? {}) });
+    response = await fetch(`${base}${path}`, { method, headers: { 'X-CSRF-Token': csrf, ...(form ? {} : { 'Content-Type': 'application/json' }) }, body: form ? body : JSON.stringify(body ?? {}) });
   } catch {
     throw new ApiError('Không thể kết nối backend cục bộ. Kiểm tra tiến trình backend rồi thử lại.', 0);
   }

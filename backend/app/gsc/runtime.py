@@ -5,6 +5,7 @@ from app.gsc.client import FixtureGSCClient, GoogleGSCClient
 from app.gsc.oauth import OAuthService
 from app.gsc.sync import SyncManager
 from app.gsc.vault import CredentialVault
+from app.technical.jobs import AuditManager
 
 
 class Runtime:
@@ -13,6 +14,7 @@ class Runtime:
         self.db.migrate()
         self.oauth = OAuthService(self.db, vault or CredentialVault())
         self.sync = SyncManager(self.db, client_factory or self.client)
+        self.technical = AuditManager(self.db)
 
     def client(self, prop, on_retry=None):
         return FixtureGSCClient() if prop.source_type == "fixture" else GoogleGSCClient(self.oauth, prop.connection_id, on_retry)

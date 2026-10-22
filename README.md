@@ -1,6 +1,21 @@
-# SEO Local Workspace · v0.2
+# SEO Local Workspace · v0.3 Core
 
-Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Giữ nguyên hai website demo qua Mock Provider; properties Google dùng SQLite Analytics Provider riêng sau khi được cấp quyền. Có bộ thử nghiệm SQLite để kiểm tra toàn luồng mà không cần Google. Không có login ứng dụng, Docker hoặc cloud deployment. Dữ liệu Google thật chỉ xuất hiện sau khi chính bạn kết nối và đồng bộ; không tự truy cập các domain demo.
+Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
+
+## v0.3 Core: Technical SEO
+
+Vào **Technical SEO → Dự án mới**, nhập website, chọn giới hạn/tốc độ/scope rồi bắt đầu audit. Không cần Google OAuth. Có robots/sitemap, HTTP/redirect diagnostics, metadata/canonical/noindex, observed link graph/depth, Issue Explorer với evidence/confidence, URL Inventory, backlog có ghi chú và xác minh, lịch sử/so sánh, CSV/JSON/printable HTML. Dữ liệu cũ vẫn đọc offline. Dùng **Tạo bộ thử nghiệm Technical SEO** để kiểm tra cùng engine với HTTP fixtures được gắn nhãn rõ.
+
+Crawler chặn SSRF/private IP, pin DNS tại socket, kiểm tra scope/robots tại redirect, giới hạn request/body/discovery và không thực hiện hành động sửa website. Local indexability không phải Google index; không có SEO health score. Hiện có 39 rule sinh finding trong 63 capability automated (gồm thu thập tín hiệu/workflow); catalog toàn master 138 checks thể hiện rõ phần chưa khả dụng. URL Inspection/rendering/CWV/logs chưa triển khai trong Core.
+
+Nâng cấp: dừng server, backup bằng `python scripts/backup_database.py`, lấy source mới rồi chạy lại hai `.bat`. Migration `002_technical_audits` bổ sung bảng, không xóa dữ liệu GSC. Task bị gián đoạn giữ checkpoint; chạy lại tạo snapshot mới.
+
+- [Hướng dẫn audit và CSV](docs/TECHNICAL_AUDIT_USER_GUIDE.md)
+- [Kiến trúc module](docs/TECHNICAL_SEO_ARCHITECTURE.md)
+- [Crawler, scope, robots và limits](docs/TECHNICAL_CRAWLER.md)
+- [Rule catalog và cách đọc bằng chứng](docs/TECHNICAL_RULES.md)
+- [Data model, history và retention](docs/TECHNICAL_DATA_MODEL.md)
+- [Giới hạn và tích hợp chưa thực hiện](docs/TECHNICAL_LIMITATIONS.md)
 
 
 ## v0.2: Google Search Console và SQLite
@@ -91,7 +106,7 @@ npm run dev
 - Data Sources ghi rõ trạng thái thực tế. Sidebar thu gọn lưu ở local storage.
 - Loading skeleton, empty state, error/retry, keyboard navigation, tooltip và panel có focus trap/Escape.
 - Responsive: bảng cuộn riêng khi cần, không làm trang tràn ngang.
-- Technical SEO, Keyword Tracking, Topical Map, Internal Links và SEO Reports vẫn là placeholder. Settings và Phân tích GSC đã được triển khai ở v0.2.
+- Technical SEO đã có module audit v0.3 Core. Keyword Tracking, Topical Map, Internal Links độc lập và SEO Reports vẫn là placeholder; link graph trong Technical SEO hoạt động riêng. Settings và Phân tích GSC giữ luồng v0.2.
 
 ## Kiểm thử
 
@@ -130,6 +145,7 @@ backend/
   app/models.py                 Pydantic response contracts
   app/providers/                MockProvider + SQLiteAnalyticsProvider
   app/gsc/                      Desktop OAuth, OS vault, Google/fixture clients, sync queue
+  app/technical/                Safe crawler, extraction, graph, rules, persistent audits/reports
   app/db/                       SQLite engine và SQLAlchemy models
   migrations/                   Alembic schema revisions
   app/services/                 Aggregation và reporting
@@ -142,6 +158,7 @@ frontend/
   src/features/dashboard/       Report orchestration + CSV utility
   src/features/settings/        OAuth, property membership và đồng bộ
   src/features/gsc/             GSC Analytics, coverage và server reports
+  src/features/technical/       Audit form, explorers, history, backlog và evidence panels
   src/services/                 Typed REST client + TanStack Query options
   src/types/                    TypeScript response contracts
   src/styles/                   Tailwind CSS 4 + theme/component styles
@@ -157,8 +174,8 @@ React 19, React Router 7 (declarative data router), Vite 7, TypeScript 5.9, Tail
 
 `package-lock.json` khóa frontend; `backend/requirements.txt` khóa phiên bản Python runtime và test dependencies đã kiểm chứng. FastAPI 0.156.4, Pydantic 2.14.1 và Uvicorn 0.54.0 không thay đổi stack yêu cầu. Các thư viện được kiểm chứng trên Linux/Python 3.12/Node 24; batch launchers Windows được cung cấp nhưng **chưa được chạy trên máy Windows thật**.
 
-Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem–be–nâu đồng–espresso theo ảnh tham chiếu. Không triển khai GA4, crawling, backlinks hoặc AI. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
+Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem–be–nâu đồng–espresso theo ảnh tham chiếu. Có crawler chỉ đọc v0.3 Core; chưa triển khai GA4, backlinks hoặc AI. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
 
 ## Bước tiếp theo
 
-Thực hiện live OAuth và một lần sync thật trên Windows theo hướng dẫn Google Cloud, đối chiếu số liệu site-level trong cùng kỳ/search type với GSC và kiểm tra reconnect/revoke. Chỉ mở rộng phân tích sau khi luồng này được xác minh.
+Chạy Quick Audit có giới hạn trên một website bạn quản lý, kiểm tra bằng chứng và xác minh một thay đổi bằng snapshot thứ hai. Khi Core được xác nhận với dữ liệu thực, ưu tiên URL Inspection cho một số URL quan trọng; vẫn giữ Google index evidence riêng với local crawl. Live OAuth/sync cần xác minh trên Windows nếu chưa thực hiện.

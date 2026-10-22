@@ -15,14 +15,18 @@ from app.services.errors import ResourceNotFoundError
 from app.api.gsc_routes import router as gsc_router, CSRF_TOKEN
 from app.gsc.runtime import get_runtime
 from app.gsc.errors import GSCError
+from app.api.technical_routes import router as technical_router
+from app.technical.urls import CrawlError
 
 
 @asynccontextmanager
 async def lifespan(app):
     runtime = get_runtime()
     runtime.sync.recover()
+    runtime.technical.recover()
     yield
     runtime.sync.close()
+    runtime.technical.close()
     get_runtime.cache_clear()
 
 
@@ -37,10 +41,10 @@ class RedactOAuthAccessLog(logging.Filter):
 
 logging.getLogger("uvicorn.access").addFilter(RedactOAuthAccessLog())
 
-app = FastAPI(title="SEO Local Workspace", version="0.2.0", lifespan=lifespan, docs_url=None, redoc_url=None,
-              description="Local SQLite Search Console analytics and an isolated mock workspace.")
+app = FastAPI(title="SEO Local Workspace", version="0.3.0", lifespan=lifespan, docs_url=None, redoc_url=None,
+              description="Local SQLite Search Console analytics, read-only Technical SEO audits and isolated demo providers.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
-                   allow_methods=["GET", "POST"], allow_headers=["Accept", "Content-Type", "X-CSRF-Token"])
+                   allow_methods=["GET", "POST", "PATCH"], allow_headers=["Accept", "Content-Type", "X-CSRF-Token"])
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
 app.mount("/docs-assets", StaticFiles(directory=Path(__file__).parent / "static" / "swagger"), name="docs-assets")
 
@@ -83,6 +87,12 @@ async def not_found(request: Request, exc: ResourceNotFoundError):
 
 app.include_router(router)
 app.include_router(gsc_router)
+app.include_router(technical_router)
+
+
+@app.exception_handler(CrawlError)
+async def crawl_error(request: Request, exc: CrawlError):
+    return JSONResponse(status_code=422, content={"code": exc.code, "detail": exc.message})
 
 
 @app.exception_handler(GSCError)

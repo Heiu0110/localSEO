@@ -91,7 +91,7 @@ def sources(site_id: str | None = None):
     result = [
         DataSource(id="gsc", name="Google Search Console", status="Mock Mode", detail="Deterministic demo data · no Google connection"),
         DataSource(id="ga4", name="Google Analytics 4", status="Not Connected", detail="Sessions and engagement · future integration"),
-        DataSource(id="technical", name="Technical SEO", status="Planned", detail="Crawl and indexability · future release"),
+        DataSource(id="technical", name="Technical SEO", status="Not Audited", detail="Technical SEO Core đã có; chưa lưu audit cho website đang chọn."),
         DataSource(id="backlinks", name="Backlink Provider", status="Not Configured", detail="External provider · future integration"),
         DataSource(id="ai", name="AI SEO Analyst", status="Planned", detail="Evidence-based insights · future release"),
     ]
@@ -121,4 +121,10 @@ def sources(site_id: str | None = None):
             latest = provider.period(site_id, 7).end
             state = "Stale" if latest < bounds()[1] - timedelta(days=7) else "Up to Date"
         result[0] = DataSource(id="gsc", name="Google Search Console", status=state, detail="SQLite cục bộ · " + prop.site_url)
+    if site_id:
+        from app.api.technical_routes import dashboard_summary
+        summary = dashboard_summary(get_runtime(), site_id)
+        if summary:
+            technical_state = "Auditing" if summary["status"] in ("queued", "running") else "Audited" if summary["status"] == "completed" else "Partial"
+            result[2] = DataSource(id="technical", name="Technical SEO", status=technical_state, detail="Snapshot HTTP/HTML chỉ đọc · " + summary["started_at"])
     return result

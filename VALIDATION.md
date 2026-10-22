@@ -1,4 +1,38 @@
-# Validation evidence · v0.2
+# Validation evidence · v0.3 Core
+
+## v0.3 — kiểm tra ngày 22/10/2026
+
+Baseline trước thay đổi tại `5188164`: **45 backend tests, 26 Playwright tests và production build đều passed**. Đã tạo backup SQLite trước migration. Thay đổi bổ sung module Technical SEO, giữ MockProvider và DashboardService không đổi mã nguồn.
+
+| Kiểm tra | Kết quả thực tế |
+|---|---|
+| Backend `.venv/bin/python -m pytest -q` | **92 passed**, không failed/skipped/xfail |
+| Backend `.venv/bin/python -m pip check` | No broken requirements found |
+| Frontend `npm run build` (TypeScript + Vite) | **Passed** |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e` | **36 passed** trên production preview, không failed/skipped |
+| Technical SEO browser suite riêng | **10 passed**; workflow chính dùng crawler/parser/DB thật với HTTP fixture ngoại tuyến |
+| Startup helpers và Alembic | Thành công; health `hybrid / 0.3.0`, schema `002_technical_audits` |
+| Frontend bootstrap sau version lock change | Cài từ cache 174 packages, lần sau bỏ qua install |
+| SQLite integrity / foreign keys | integrity_check = ok; foreign_key_check không lỗi |
+| GSC preservation | 518 fact rows trước/sau; hash toàn bộ khóa và metric values khớp, không tính fetched_at được sync lại có chủ ý |
+| Mock report | 28-day clicks xuong-may vẫn **44.499** |
+| Website production thật, Windows native, Google credentials thật | **Not executed**; không dùng các kiểm thử này để tuyên bố đã xác minh môi trường máy cá nhân |
+
+Backend thêm 47 kiểm thử (kể cả parametrized cases): normalization/trailing slash/query/scope; credentials/private/metadata/action URL rejection; DNS pinning/mixed public-private/rebinding và IPv6 transition rejection; redirect chain/loop/external/robots guard; timeout/rate/cancel/Retry-After/host stop; gzip input/output limits, slow trickle deadline; robots group precedence/wildcards/unknown; extraction/canonical headers/robots/headings/breadcrumb; XML/index/entities/gzip cap/lastmod; indexability states; real graph depth/orphan candidate; persisted history, new/persistent/resolved/reopened findings; incomplete/robots-blocked dependencies không bị xác nhận resolved; checkpoint recovery/cancel/duplicate jobs; SQL paging/sort/search validation; import preview/commit; export formula/XSS defenses; retention; GSC page exposure không cần OAuth; migration 001→002 giữ dữ liệu GSC; Dashboard summary matching và unknown graph values trước finalization.
+
+36 browser tests gồm 18 Dashboard, 8 GSC và 10 Technical SEO. Technical tests thực hiện tạo fixture project, chạy worker, xem tiến độ, URL detail/sort/search/filter, issue evidence, backlog notes/status, recrawl, comparison, CSV/JSON/HTML exports, sitemap/link tables, CSV preview/commit, custom limits/partial comparison, unsafe URL rejection và responsive 1366/768/390 px. **Một test nút hủy UI dùng mock running/cancelled job** để tránh fixture hoàn tất quá nhanh; cancellation backend thật được kiểm tra riêng. URL Inspection và Google OAuth error states dùng giả lập như v0.2; không tiêu tốn quota Google.
+
+Lượt regression đầu phát hiện race ở GSC: UI có thể còn thẻ completed của job cũ khi start job mới. Đã sửa pending state, cập nhật jobs cache ngay bằng response và hủy stale read; test bám đúng job ID. Sau sửa, toàn bộ 36 tests trên production passed; không bỏ assertions hoặc skip test để đạt kết quả.
+
+Đã chụp/xem giao diện nội bộ: `/tmp/seo-v03-technical-overview.png`, `/tmp/seo-v03-technical-issues.png`, `/tmp/seo-v03-technical-evidence.png`, `/tmp/seo-v03-technical-mobile.png`, `/tmp/seo-v03-dashboard.png`. Desktop 1440×1080 và mobile 390×844, density 1; kiểm tra overflow và browser pageerrors. Không tạo PDF/presentation/UI review artifact riêng. Theme kem–be–nâu đồng và Dashboard giữ nguyên bố cục; chỉ hiện thẻ technical summary khi có audit live khớp website.
+
+Môi trường Linux Python 3.12 / Node 24 / Chromium 154 và dependency locks hiện có. Có cảnh báo deprecation Starlette TestClient về httpx và cảnh báo màu terminal NO_COLOR/FORCE_COLOR; không phải failed assertions. Không tắt TLS, package integrity, SSRF hoặc robots guards.
+
+Phạm vi giao: **v0.3 Core**, 39 rule sinh finding trong 63 automated capabilities (gồm signals/workflows), catalog 138 checks có capability và trạng thái dữ liệu riêng. Không tuyên bố hoàn tất v0.3.1–v0.3.3. Xem sáu tài liệu Technical SEO trong docs/ cho kiến trúc, crawler, rule catalog, data model, hướng dẫn và giới hạn.
+
+## Lịch sử v0.2
+
+Các mục bên dưới ghi nhận những lượt xác minh trước khi triển khai Technical SEO.
 
 Chạy trong workspace Linux ngày **21/10/2026**, trên repository hiện có. Trước khi thay đổi, baseline v0.1 tại `f7a0a25` đạt **28 backend tests, 18 browser tests và production build**. Mock Provider và DashboardService v0.1 được giữ nguyên mã nguồn. Dashboard tiếp tục dùng giao diện tiếng Việt và bảng màu đã thống nhất.
 
