@@ -20,9 +20,36 @@ Xem [hướng dẫn Technical SEO](TECHNICAL_AUDIT_USER_GUIDE.md) và [giới h�
 
 Backend in `Application startup complete` và địa chỉ `127.0.0.1:8000` nghĩa là đã chạy xong; cửa sổ đó tiếp tục mở để phục vụ API.
 
-Frontend lần đầu cần tải/cài dependencies. Script hiện in bước đang chạy ngay từ đầu và nhắc tiến độ mỗi 15 giây trong lúc npm cài. Khi lockfile không đổi và lần cài trước hoàn tất, các lần sau bỏ qua npm install và gọi Vite trực tiếp. Giữ nguyên `frontend/node_modules` và `.cache/npm` giữa các lần chạy; tải ZIP/thư mục mới sẽ không có bản cài cũ. npm ưu tiên cache và không chờ audit trong bước khởi động; vẫn kiểm tra package integrity/TLS như bình thường. Có thể chạy `npm audit` riêng trong `frontend/`.
+Ảnh log có `added … packages in 9m` nhưng `VITE ready in 263ms` nghĩa là chậm ở npm tải/cài dependency, không phải Dashboard hoặc Vite. Thời gian mạng/ổ đĩa trên máy thật chưa thể suy ra chỉ từ ảnh.
 
-Nếu vẫn chờ lâu, xem dòng cuối trong cửa sổ frontend. Với lỗi mạng npm, kiểm tra VPN/proxy/firewall và kết nối `https://registry.npmjs.org`; không tắt TLS. Có thể chạy `npm ping` từ thư mục `frontend` để chẩn đoán kết nối. Nếu thư viện đã sẵn sàng nhưng Vite chưa hiện Ready, chạy `node --version` và `npm --version`, ghi lại log để xác định bước chậm. Không xóa `node_modules` để thử tăng tốc vì sẽ buộc cài lại toàn bộ.
+Launcher hiện đối chiếu dependency thực tế với lockfile và phiên bản đã cài. Đổi version app, định dạng JSON hoặc thiếu stamp từ launcher cũ không tự buộc cài lại toàn bộ. Bản cài hợp lệ từ `npm ci` cũng được dùng lại sau một kiểm tra Vite/esbuild/plugin ngoại tuyến. Giữ nguyên `frontend/node_modules`; đừng giải nén vào thư mục mới mỗi lần cập nhật nếu muốn giữ bản cài.
+
+Khi thật sự cần npm, launcher dùng cache chung của máy/cấu hình npm; nếu dự án đã có `.cache/npm` từ bản cũ thì giữ cache ấm đó. Log `npm http` cho biết đang tải gói nào hoặc cache hit. Request mạng mặc định giới hạn 60 giây, retry một lần, toàn lượt cài mặc định 180 giây. Quá hạn sẽ dừng cả tiến trình con và không đánh dấu cài thành công. Không tắt TLS, bỏ integrity hoặc tự cấp quyền install scripts.
+
+Sau khi bản cài vừa hoàn tất như ảnh, cập nhật code rồi mở lại cùng thư mục:
+
+```powershell
+git pull
+.\run-frontend.bat
+```
+
+Bạn sẽ thấy `Dependency không đổi… bỏ qua npm ci` hoặc `Tìm thấy bản cài khớp lockfile… không tải lại npm`. Lần chuyển sang launcher mới chỉ thêm kiểm tra native một lần. Cài mới từ đầu vẫn cần Internet hoặc cache đầy đủ và phụ thuộc tốc độ mạng/ổ đĩa.
+
+Nếu mạng chậm nhưng log HTTP vẫn tiến triển, cho phép tối đa 10 phút **chỉ cho lần cài đó** (request mạng tối đa 120 giây):
+
+```powershell
+.\run-frontend.bat --install-timeout=600
+```
+
+Dừng cửa sổ frontend đang chạy trước. Chỉ khi bản cài bị hỏng hoặc kiểm tra native báo thiếu file, dùng cài lại có chủ ý (npm ci sẽ thay node_modules, giữ cache):
+
+```powershell
+.\run-frontend.bat --repair --install-timeout=600
+```
+
+Không mở hai cửa sổ cùng cài dependency: launcher chặn lượt thứ hai và tự thu hồi khóa của tiến trình đã dừng. Lỗi mạng cần xem dòng `npm http`/`npm ERR` và kiểm tra VPN/proxy/firewall, không tắt TLS. Có thể chẩn đoán riêng với `npm ping --fetch-retries=0 --fetch-timeout=10000` trong `frontend/`. Nếu npm cảnh báo install script của esbuild nhưng Vite chạy được thì không cần tự động approve; launcher mới kiểm tra công cụ native trước khi ghi nhận bản cài dùng được.
+
+Kiểm thử launcher: `node --test scripts/tests/frontend.test.mjs`. Tests sử dụng thư mục tạm, không xóa bản cài hoặc dữ liệu thật. Native Windows vẫn cần kiểm chứng trên máy cá nhân; tests hiện xác minh command/arguments Windows và đường dẫn chứa khoảng trắng, còn đo thời gian thực tế được thực hiện trên Linux.
 
 Sau khi thấy `Local: http://127.0.0.1:5173/`, mở địa chỉ đó bằng trình duyệt. Terminal không tự đóng khi server chạy bình thường. Muốn dừng, nhấn Ctrl+C.
 

@@ -1,5 +1,27 @@
 # Validation evidence · v0.4 Core
 
+## Sửa launcher frontend — 22/10/2026
+
+Ảnh Windows người dùng cho thấy npm cài171gói mất9phút, chuẩn bị551,4giây, trong khi Vite ready263ms. Điều này xác định bước chậm là cài dependency; ảnh không đủ kết luận riêng tốc độ mạng hay antivirus/ổ đĩa.
+
+Đã tìm thấy lỗi tái cài không cần thiết: v0.3→v0.4 chỉ đổi app version trong lockfile nhưng SHA toàn file thay đổi, launcher cũ vẫn gọi npm ci. Chữ ký dependency mới xác nhận hai release này cùng dependency. Bản cài cũ/`npm ci` trực tiếp được đối chiếu hidden lock, file package/version và kiểm tra native một lần trước khi dùng lại. Không thay lockfile hoặc thêm thư viện.
+
+| Kiểm tra thực thi cho bản sửa launcher | Kết quả |
+|---|---|
+| `node --test scripts/tests/frontend.test.mjs` | **17 passed**, không failed/skipped trên Linux |
+| Dùng lại node_modules hiện có từ launcher cũ | Kiểm tra native ngoại tuyến thành công trong **0,3s**, không gọi npm ci |
+| Registry giả không truy cập được: `npm_config_registry=http://127.0.0.1:9 node scripts/frontend.mjs` | **Passed**, chuẩn bị **0,0s**, bỏ npm hoàn toàn |
+| Cài sạch trong thư mục tạm có khoảng trắng, cache đầy đủ, npm offline=true | npm ci thực cài174packages + native probe **3.899ms**; chạy tiếp dùng lại bản cài |
+| Launcher thực `node scripts/frontend.mjs --run` | Chuẩn bị **0,0s**, Vite ready **162ms**, HTTP5173 hoạt động |
+| Process timeout và Ctrl+C | Dừng process thực, trả124/130; không đánh dấu cài thành công, giải phóng install lock |
+| Windows process termination | Test kiểm tra taskkill.exe/PID/T/F, shell=false; chưa chạy native Windows |
+| `npm --prefix frontend run build` | **Passed** TypeScript + Vite, artifacts UI không đổi |
+| Browser smoke sau khởi động bằng launcher mới | **2 passed**: Dashboard API→UI 28ngày và Keyword Tracking 1366px |
+
+Tests còn kiểm tra phiên bản app/JSON formatting không gây npm ci, thiếu dependency bắt buộc/sai version không bị bỏ qua, lifecycle/override/Node ABI, sửa bản cài có chủ ý, khóa concurrent và phục hồi khóa cũ. HTTP logs được bật; mặc định request60giây/retry1, toàn lượt180giây; `--install-timeout=600` cho toàn lượt600giây/request120giây. Giữ TLS/integrity và chính sách install scripts của npm.
+
+Số đo là môi trường Linux/Python/Node cloud hiện tại, **không cam kết thời gian tải lần đầu trên Windows**. Cài mới/cache thiếu vẫn phụ thuộc mạng/ổ đĩa. Không thay code giao diện/backend hoặc dữ liệu SQLite; không chạy lại toàn bộ 130 backend và 46 browser vì không có thay đổi liên quan.
+
 ## v0.4 — kiểm tra ngày 22/10/2026
 
 Baseline trước thay đổi tại `6bd141b`: **92 backend tests và 36 Playwright tests passed**. Đã sao lưu SQLite trước migration003. Không đổi mã nguồn MockProvider/DashboardService hoặc cơ chế OAuth/token.

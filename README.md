@@ -58,7 +58,7 @@ SQLite mặc định ở `backend/data/seo_workspace.db`, Git ignore. Migrations
 
 ## Chạy trên Windows 10/11
 
-Yêu cầu **Python 3.11+** (bật “Add Python to PATH”) và **Node.js 24 LTS** kèm npm (tối thiểu Node 22.12). Mở terminal mới sau khi cài. Cần Internet cho lần cài dependencies đầu tiên; sau đó ứng dụng chạy offline nếu lockfile không thay đổi.
+Yêu cầu **Python 3.11+** (bật “Add Python to PATH”) và **Node.js 24 LTS** kèm npm (tối thiểu Node 22.12). Mở terminal mới sau khi cài. Cần Internet cho lần cài dependencies đầu tiên; sau đó ứng dụng chạy offline khi dependency đã cài hợp lệ.
 
 1. Mở thư mục project trong VS Code.
 2. Chạy `run-backend.bat` bằng double-click hoặc terminal.
@@ -67,7 +67,7 @@ Yêu cầu **Python 3.11+** (bật “Add Python to PATH”) và **Node.js 24 LT
 
 Backend: `http://127.0.0.1:8000` (không có trang ở `/`; xem `/api/health`). Swagger API docs: `http://127.0.0.1:8000/docs`. Swagger UI được lưu sẵn trong project để tài liệu cũng hoạt động offline, không cần CDN.
 
-Hai script tự kiểm tra runtime, tạo `backend/.venv`, cài dependencies đã khóa và chạy server. Cài lại khi checksum của lockfile/requirements thay đổi; lần chạy tiếp theo không gọi package registry. Cache cài đặt nằm trong `.cache/`, không cần quyền administrator. Hai server mặc định chỉ bind **127.0.0.1**. Không cần tạo `.env`; Vite proxy `/api` sang backend. `.env.example` chỉ dành cho tùy chọn override API base URL.
+Hai script tự kiểm tra runtime, tạo `backend/.venv`, cài dependencies đã khóa và chạy server. Backend cài lại khi checksum requirements đổi. Frontend đối chiếu dependency, dùng lại bản cài đúng ngay cả khi chỉ đổi version app/định dạng lockfile; không gọi registry khi thư viện đã đủ. Cache dùng lại của npm hoặc `.cache/npm` từ bản cũ, không cần quyền administrator. Khi cần cài mới, launcher hiện log tải gói và giới hạn mặc định 180 giây; xem [chẩn đoán khởi động frontend](docs/TROUBLESHOOTING.md#frontend-khởi-động-lâu). Hai server mặc định chỉ bind **127.0.0.1**. Không cần tạo `.env`; Vite proxy `/api` sang backend. `.env.example` chỉ dành cho tùy chọn override API base URL.
 
 **Dừng ứng dụng:** nhấn `Ctrl+C` ở cả hai cửa sổ, xác nhận `Y` nếu Windows hỏi dừng batch job. Không copy `node_modules` hoặc `.venv` giữa Windows và Linux; để script cài lại trên hệ điều hành tương ứng.
 
