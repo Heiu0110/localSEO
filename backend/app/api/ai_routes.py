@@ -174,7 +174,11 @@ def create_conversation(data: ConversationCreate, runtime: Runtime):
             project_id=data.project_id,
             title=redact(data.title),
             provider=data.provider,
-            model=cfg.model if data.provider == "openai" else "deterministic-report-v1",
+            model=(
+                cfg.model
+                if data.provider == "openai"
+                else "" if data.provider == "chatgpt" else "deterministic-report-v1"
+            ),
             saved=False,
             created_at=now(),
             updated_at=now(),

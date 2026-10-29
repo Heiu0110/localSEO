@@ -30,6 +30,7 @@ import type {
 import { AgentMessage } from "./AgentChat";
 import { ContextDrawer, EvidenceDrawer } from "./EvidenceDrawer";
 import { AISettingsPanel, UsageSummary } from "./AISettingsPanel";
+import { chatGPTQuery } from "./ChatGPTConnectionPanel";
 import { money, stamp } from "./shared";
 const suggestions = [
   "Phân tích hiệu suất SEO 28 ngày gần nhất.",
@@ -54,7 +55,9 @@ export function AIWorkspacePage() {
   const [historyPage, setHistoryPage] = useState(1);
   const [messagePage, setMessagePage] = useState(1);
   const [question, setQuestion] = useState("");
-  const [mode, setMode] = useState<"local_report" | "openai">("local_report");
+  const [mode, setMode] = useState<"local_report" | "openai" | "chatgpt">(
+    "local_report",
+  );
   const [days, setDays] = useState(28);
   const [end, setEnd] = useState("");
   const [consent, setConsent] = useState(false);
@@ -95,6 +98,7 @@ export function AIWorkspacePage() {
     ),
   );
   const provider = useQuery(aiQuery<AIProviderState>("/settings"));
+  const chatgpt = useQuery(chatGPTQuery());
   function update(values: Record<string, string>) {
     const next = new URLSearchParams(latest.current);
     for (const [k, v] of Object.entries(values))
@@ -195,6 +199,8 @@ export function AIWorkspacePage() {
       provider: mode,
       acknowledge_external_processing: consent,
       approved_model: estimate?.model || null,
+      approved_connection_id:
+        mode === "chatgpt" ? estimate?.connection_id || null : null,
       approved_max_estimate_usd: estimate?.turn_upper_estimate_usd ?? null,
       request_key: String(crypto.randomUUID()),
     };
@@ -634,6 +640,9 @@ export function AIWorkspacePage() {
                     <option value="local_report">
                       Báo cáo ngoại tuyến · không gọi AI
                     </option>
+                    <option value="chatgpt">
+                      ChatGPT · Plan Usage, không fallback trả phí
+                    </option>
                     <option value="openai">
                       OpenAI · gửi dữ liệu có xác nhận
                     </option>
@@ -695,6 +704,49 @@ export function AIWorkspacePage() {
                   }
                 }}
               />
+              {mode === "chatgpt" && (
+                <div className="ai-cloud-consent">
+                  <p>
+                    ChatGPT Plan Usage ·{" "}
+                    {chatgpt.data?.account?.name ||
+                      chatgpt.data?.account?.email ||
+                      "Chưa kết nối"}{" "}
+                    · Model: {chatgpt.data?.selected_model || "Chưa chọn"}. Cấu
+                    hình trong AI Settings. Hết hạn mức sẽ dừng, không dùng API
+                    Key.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={busy || running || !question.trim()}
+                    onClick={() => void estimateCost()}
+                  >
+                    Kiểm tra quyền và model ChatGPT cho lượt này
+                  </Button>
+                  {estimate?.provider === "chatgpt" && (
+                    <>
+                      <p role="status">
+                        Model {estimate.model} · tối đa {estimate.max_calls}{" "}
+                        request có giới hạn. Hạn mức ChatGPT còn lại chưa xác
+                        định; không có ước tính USD hoặc tự chuyển sang API trả
+                        phí.
+                      </p>
+                      <label className="ai-check">
+                        <input
+                          type="checkbox"
+                          aria-label="Xác nhận gửi ChatGPT Plan Usage"
+                          checked={consent}
+                          onChange={(e) => setConsent(e.target.checked)}
+                        />
+                        Tôi đồng ý gửi câu hỏi, lịch sử ngắn và bằng chứng đến
+                        OpenAI, sử dụng hạn mức ChatGPT của tài khoản/model đã
+                        hiển thị cho lượt này.
+                      </label>
+                    </>
+                  )}
+                </div>
+              )}
               {mode === "openai" && (
                 <div className="ai-cloud-consent">
                   <p>
@@ -757,7 +809,9 @@ export function AIWorkspacePage() {
                     running ||
                     !question.trim() ||
                     (mode === "openai" &&
-                      (!consent || !estimate?.within_daily_limit))
+                      (!consent || !estimate?.within_daily_limit)) ||
+                    (mode === "chatgpt" &&
+                      (!consent || estimate?.provider !== "chatgpt"))
                   }
                 >
                   <Send size={14} />

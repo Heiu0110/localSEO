@@ -173,7 +173,7 @@ test.describe("AI Workspace local evidence workflow", () => {
     if (await star.isVisible()) await star.click();
     await page.getByRole("tab", { name: "AI Settings", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "OpenAI · cấu hình tại localhost" }),
+      page.getByRole("heading", { name: "OpenAI API Key Provider · cấu hình tại localhost" }),
     ).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
     await expect(page.locator(".ai-command")).toContainText(
@@ -187,7 +187,7 @@ test.describe("AI Workspace local evidence workflow", () => {
       page.getByRole("heading", { name: "Token và chi phí ước tính" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Chưa có request AI trả phí.", { exact: false }),
+      page.getByText("Chưa có request cloud AI được ghi nhận.", { exact: false }),
     ).toBeVisible();
   });
 });

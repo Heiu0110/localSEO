@@ -20,6 +20,7 @@ from .models import (
     AIUsage,
 )
 from .schemas import Analysis, AISettings
+from .chatgpt import ChatGPTConnection
 from .common import uid, now, fail, view, require, redact
 from .context import context, project
 from .tools import ToolRegistry, strict_schema
@@ -69,6 +70,7 @@ class AIManager:
         self.db = db
         self.vault = vault
         self.registry = ToolRegistry(db)
+        self.chatgpt = ChatGPTConnection(db, vault)
         self.provider_factory = provider_factory or (lambda: OpenAIProvider(vault))
         self.executor = ThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ai-analyst"
@@ -98,9 +100,21 @@ class AIManager:
         self.stopping.set()
         self.executor.shutdown(wait=True, cancel_futures=True)
         self.registry.close()
+        self.chatgpt.close()
 
     def preflight(self, provider):
         cfg = settings(self.db)
+        if provider == "chatgpt":
+            return cfg, {
+                **self.chatgpt.preflight(),
+                "max_calls": cfg.max_tool_calls + 2,
+            }
+        if provider not in ("local_report", "openai"):
+            fail(
+                "ai_provider_invalid",
+                "Provider không được hỗ trợ; không tự chuyển phương thức.",
+                409,
+            )
         if provider != "openai":
             return cfg, {
                 "provider": "local_report",
@@ -228,6 +242,22 @@ class AIManager:
                     "Model/ước tính hiện tại khác phần đã xác nhận. Xem lại ước tính và đồng ý cho lượt này.",
                     409,
                 )
+            if provider == "chatgpt":
+                if not data.acknowledge_external_processing:
+                    fail(
+                        "ai_consent_required",
+                        "Xem model/quyền ChatGPT và xác nhận gửi dữ liệu cho lượt này.",
+                        409,
+                    )
+                if (
+                    data.approved_model != estimate["model"]
+                    or data.approved_connection_id != estimate["connection_id"]
+                ):
+                    fail(
+                        "chatgpt_connection_changed",
+                        "Model/tài khoản khác phần đã xác nhận. Kiểm tra lại trước khi gửi.",
+                        409,
+                    )
             stamp = now()
             message = AIMessage(
                 id=uid(),
@@ -239,21 +269,35 @@ class AIManager:
                 data={
                     "provider": provider,
                     "model": (
-                        cfg.model if provider == "openai" else "deterministic-report-v1"
+                        cfg.model
+                        if provider == "openai"
+                        else (
+                            estimate["model"]
+                            if provider == "chatgpt"
+                            else "deterministic-report-v1"
+                        )
                     ),
                     "window": {"days": days, "end_date": end},
                     "settings_snapshot": cfg.model_dump(mode="json"),
                     "cost_estimate": estimate,
+                    "connection_id": estimate.get("connection_id"),
                     "consent": {
-                        "external_processing": provider == "openai"
+                        "approved_connection_id": (
+                            data.approved_connection_id
+                            if provider == "chatgpt"
+                            else None
+                        ),
+                        "external_processing": provider in ("openai", "chatgpt")
                         and data.acknowledge_external_processing,
                         "approved_model": (
-                            data.approved_model if provider == "openai" else None
+                            data.approved_model
+                            if provider in ("openai", "chatgpt")
+                            else None
                         ),
                         "approved_max_estimate_usd": (
                             data.approved_max_estimate_usd
                             if provider == "openai"
-                            else 0
+                            else None if provider == "chatgpt" else 0
                         ),
                         "approved_at": stamp,
                     },
@@ -534,6 +578,9 @@ class AIManager:
         ).model_dump(mode="json")
 
     def _provider_call(self, message, payload, cfg):
+        if message.data["provider"] == "chatgpt":
+            return self._chatgpt_call(message, payload, cfg)
+
         if (
             len(json.dumps(payload, ensure_ascii=False).encode())
             > cfg.max_context_bytes
@@ -616,6 +663,93 @@ class AIManager:
                 }
             raise
 
+    def _chatgpt_call(self, message, payload, cfg):
+        if (
+            len(json.dumps(payload, ensure_ascii=False).encode())
+            > cfg.max_context_bytes
+        ):
+            fail(
+                "ai_context_limit",
+                "Ngữ cảnh vượt giới hạn byte, hãy thu hẹp câu hỏi.",
+                409,
+            )
+        current = settings(self.db)
+        if (current.max_context_bytes, current.max_tool_calls) != (
+            cfg.max_context_bytes,
+            cfg.max_tool_calls,
+        ):
+            fail(
+                "ai_settings_changed",
+                "Giới hạn ngữ cảnh/tools đã đổi; gửi lại sau khi kiểm tra.",
+                409,
+            )
+        usage = AIUsage(
+            id=uid(),
+            message_id=message.id,
+            provider="chatgpt",
+            model=message.data["model"],
+            request_id=None,
+            status="reserved",
+            input_tokens=None,
+            output_tokens=None,
+            reserved_usd=0,
+            estimated_cost_usd=None,
+            data={
+                "billing_source": "chatgpt_plan",
+                "quota_remaining": None,
+                "provider_reported_cost": None,
+                "fallback_to_api_key": False,
+            },
+            created_at=now(),
+        )
+        with self.db.session.begin() as s:
+            s.add(usage)
+        chars = 0
+        last_write = 0
+
+        def delta(text):
+            nonlocal chars, last_write
+            chars += len(text)
+            if time.monotonic() - last_write < 0.25:
+                return
+            last_write = time.monotonic()
+            with self.db.session.begin() as s:
+                m = s.get(AIMessage, message.id)
+                if m:
+                    m.data = {**m.data, "streaming_characters_received": chars}
+                    m.updated_at = now()
+
+        try:
+            response = self.chatgpt.respond(
+                payload, message.data["connection_id"], delta
+            )
+            tokens = response.get("usage") or {}
+            a = tokens.get("input_tokens")
+            b = tokens.get("output_tokens")
+            if not all(type(n) is int and n >= 0 for n in (a, b)):
+                a = b = None
+            with self.db.session.begin() as s:
+                u = s.get(AIUsage, usage.id)
+                u.request_id = str(response.get("id", ""))[:150] or None
+                u.status = "completed"
+                u.input_tokens = a
+                u.output_tokens = b
+                u.data = {
+                    **u.data,
+                    "terminal_event": "response.completed",
+                    "streaming_characters_received": chars,
+                }
+            return response
+        except Exception:
+            with self.db.session.begin() as s:
+                u = s.get(AIUsage, usage.id)
+                u.status = "unknown"
+                u.data = {
+                    **u.data,
+                    "error": "Chưa xác định lượng hạn mức đã dùng; không tự retry hoặc chuyển provider.",
+                }
+            raise
+
     def _cloud(self, message, evidence, count, cfg):
         with self.db.session() as s:
             prior = list(
@@ -693,6 +827,17 @@ class AIManager:
                     }
                 },
             }
+            if message.data["provider"] == "chatgpt":
+                payload["model"] = message.data["model"]
+                # SIWC has a strict transport allowlist; JSON is validated locally.
+                payload["input"][0] = {
+                    "role": "system",
+                    "content": POLICY
+                    + "\nTrả JSON theo schema sau: "
+                    + json.dumps(Analysis.model_json_schema(), ensure_ascii=False),
+                }
+                if count[0] >= cfg.max_tool_calls:
+                    payload["tools"] = []
             response = self._provider_call(message, payload, cfg)
             if response.get("status") != "completed":
                 fail(
@@ -703,6 +848,8 @@ class AIManager:
             outputs = response.get("output", [])
             calls = [x for x in outputs if x.get("type") == "function_call"]
             if calls:
+                if message.data["provider"] == "chatgpt":
+                    inputs.extend(outputs)
                 for call in calls:
                     if count[0] >= cfg.max_tool_calls:
                         fail(
@@ -733,7 +880,7 @@ class AIManager:
                     )
                     inputs.extend(
                         [
-                            call,
+                            *([call] if message.data["provider"] != "chatgpt" else []),
                             {
                                 "type": "function_call_output",
                                 "call_id": call["call_id"],
@@ -782,7 +929,7 @@ class AIManager:
             self._tool(message, "get_project_context", {}, evidence, count)
             analysis = (
                 self._cloud(message, evidence, count, cfg)
-                if message.data["provider"] == "openai"
+                if message.data["provider"] in ("openai", "chatgpt")
                 else self._local(message, evidence, count)
             )
             analysis = redact(analysis)

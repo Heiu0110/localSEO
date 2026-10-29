@@ -19,6 +19,7 @@ from app.api.technical_routes import router as technical_router
 from app.technical.urls import CrawlError
 from app.api.keyword_routes import router as keyword_router
 from app.api.ai_routes import router as ai_router
+from app.api.chatgpt_routes import router as chatgpt_router
 from app.api.research_routes import router as research_router
 from sqlalchemy.exc import IntegrityError
 
@@ -98,6 +99,7 @@ app.include_router(gsc_router)
 app.include_router(technical_router)
 app.include_router(keyword_router)
 app.include_router(ai_router)
+app.include_router(chatgpt_router)
 app.include_router(research_router)
 
 @app.exception_handler(IntegrityError)

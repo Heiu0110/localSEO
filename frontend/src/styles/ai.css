@@ -739,3 +739,16 @@
     align-self: flex-start;
   }
 }
+
+.chatgpt-connection .badge {
+  white-space: normal;
+  max-width: 100%;
+  line-height: 1.5;
+}
+.chatgpt-connection .technical-inline {
+  flex-wrap: wrap;
+}
+.chatgpt-connection a {
+  color: var(--primary);
+  text-decoration: underline;
+}

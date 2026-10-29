@@ -1,6 +1,6 @@
 # OpenAI provider và ngân sách
 
-Chỉ một provider cloud được triển khai: OpenAI Responses API ở host HTTPS cố định. Không phải quyền truy cập OpenAI của Codex, không tích hợp Sol/Astra giả vào API runtime.
+Có hai phương thức kết nối riêng tới OpenAI: API Key Provider ở phần dưới và [Sign in with ChatGPT / ChatGPT Plan Usage](CHATGPT_CONNECTION_SETUP.md). SIWC dùng OAuth theo handoff ngày29/10/2026, model tài khoản và streaming riêng; eligibility/login thật còn Pending Live Verification, không tự fallback sang API key. Không phải quyền truy cập OpenAI của Codex, không tích hợp Sol/Astra giả vào API runtime.
 
 ## Model và giá
 

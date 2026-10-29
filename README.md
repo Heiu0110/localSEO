@@ -66,7 +66,15 @@ Backend không có trang tại `http://127.0.0.1:8000/`. Vite proxy `/api` sang 
 
 Demo/bộ thử nghiệm dùng được khi chưa cấu hình Google hoặc OpenAI. Sau khi cài đủ dependency, các báo cáo đã lưu và API docs dùng được ngoại tuyến; đồng bộ Google, crawl website và gọi AI cloud cần Internet.
 
-### 5. Bật OpenAI cho AI Workspace (tùy chọn)
+### 5. Sign in with ChatGPT / ChatGPT Plan Usage (tùy chọn)
+
+Vào **AI Workspace → AI Settings → ChatGPT Connection → Continue with ChatGPT**. Luồng open-source/locally hosted dùng dynamic registration, không cần Client ID cấp trước hoặc API key. Token lưu trong OS Credential Vault; chỉ model `visibility=list` của tài khoản được chọn. Chạy trình duyệt và backend trên cùng máy tại localhost/127.0.0.1.
+
+**Pending Live Verification:** LocalSEO chưa được xác nhận eligibility; repo chưa có LICENSE ở thư mục gốc. Người sở hữu cần rà soát điều kiện và quyền sử dụng mã nguồn trước khi chọn các checkbox xác nhận. App không tự công bố license. Đăng nhập thiếu `chatgpt.tokens.use.direct` sẽ bị chặn Plan Usage; app không bịa hạn mức còn lại hoặc tự chuyển API trả phí khi bị giới hạn. Full Preview Limitations chưa được đối chiếu độc lập do docs bị Tunnel403; contract triển khai theo handoff người dùng cung cấp ngày29/10/2026.
+
+Sau khi được cấp quyền: chọn/lưu model ChatGPT → về chat chọn **ChatGPT · Plan Usage** → kiểm tra quyền/model và xác nhận gửi dữ liệu cho lượt này. Responses dùng streaming; kết quả chỉ hoàn tất sau `response.completed` và kiểm tra evidence. Xem [hướng dẫn & bước xác minh localhost](docs/CHATGPT_CONNECTION_SETUP.md) và [kiến trúc/bảo mật](docs/CHATGPT_CONNECTION_ARCHITECTURE.md). Chưa thực hiện login/inference thật trong cloud.
+
+### 6. Bật OpenAI API Key Provider (tùy chọn)
 
 Sau khi backend đã tạo môi trường ảo, mở terminal thứ ba tại thư mục gốc:
 

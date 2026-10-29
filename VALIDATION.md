@@ -1,3 +1,30 @@
+# SIWC — Sign in with ChatGPT validation · 29/10/2026
+
+Bổ sung duy nhất OAuth/Plan Usage và các phụ thuộc trực tiếp vào AI Workspace. Baseline `fef7068`: đã chạy **207 backend tests, 12 AI browser tests và production build passed** trước thay đổi; 68 browser tests trước đó là kết quả Phase7 được lưu trong lịch sử.
+
+| Kiểm tra thực thi trong lượt SIWC | Kết quả |
+|---|---|
+| Toàn bộ backend pytest | **254 passed**: 207 cũ + 47 SIWC cases; không failed/skipped/xfail |
+| Toàn bộ Playwright production preview | **72 passed**: 68 cũ + 4 SIWC UI tests, không failed/skipped |
+| TypeScript/Vite build | **Passed**, AI route tải riêng khoảng39,9KB; không thêm dependencies |
+| Launcher tests | **17 passed** trên Linux; launcher thực dùng lại node_modules, chuẩn bị0,0s |
+| Dependency/persistence | requirements/package lock không đổi; pip check không broken requirements; schema vẫn005, integrity_check=ok, FK không lỗi |
+| OAuth | Dynamic client/host UUID, PKCE S256/state/nonce, listener hoạt động trước URL, callback thật qua loopback với mock issuer, issued ID exchange/reuse, expiry/replay/denial/missing client/invalid state |
+| OIDC | RSA keys tạo trong tests, RS256 signature/issuer/audience/azp/exp/nbf/sub/nonce; từ chối invalid JWT/discovery/JWKS URI, redirect và token header injection |
+| Permission/lifecycle | Missing direct scope hoặc không có initial granted scopes: connected_not_authorized, không lấy models/inference; refresh rotation single-flight, revoked/expired/changed subject/scope removal và disconnect/revocation |
+| Host identity | Cùng OS Vault giữ UUID ổn định; dùng SQLite cũ với Vault khác tạo host identity mới, không clone máy qua database backup |
+| Models | visibility=list/display_name/slug; không default API model; hidden/unknown/removed model bị chặn; model/session thay sau consent chặn queued inference |
+| SSE/inference | Payload allowlist store=false/stream=true/input array; không forward unsupported API-key fields; function-tool roundtrip; delta/UTF-8 chunk fragmentation/completed/incomplete/failed/EOF/size cap; lỗi401/403/429/503 trước và sau mở stream |
+| No paid fallback | Mock API-key factory không được gọi khi SIWC lỗi/quota; UI giữ mode chatgpt; USD=null, token usage thuộc provider chatgpt, không cộng hạn mức ChatGPT vào API-key dollar budget |
+| UI | Continue button/review/local-browser check, popup/link fallback (mock), account/no-permission state, model picker/save, per-turn consent, quota error và mobile390; key/token không có input trên frontend |
+| Regression | Dashboard/GSC/Technical/Keyword Tracking/Research/AI history/evidence/review và startup cùng suite cũ; không sửa code source SEO, OAuth Google hoặc database migrations |
+
+Đã xem ảnh thực tế AI Settings1440×1100 và390×1100, không horizontal overflow/pageerror. Trạng thái thật trong cloud: chưa kết nối, OS Credential Vault chưa khả dụng; ảnh không giả lập tài khoản đã login. AIUsage trong workspace vẫn0, không có inference thật hoặc paid API request. Browser tests có mocking cho trạng thái connected, code callback và model/quota UI; backend dùng MemoryVault chỉ trong tests, không thêm plaintext fallback vào runtime.
+
+Một lượt browser có71passed/1failed do selector dùng nhãn API Provider cũ sau khi đổi thành “OpenAI API Key Provider”; đã cập nhật đúng nhãn mới và thông báo empty usage, giữ nguyên assertions. Lượt cuối **72/72passed**. Không tắt test/SSL/signature assertions để qua kiểm tra. Cảnh báo Starlette TestClient/httpx và NO_COLOR/FORCE_COLOR giống baseline.
+
+**Pending Live Verification:** LocalSEO OSS/locally hosted eligibility và license, dynamic registration thật (chưa có issued ID/redirect đã xác minh), OAuth/permission/models/inference/hạn mức thật, Windows Credential Manager và native Windows. Không thêm LICENSE hoặc mặc định public repo đủ điều kiện. Contract theo official handoff người dùng cung cấp ngày29/10/2026; cả4trang chính thức vẫn Tunnel403 nên full Preview Limitations chưa được đối chiếu độc lập. Chỉ triển khai subset fail-closed (RS256, HTTP SSE, local function tools); không giả lập quota balance/model availability live. Xem [các bước kiểm chứng localhost](docs/CHATGPT_CONNECTION_SETUP.md). Dừng ở tính năng này.
+
 # Validation evidence · v0.7 / Phase 7 Core
 
 ## Phase 7 Core — ngày 29/10/2026

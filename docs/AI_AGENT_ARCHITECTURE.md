@@ -12,10 +12,11 @@ Dashboard/MockProvider, SQLite GSC, OAuth, Technical SEO và Keyword Tracking c�
 
 `AIManager → OpenAIProvider → https://api.openai.com/v1/responses` chỉ khi người dùng gửi với consent.
 
-Hai chế độ:
+Ba chế độ (bổ sung SIWC sau Phase7 Core):
 
 - `local_report`: bộ quy tắc dựng báo cáo từ tool outputs. Chạy ngoại tuyến, không có mô hình AI, không tiêu token.
-- `openai`: một provider cloud, có model/giá ước tính/ngân sách cấu hình được, key trong OS keyring. Không sử dụng tài khoản/model Codex của phiên phát triển.
+- `chatgpt`: OAuth SIWC open-source/locally hosted, PKCE/dynamic registration/OS vault, model tài khoản và Responses SSE; [live eligibility và login còn pending](CHATGPT_CONNECTION_SETUP.md).
+- `openai`: provider API key, có model/giá ước tính/ngân sách cấu hình được, key trong OS keyring. Không sử dụng tài khoản/model Codex của phiên phát triển.
 
 Route AI tải riêng; không thêm dependency JS/Python. Mở Dashboard hoặc AI Workspace không tạo request sinh nội dung. Worker AI chỉ được gọi từ POST message, độc lập với worker GSC/audit/keyword.
 
@@ -27,7 +28,7 @@ Registry có Pydantic input/output, version, read_only, timeout 5 giây, kết q
 
 Mặc định tối đa 6 tool/lượt, trong đó có context ban đầu; tối đa 8. Tool GSC kế thừa kỳ đã chọn; yêu cầu kỳ khác bị chặn để tránh trộn báo cáo. Kỳ manual rank là tuần/profile riêng. Khi UI nhận câu hỏi có 7/28/90 ngày rõ ràng, gửi kỳ đó; hỏi tiếp giữ kỳ trước. URL được nhắc trong hội thoại giữ cho bước điều tra tiếp theo, không tự truy cập URL.
 
-OpenAI dùng Responses API không stream, store=false, parallel_tool_calls=false, JSON schema. Context/history ngắn và tổng payload có giới hạn byte. Tool loops bị giới hạn; kiểm tra ngân sách/thời gian trước request tiếp theo. HTTP đang chạy có timeout riêng, nên mốc 90 giây của orchestration không phải deadline cứng cho request đang truyền.
+API Key Provider dùng Responses API không stream, store=false, parallel_tool_calls=false, JSON schema. Context/history ngắn và tổng payload có giới hạn byte. Tool loops bị giới hạn; kiểm tra ngân sách/thời gian trước request tiếp theo. HTTP đang chạy có timeout riêng, nên mốc 90 giây của orchestration không phải deadline cứng cho request đang truyền.
 
 ## Grounding
 

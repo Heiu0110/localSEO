@@ -106,8 +106,10 @@ export function AgentMessage({
     <article className="ai-answer" data-ai-message={message.id}>
       <div className="ai-answer-heading">
         <strong>
-          {message.data.provider === "openai"
-            ? "OpenAI · " + message.data.model
+          {message.data.provider !== "local_report"
+            ? (message.data.provider === "chatgpt"
+                ? "ChatGPT Plan Usage · "
+                : "OpenAI · ") + message.data.model
             : "Báo cáo theo quy tắc · không gọi AI"}
         </strong>
         <span className="badge badge-neutral">{textLabel(message.status)}</span>
@@ -118,7 +120,9 @@ export function AgentMessage({
       </p>
       {running && (
         <p role="status" className="ai-processing">
-          Đang đọc nguồn và phân tích…
+          {message.data.provider === "chatgpt"
+            ? `Đang nhận stream ChatGPT · ${message.data.streaming_characters_received || 0} ký tự. Chỉ hiển thị phân tích sau response.completed và kiểm tra bằng chứng.`
+            : "Đang đọc nguồn và phân tích…"}
         </p>
       )}
       {message.data.error && (
@@ -161,7 +165,7 @@ export function AgentMessage({
       {analysis && (
         <>
           <p className="ai-summary">{analysis.summary}</p>
-          {message.data.provider === "openai" && (
+          {message.data.provider !== "local_report" && (
             <p className="ai-inference-note">
               Diễn giải AI cần được kiểm tra với nguồn; citation hợp lệ không tự
               chứng minh kết luận đúng.

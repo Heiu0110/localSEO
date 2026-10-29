@@ -17,3 +17,5 @@ Xác nhận gửi OpenAI gắn với model và trần ước tính người dùn
 Review statuses chỉ ghi ai_recommendations. Approved không tạo backlog Technical SEO hoặc bất cứ external write nào. Không có execution hook cho automation sau này.
 
 Giới hạn: semantic hallucination/prompt injection vẫn có thể ảnh hưởng diễn giải; citation validation không phải proof of correctness. Human review và mở nguồn gốc vẫn cần thiết. Tool timeout không giết thread SQL đang chạy, chỉ trả lỗi và giữ slot đến khi tác vụ thực kết thúc. Windows keyring/API thật chưa được chạy trong tests cloud.
+
+SIWC bổ sung authentication tách biệt, state/nonce/PKCE, JWKS/RS256 validation và refresh rotation trong OS vault. Không đọc Codex credentials, không dùng API key dự phòng; models lấy theo quyền tài khoản. Xem [thiết kế callback, token và SSE](CHATGPT_CONNECTION_ARCHITECTURE.md). Eligibility/license không được suy ra từ repository public hoặc checkbox; chủ sở hữu cần review trước live OAuth.

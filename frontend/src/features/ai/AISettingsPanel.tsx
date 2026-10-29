@@ -1,3 +1,4 @@
+import { ChatGPTConnectionPanel } from "./ChatGPTConnectionPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "../../components/ui/button";
 import { ErrorState } from "../../components/ui/states";
@@ -20,8 +21,9 @@ export function AISettingsPanel({
   const cfg = data.settings;
   return (
     <div className="ai-settings">
+      <ChatGPTConnectionPanel />
       <section className="card ai-panel">
-        <h2>OpenAI · cấu hình tại localhost</h2>
+        <h2>OpenAI API Key Provider · cấu hình tại localhost</h2>
         <div className="ai-badges">
           <span className="badge badge-neutral">
             {data.key_configured
@@ -214,7 +216,7 @@ export function AISettingsPanel({
             aria-label="Bật OpenAI"
             defaultChecked={cfg.enabled}
           />
-          Bật OpenAI cho các lượt gửi có xác nhận riêng
+          Bật API Key Provider cho các lượt gửi có xác nhận riêng
         </label>
         <p className="muted-copy">
           Giá vẫn là ước tính do bạn cấu hình, không phải giá/billing do
@@ -262,6 +264,11 @@ export function UsageSummary() {
     <section className="card ai-panel">
       <h2>Token và chi phí ước tính</h2>
       <p>
+        Ngân sách USD chỉ áp dụng API Key Provider. ChatGPT Plan Usage dùng hạn
+        mức tài khoản; ứng dụng chưa có số dư hạn mức hoặc giá USD cho phương
+        thức này.
+      </p>
+      <p>
         Ngày ({query.data.day_timezone}):{" "}
         <strong>{money(query.data.daily_used_estimate_usd)}</strong> /{" "}
         {money(query.data.daily_limit_usd)}
@@ -283,12 +290,21 @@ export function UsageSummary() {
             {query.data.rows.map((u) => (
               <tr key={u.id}>
                 <td>{stamp(u.created_at)}</td>
-                <td>{u.model}</td>
+                <td>
+                  {u.model}
+                  <small>
+                    {u.provider === "chatgpt"
+                      ? "ChatGPT Plan Usage"
+                      : u.provider}
+                  </small>
+                </td>
                 <td>{textLabel(u.status)}</td>
                 <td>{u.input_tokens ?? "—"}</td>
                 <td>{u.output_tokens ?? "—"}</td>
                 <td>
-                  {money(u.estimated_cost_usd ?? u.reserved_usd)}
+                  {u.provider === "chatgpt"
+                    ? "Hạn mức ChatGPT · chưa có số dư"
+                    : money(u.estimated_cost_usd ?? u.reserved_usd)}
                   {u.estimated_cost_usd == null ? " · dự phòng" : ""}
                 </td>
               </tr>
@@ -298,7 +314,8 @@ export function UsageSummary() {
       </div>
       {!query.data.rows.length && (
         <p className="muted-copy">
-          Chưa có request AI trả phí. Báo cáo theo quy tắc không dùng token.
+          Chưa có request cloud AI được ghi nhận. Báo cáo theo quy tắc không
+          dùng token.
         </p>
       )}
       <div className="technical-inline">

@@ -55,7 +55,7 @@ class AISettings(Input):
 class ConversationCreate(Input):
     project_id: str = Field(min_length=1, max_length=150)
     title: str = Field(default="Phiên phân tích mới", min_length=1, max_length=120)
-    provider: Literal["local_report", "openai"] = "local_report"
+    provider: Literal["local_report", "openai", "chatgpt"] = "local_report"
 
 
 class ConversationPatch(Input):
@@ -67,9 +67,10 @@ class MessageCreate(Input):
     content: str = Field(min_length=1, max_length=4000)
     days: Literal[7, 28, 90] | None = None
     end_date: date | None = None
-    provider: Literal["local_report", "openai"] | None = None
+    provider: Literal["local_report", "openai", "chatgpt"] | None = None
     acknowledge_external_processing: bool = False
-    approved_model: str | None = Field(default=None, max_length=100)
+    approved_model: str | None = Field(default=None, max_length=150)
+    approved_connection_id: str | None = Field(default=None, max_length=100)
     approved_max_estimate_usd: float | None = Field(
         default=None, ge=0, le=1000, allow_inf_nan=False
     )

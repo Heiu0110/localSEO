@@ -34,7 +34,7 @@ export interface AIConversation {
   id: string;
   project_id: string;
   title: string;
-  provider: "local_report" | "openai";
+  provider: "local_report" | "openai" | "chatgpt";
   model: string;
   saved: boolean;
   created_at: string;
@@ -106,6 +106,7 @@ export interface AIMessage {
     error?: string;
     error_code?: string;
     tool_calls?: number;
+    streaming_characters_received?: number;
     focus_url?: string | null;
   };
   evidence: AIEvidence[];
@@ -171,8 +172,10 @@ export interface AIUsage {
 }
 export interface AIEstimate {
   model?: string;
+  connection_id?: string;
+  billing_source?: string;
   provider: string;
-  estimated_cost_usd?: number;
+  estimated_cost_usd?: number | null;
   turn_upper_estimate_usd?: number;
   per_call_reserved_usd?: number;
   max_calls?: number;
@@ -181,4 +184,33 @@ export interface AIEstimate {
   daily_used_estimate_usd?: number;
   requires_external_consent: boolean;
   warning?: boolean;
+}
+
+export interface ChatGPTStatus {
+  provider: "chatgpt";
+  status: string;
+  secure_storage_available: boolean;
+  authorization_status: string;
+  pending_authorization: boolean;
+  account: { sub: string; name?: string; email?: string } | null;
+  connection_id: string | null;
+  granted_scopes: string[];
+  plan_usage_authorized: boolean;
+  access_expires_at: number | null;
+  refresh_expires_at: number | null;
+  models: { slug: string; display_name: string }[];
+  selected_model: string | null;
+  models_stale: boolean;
+  last_error: { code: string; detail: string } | null;
+  eligibility: {
+    status: string;
+    repository_license_found: boolean;
+    user_review_required: boolean;
+    note: string;
+  };
+  live_verification: string;
+  quota: { status: string; remaining: number | null; note: string };
+  documentation: string[];
+  full_preview_limitations_verified: boolean;
+  fallback_to_api_key: false;
 }
