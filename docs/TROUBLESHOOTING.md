@@ -90,3 +90,17 @@ Chưa triển khai GA4, backlink provider, AI hoặc auth đa người dùng. Cr
 - Import báo lỗi cột: mở Ánh xạ cột, chọn keyword/week tương ứng, xem trước lại; xác nhận bỏ dòng lỗi chỉ khi chấp nhận. Tệp lớn cần chia nhỏ dưới100KiB/1.000dòng.
 - Sáu cột chiếm hết màn hình nhỏ: tại ≤1100px chỉ cột keyword cố định; cuộn ngang để xem phần còn lại. Desktop là trải nghiệm ưu tiên.
 - Sync bị dừng: job interrupted/cancelled có thể chạy lại dùng cache; giữ nguyên dữ liệu đã lưu. Không chạy scraping để thay OAuth.
+
+
+## AI Workspace Phase 6
+
+- Báo cáo ngoại tuyến không phải AI/LLM; vẫn đọc nguồn dữ liệu đã lưu và không tiêu token.
+- Thiếu Topical Map/URL Inspection/Server Logs: module/adapter chưa tồn tại, không thể bật bằng model hoặc API key.
+- Không có keyring trong cloud: giữ báo cáo ngoại tuyến; cấu hình bằng terminal/Windows Credential Manager trên máy cá nhân, không plaintext fallback.
+- Model chưa kiểm tra: AI Settings → làm mới trạng thái key → Kiểm tra key/model. GET model không phải generation trả phí.
+- Giá chưa xác minh: kiểm tra bảng giá đúng model và nhập ước tính. Không có mức giá giả mặc định; USD không phải hóa đơn provider.
+- Consent/estimate biến mất khi sửa câu hỏi: cần kiểm tra lại ước tính/xác nhận vì đây là lượt gửi mới. Không bật xác nhận mặc định.
+- Tool/context vượt giới hạn hoặc kỳ không khớp: thu hẹp câu hỏi/chọn lại kỳ GSC; keyword week độc lập. Không dùng SQL hoặc scrape để thay dữ liệu thiếu.
+- Unknown usage sau timeout: giữ dự phòng, không tự replay. Xóa hội thoại vẫn giữ usage để tính ngân sách.
+
+Xem [AI user guide](AI_AGENT_USER_GUIDE.md) và [AI provider setup](AI_PROVIDER_SETUP.md).

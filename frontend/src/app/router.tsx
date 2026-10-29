@@ -11,6 +11,11 @@ const KeywordPage = lazy(() =>
     default: module.KeywordPage,
   })),
 );
+const AIWorkspacePage = lazy(() =>
+  import("../features/ai/AIWorkspacePage").then((module) => ({
+    default: module.AIWorkspacePage,
+  })),
+);
 import { TechnicalPage } from "../features/technical/TechnicalPage";
 
 export const router = createBrowserRouter([
@@ -21,6 +26,14 @@ export const router = createBrowserRouter([
       { path: "/settings", element: <SettingsPage /> },
       { path: "/gsc-analytics", element: <AnalyticsPage /> },
       { path: "/technical-seo", element: <TechnicalPage /> },
+      {
+        path: "/ai-workspace",
+        element: (
+          <Suspense fallback={<p role="status">Đang tải AI Workspace…</p>}>
+            <AIWorkspacePage />
+          </Suspense>
+        ),
+      },
       {
         path: "/keyword-tracking",
         element: (
@@ -38,6 +51,7 @@ export const router = createBrowserRouter([
               "/gsc-analytics",
               "/technical-seo",
               "/keyword-tracking",
+              "/ai-workspace",
             ].includes(module.path),
         )
         .map((module) => ({ path: module.path, element: <PlaceholderPage /> })),

@@ -18,6 +18,7 @@ from app.gsc.errors import GSCError
 from app.api.technical_routes import router as technical_router
 from app.technical.urls import CrawlError
 from app.api.keyword_routes import router as keyword_router
+from app.api.ai_routes import router as ai_router
 from sqlalchemy.exc import IntegrityError
 
 
@@ -27,7 +28,9 @@ async def lifespan(app):
     runtime.sync.recover()
     runtime.technical.recover()
     runtime.keywords.recover()
+    runtime.ai.recover()
     yield
+    runtime.ai.close()
     runtime.sync.close()
     runtime.technical.close()
     runtime.keywords.close()
@@ -45,7 +48,7 @@ class RedactOAuthAccessLog(logging.Filter):
 
 logging.getLogger("uvicorn.access").addFilter(RedactOAuthAccessLog())
 
-app = FastAPI(title="SEO Local Workspace", version="0.4.0", lifespan=lifespan, docs_url=None, redoc_url=None,
+app = FastAPI(title="SEO Local Workspace", version="0.6.0", lifespan=lifespan, docs_url=None, redoc_url=None,
               description="Local SQLite Search Console analytics, read-only Technical SEO audits, independent manual keyword ranks and isolated demo providers.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
                    allow_methods=["GET", "POST", "PATCH"], allow_headers=["Accept", "Content-Type", "X-CSRF-Token"])
@@ -93,6 +96,7 @@ app.include_router(router)
 app.include_router(gsc_router)
 app.include_router(technical_router)
 app.include_router(keyword_router)
+app.include_router(ai_router)
 
 @app.exception_handler(IntegrityError)
 async def integrity_error(request: Request, exc: IntegrityError):

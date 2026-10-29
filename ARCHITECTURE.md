@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.4 Core
+# Architecture · SEO Local Workspace v0.6 · Phase 6
+
+Phase 6 thêm `AI Workspace → AIManager → ToolRegistry → existing SEO services`, evidence/review/history/usage riêng trong 6 bảng Agent. OpenAI là provider tùy chọn HTTPS cố định, OS keyring, consent/budget; mặc định local_report không dùng LLM. Không có publishing, arbitrary SQL/shell hoặc AI calls nền. Topical Map chưa có service, không đăng ký tool giả. Xem [kiến trúc Agent](docs/AI_AGENT_ARCHITECTURE.md) và [security](docs/AI_AGENT_SECURITY.md).
 
 Keyword Tracking thêm đường dữ liệu riêng: `Keyword Set → tuần/profile → MANUAL observations → SQLite → grid/overview/history`. GSC keyword cache dùng exact query và scope property/page qua OAuth/client sẵn có; không ghép query/page totals, không biến Average Position thành rank thủ công. Queue, import preview/commit và các bảng được thêm bằng migration003. Dashboard chỉ thêm thẻ nhỏ; route Keyword Tracking tải riêng. Xem [kiến trúc Keyword Tracking](docs/KEYWORD_TRACKING_ARCHITECTURE.md).
 

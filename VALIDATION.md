@@ -1,4 +1,30 @@
-# Validation evidence · v0.4 Core
+# Validation evidence · v0.6 / Phase 6
+
+## Phase 6 — kiểm tra ngày 29/10/2026
+
+Baseline tại `777e2a8`: **130 pytest, 46 Playwright, 17 launcher tests và production build passed**. Repo có GSC, Technical SEO, Keyword Tracking; Topical Map chỉ là placeholder. Đã backup trước migration; không viết lại các provider/crawler đã ổn định.
+
+| Kiểm tra thực thi | Kết quả |
+|---|---|
+| `PYTHONPATH=backend backend/.venv/bin/python -m pytest backend/tests -q` | **170 passed**: 130 cũ + 40 Agent tests, không failed/skipped/xfail |
+| `node --test scripts/tests/frontend.test.mjs` | **17 passed**, dependency không đổi vẫn bỏ npm ci |
+| `npm --prefix frontend run build` | **Passed** TypeScript + Vite; AI Workspace thành chunk riêng khoảng32,8KB |
+| Toàn bộ Playwright trên production preview | **58 passed**, không failed/skipped: 12 AI + 18 Dashboard + 8 GSC + 10 Keyword + 10 Technical |
+| AI UI | Tạo phiên/chọn website, context missing Topical Map, báo cáo thật từ demo/services, evidence/table/card, history/reload, review và ghi chú, đổi website/kỳ, offline, settings không có key input, provider error mock, usage, responsive |
+| UI race/scroll | Estimate không mất khi vừa tạo phiên; retry dùng idempotency key; mở hội thoại dài chỉ cuộn trong chat, không nhảy trang trên mobile |
+| Agent security | Tool/SQL/shell/file/external research allowlist, input/output schema, ownership, giới hạn tool/result/time, citation giả, key redaction, CSRF/Origin và validation không echo secret |
+| Prompt injection | Title crawl chứa chỉ dẫn độc hại được truyền như dữ liệu tới provider mock; model mô phỏng yêu cầu SQL bị registry từ chối, bảng SEO giữ nguyên |
+| Review chỉ đọc | Đối chiếu **toàn bộ giá trị** các bảng SEO trong DB fixture trước/sau phân tích và review, không chỉ đếm dòng; không có execution hook |
+| GSC preservation workspace | **777 fact rows**, hash khóa+metric values trước/sau `a783d31370b2f749` khớp; không tính fetched_at được fixture sync lại có chủ ý |
+| SQLite | Schema `004_ai_agent`; integrity_check=ok, foreign_key_check không lỗi; 6 bảng Agent thêm vào, không reset SEO data |
+| Provider/cost tests | Mock Responses/tool calling, token usage, ước tính/dự phòng/ngân sách, unknown usage khi lỗi, không replay, disable/model change, xóa phiên vẫn giữ usage; xác nhận gắn với model/trần chi phí, đổi giá giữa lượt chặn request tiếp |
+| Dependencies | `pip check`: No broken requirements; không thêm dependency frontend/backend |
+
+Ảnh giao diện thực tế đã kiểm tra ở1440×1000 và390×1000; không overflow trang hoặc pageerror. Bản mới giữ các token nâu–kem hiện tại. Sau sửa auto-scroll, scrollY khi mở hội thoại có dữ liệu là0 ở cả hai viewport. Fixtures browser có tên phiên/test rõ ràng; không có paid AI calls trong bộ tests.
+
+Model ID `gpt-4.1-mini` và Responses/function tool contract được đối chiếu SDK chính thức trên GitHub. Trang model/pricing trực tiếp bị tunnel403; **giá hiện hành chưa được xác minh**, không gán mức giá mặc định. Giá trong app là user estimate; model/account/key/capabilities và Windows keyring/OpenAI live còn **Pending Credentials / Pending Live Verification**. Tests OpenAI HTTP dùng httpx.MockTransport; không khẳng định paid API thành công.
+
+Topical Map, External Research, URL Inspection, Server Logs và Phases7–11 chưa triển khai. AI semantic hallucination vẫn có thể xảy ra: citation validation không chứng minh diễn giải đúng. Metric cards từ backend; AI chỉ là diễn giải/giả thuyết, cần human review. Tool timeout không giết SQL thread đang chạy; HTTP đã gửi có thể vẫn hoàn tất/tính phí. Xem7tài liệu AI để biết giới hạn.
 
 ## Sửa launcher frontend — 22/10/2026
 

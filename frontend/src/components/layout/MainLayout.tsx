@@ -22,7 +22,7 @@ export function MainLayout() {
     <AppSidebar collapsed={collapsed} toggle={toggle} />
     <div className="workspace"><header className="topbar"><div className="breadcrumb"><Button className="mobile-toggle" variant="ghost" size="icon" onClick={toggle} aria-label="Ẩn/hiện thanh bên"><PanelLeft size={18} /></Button><span>Không gian làm việc</span><ChevronRight size={14} /><strong>{title}</strong></div><div className="local-badge"><span className="status-dot" /><Laptop size={15} />Môi trường cục bộ</div></header>
       <main id="main-content" tabIndex={-1}><Outlet /></main>
-      <footer className="app-footer"><span>SEO Local Workspace <span className="footer-divider">/</span> Nền tảng v0.4</span><span>Hiểu rõ hơn hiệu suất tìm kiếm.</span></footer>
+      <footer className="app-footer"><span>SEO Local Workspace <span className="footer-divider">/</span> Nền tảng v0.6</span><span>Hiểu rõ hơn hiệu suất tìm kiếm.</span></footer>
     </div>
   </div>;
 }

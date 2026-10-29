@@ -1,6 +1,23 @@
-# SEO Local Workspace · v0.4 Core
+# SEO Local Workspace · v0.6 · AI Agent Foundation
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
+
+## Phase 6: AI Workspace
+
+AI Analyst chỉ đọc dữ liệu hiện có, không tự thực hiện hành động SEO:
+
+- Hội thoại theo website, lịch sử/lưu phiên, kỳ báo cáo và URL được giữ khi hỏi tiếp.
+- Tool registry gồm 13 tool chỉ đọc, tái sử dụng GSC, Technical SEO và Keyword Tracking; không có SQL/shell/file hoặc external write tool.
+- Metric cards/bảng từ backend, bằng chứng có nguồn/kỳ/freshness/completeness và liên kết báo cáo; diễn giải/giả thuyết tách riêng.
+- Đề xuất có review/ghi chú; Approved chỉ lưu trạng thái, không tạo Technical backlog hoặc publishing.
+- Mặc định báo cáo theo quy tắc ngoại tuyến, ghi rõ không phải LLM. OpenAI là tùy chọn riêng, key OS keyring nhập qua terminal, có consent và ước tính/budget mỗi lượt.
+- Có token usage, dự phòng chi phí chưa rõ, idempotency và giới hạn tool/context/response; không gọi AI nền khi chỉ mở báo cáo.
+
+Topical Map chưa có triển khai trong repo nên Agent báo thiếu nguồn, không tạo mapping giả. Các phase 7–11 chỉ được lưu trong roadmap. Không có live API verification/giá hiện hành được ngầm bảo đảm: model ID được đối chiếu SDK chính thức, trang giá bị chặn truy cập trong môi trường triển khai, nên app để giá trống và yêu cầu người dùng xác minh/nhập ước tính trước khi bật OpenAI.
+
+Bắt đầu ngay: **AI Workspace → chọn website → hỏi bằng Báo cáo ngoại tuyến**. Muốn OpenAI, xem [cấu hình provider](docs/AI_PROVIDER_SETUP.md); không gửi API key trong chat hoặc frontend.
+
+Tài liệu: [Hướng dẫn](docs/AI_AGENT_USER_GUIDE.md) · [Kiến trúc](docs/AI_AGENT_ARCHITECTURE.md) · [Tools](docs/AI_AGENT_TOOLS.md) · [Evidence](docs/AI_AGENT_EVIDENCE.md) · [Security](docs/AI_AGENT_SECURITY.md) · [Roadmap](docs/AI_AGENT_ROADMAP.md).
 
 ## v0.4 Core: Theo dõi từ khóa
 
@@ -190,7 +207,7 @@ React 19, React Router 7 (declarative data router), Vite 7, TypeScript 5.9, Tail
 
 `package-lock.json` khóa frontend; `backend/requirements.txt` khóa phiên bản Python runtime và test dependencies đã kiểm chứng. FastAPI 0.156.4, Pydantic 2.14.1 và Uvicorn 0.54.0 không thay đổi stack yêu cầu. Các thư viện được kiểm chứng trên Linux/Python 3.12/Node 24; batch launchers Windows được cung cấp nhưng **chưa được chạy trên máy Windows thật**.
 
-Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem–be–nâu đồng–espresso theo ảnh tham chiếu. Có crawler chỉ đọc v0.3 Core; chưa triển khai GA4, backlinks hoặc AI. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
+Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem–be–nâu đồng–espresso theo ảnh tham chiếu. Có crawler chỉ đọc v0.3 Core và AI Workspace Phase 6; chưa triển khai GA4 hoặc backlinks. AI cloud là tùy chọn riêng, mặc định không gọi. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
 
 ## Bước tiếp theo
 
