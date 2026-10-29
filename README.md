@@ -2,6 +2,131 @@
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
 
+## Hướng dẫn chạy trên Windows 10/11
+
+### 1. Chuẩn bị
+
+Cài **Python 3.11+** (chọn “Add Python to PATH”) và **Node.js 24 LTS** kèm npm (tối thiểu Node 22.12). Cài thêm Git nếu muốn tải/cập nhật bằng lệnh Git. Sau khi cài, mở terminal PowerShell mới và kiểm tra:
+
+```powershell
+python --version
+node --version
+npm --version
+```
+
+Nếu máy dùng Python Launcher, thay `python --version` bằng `py -3 --version`. Lần cài dependency đầu tiên cần Internet; những lần sau script dùng lại thư viện đã cài hợp lệ.
+
+### 2. Mở thư mục dự án
+
+Nếu chưa có mã nguồn, chạy:
+
+```powershell
+git clone https://github.com/Heiu0110/localSEO.git
+cd localSEO
+```
+
+Nếu đã có project, mở thư mục đó trong VS Code rồi chọn **Terminal → New Terminal**. Thư mục hiện tại cần chứa `README.md`, `run-backend.bat`, `run-frontend.bat`, `backend/` và `frontend/`. Nếu tải ZIP từ GitHub, giải nén trước; tên thư mục có thể là `localSEO-main`.
+
+### 3. Chạy backend và frontend ở hai terminal riêng
+
+**Terminal 1 — backend**, chạy từ thư mục gốc:
+
+```powershell
+.\run-backend.bat
+```
+
+Chờ log `Application startup complete.` và giữ terminal này mở. Script tự tạo `backend/.venv`, cài requirements khi cần và cập nhật schema SQLite.
+
+**Terminal 2 — frontend**, mở terminal mới tại cùng thư mục gốc:
+
+```powershell
+.\run-frontend.bat
+```
+
+Chờ Vite hiện `Local: http://127.0.0.1:5173/`, rồi mở địa chỉ đó trên trình duyệt. Giữ cả hai terminal mở trong lúc dùng ứng dụng. Cũng có thể double-click hai file `.bat` trong File Explorer.
+
+| Địa chỉ | Mục đích |
+|---|---|
+| http://127.0.0.1:5173 | Giao diện ứng dụng |
+| http://127.0.0.1:8000/api/health | Kiểm tra backend; phản hồi có `status: "ok"` |
+| http://127.0.0.1:8000/docs | Tài liệu và thử API |
+
+Backend không có trang tại `http://127.0.0.1:8000/`. Vite proxy `/api` sang backend; **không cần tạo `.env` để chạy mặc định**. Hai server chỉ bind `127.0.0.1`.
+
+**Dừng ứng dụng:** nhấn `Ctrl+C` trong cả hai terminal, xác nhận `Y` nếu Windows hỏi dừng batch job. Lần chạy tiếp theo chỉ cần thực hiện lại bước 3, không cần clone hoặc chạy `npm ci` mỗi lần.
+
+### 4. Sử dụng ngay sau khi mở app
+
+- **Tổng quan:** chọn website `[DEMO]` để xem giao diện và báo cáo mẫu.
+- **AI Workspace:** chọn website, nhập “Phân tích hiệu suất SEO 28 ngày gần nhất”, chọn **Báo cáo ngoại tuyến** rồi gửi. Chế độ này đọc dữ liệu đã lưu theo quy tắc, không phải LLM và không cần API key.
+- **Technical SEO:** tạo dự án hoặc bộ thử nghiệm để xem URL, findings và bằng chứng.
+- **Theo dõi từ khóa:** tạo bộ từ khóa, nhập rank thủ công hoặc import dữ liệu.
+- **Dữ liệu GSC thật:** vào **Cài đặt → Tích hợp Google Search Console**, làm theo [hướng dẫn OAuth](docs/GOOGLE_GSC_SETUP.md), thêm property và đồng bộ.
+
+Demo/bộ thử nghiệm dùng được khi chưa cấu hình Google hoặc OpenAI. Sau khi cài đủ dependency, các báo cáo đã lưu và API docs dùng được ngoại tuyến; đồng bộ Google, crawl website và gọi AI cloud cần Internet.
+
+### 5. Bật OpenAI cho AI Workspace (tùy chọn)
+
+Sau khi backend đã tạo môi trường ảo, mở terminal thứ ba tại thư mục gốc:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts\configure_ai_provider.py
+```
+
+Nhập key tại prompt ẩn. Sau đó mở **AI Workspace → AI Settings**, làm mới trạng thái key, cấu hình model/giá/ngân sách, kiểm tra key/model và bật OpenAI. Khi chat, chọn OpenAI, xem ước tính rồi xác nhận gửi dữ liệu/chi phí.
+
+Key lưu trong kho khóa hệ điều hành, không nhập vào frontend hoặc chat. OpenAI có thể tính phí theo tài khoản API riêng; quyền sử dụng Codex không tự cấp API cho app. Xem [hướng dẫn provider](docs/AI_PROVIDER_SETUP.md) về cấu hình, giới hạn và các bước live verification còn chờ xác minh.
+
+## Cập nhật phiên bản và giữ dữ liệu
+
+Dừng cả hai server bằng `Ctrl+C`. Nếu project được clone bằng Git, chạy tại thư mục gốc trong PowerShell:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts\backup_database.py
+```
+
+Lệnh backup dùng môi trường Python đã tạo khi chạy backend; chỉ chạy khi database đã tồn tại. Với cấu hình mặc định, bản sao được lưu tại `backend/data/backups/` và đường dẫn sẽ được in ra terminal. Sau khi backup báo thành công, cập nhật mã nguồn:
+
+```powershell
+git pull origin main
+```
+
+Sau khi cập nhật, chạy lại `run-backend.bat` và `run-frontend.bat` ở hai terminal. Backend tự migrate schema. Frontend dùng lại `node_modules` khi dependency không đổi, kể cả khi chỉ tăng version app; chỉ cài lại khi cần.
+
+Dữ liệu mặc định nằm ở `backend/data/seo_workspace.db`; giữ nguyên thư mục `backend/data/`. Nếu tải source bằng ZIP thì không dùng được `git pull`: giữ bản project cũ và backup, cập nhật các file mã nguồn vào thư mục đang dùng, giữ dữ liệu local. Không copy `.venv` hoặc `node_modules` giữa Windows/Linux; để launcher chuẩn bị theo hệ điều hành.
+
+## Khi frontend chuẩn bị lâu hoặc không mở được app
+
+Bước cài thư viện (`npm`) và bước chạy Vite là hai bước riêng. Khi đã hiện `VITE ... ready` cùng địa chỉ `5173`, frontend đã sẵn sàng; terminal tiếp tục chạy để phục vụ app.
+
+| Vấn đề | Cách xử lý |
+|---|---|
+| Không tìm thấy Python/Node/npm | Cài runtime, mở terminal mới; kiểm tra các lệnh version ở bước 1. |
+| Frontend đang “cài thư viện” | Xem log `npm http`/`npm ERR` và kết nối tới `registry.npmjs.org`. Launcher mặc định giới hạn toàn lượt cài 180 giây; xem [chẩn đoán chi tiết](docs/TROUBLESHOOTING.md#frontend-khởi-động-lâu). |
+| Mạng chậm nhưng vẫn đang tải gói | Dừng frontend rồi chạy `.\run-frontend.bat --install-timeout=600` để cho phép tối đa 600 giây. Những lần sau dependency hợp lệ sẽ được dùng lại. |
+| Bản cài frontend bị hỏng | Dừng frontend rồi chạy `.\run-frontend.bat --repair`; tùy chọn này chủ động cài lại, không cần dùng mỗi lần. |
+| Giao diện báo không gọi được API hoặc proxy 500 | Kiểm tra backend đã hiện `Application startup complete.` và mở `/api/health`; xem lỗi tại terminal backend rồi bấm **Thử lại** trong app. |
+| Port 8000 hoặc 5173 đã được dùng | Dừng terminal ứng dụng cũ rồi chạy lại. Vite dùng strict port để giữ đúng cấu hình kết nối. |
+| Môi trường ảo bị xóa một phần | Dừng backend, xóa riêng `backend/.venv` rồi chạy lại `run-backend.bat`; giữ nguyên `backend/data/`. |
+| Đã đổi cấu hình `.env` nhưng chưa có tác dụng | Khởi động lại Vite. Cấu hình frontend tùy chỉnh đặt ở `frontend/.env.local`; chạy mặc định không cần file này. |
+| Ngày dữ liệu demo không theo hôm nay | Demo có 200 ngày cố định, kết thúc **20/10/2026**; báo cáo tính từ ngày cuối fixture. |
+
+## Chạy trên Linux/macOS
+
+Tại thư mục gốc, mở hai terminal riêng. Terminal backend:
+
+```bash
+python3 scripts/backend.py --run
+```
+
+Terminal frontend:
+
+```bash
+node scripts/frontend.mjs --run
+```
+
+Mở http://127.0.0.1:5173 và giữ cả hai terminal chạy. Dùng `python` nếu máy không có lệnh `python3`. Có thể chỉ chuẩn bị dependency bằng cách bỏ `--run`. Cấu hình OpenAI dùng `backend/.venv/bin/python scripts/configure_ai_provider.py` và cần OS keyring khả dụng.
+
 ## Phase 6: AI Workspace
 
 AI Analyst chỉ đọc dữ liệu hiện có, không tự thực hiện hành động SEO:
@@ -73,58 +198,6 @@ SQLite mặc định ở `backend/data/seo_workspace.db`, Git ignore. Migrations
 
 **Pending Live Verification:** các kiểm thử tự động không dùng credentials thật hoặc quota Google. Bạn cần thực hiện OAuth/live sync trên cùng máy Windows với trình duyệt, không dùng loopback của cloud container. Tệp credentials được nhập qua UI, không dán token vào chat.
 
-## Chạy trên Windows 10/11
-
-Yêu cầu **Python 3.11+** (bật “Add Python to PATH”) và **Node.js 24 LTS** kèm npm (tối thiểu Node 22.12). Mở terminal mới sau khi cài. Cần Internet cho lần cài dependencies đầu tiên; sau đó ứng dụng chạy offline khi dependency đã cài hợp lệ.
-
-1. Mở thư mục project trong VS Code.
-2. Chạy `run-backend.bat` bằng double-click hoặc terminal.
-3. Chạy `run-frontend.bat` trong cửa sổ khác.
-4. Mở frontend: `http://127.0.0.1:5173`.
-
-Backend: `http://127.0.0.1:8000` (không có trang ở `/`; xem `/api/health`). Swagger API docs: `http://127.0.0.1:8000/docs`. Swagger UI được lưu sẵn trong project để tài liệu cũng hoạt động offline, không cần CDN.
-
-Hai script tự kiểm tra runtime, tạo `backend/.venv`, cài dependencies đã khóa và chạy server. Backend cài lại khi checksum requirements đổi. Frontend đối chiếu dependency, dùng lại bản cài đúng ngay cả khi chỉ đổi version app/định dạng lockfile; không gọi registry khi thư viện đã đủ. Cache dùng lại của npm hoặc `.cache/npm` từ bản cũ, không cần quyền administrator. Khi cần cài mới, launcher hiện log tải gói và giới hạn mặc định 180 giây; xem [chẩn đoán khởi động frontend](docs/TROUBLESHOOTING.md#frontend-khởi-động-lâu). Hai server mặc định chỉ bind **127.0.0.1**. Không cần tạo `.env`; Vite proxy `/api` sang backend. `.env.example` chỉ dành cho tùy chọn override API base URL.
-
-**Dừng ứng dụng:** nhấn `Ctrl+C` ở cả hai cửa sổ, xác nhận `Y` nếu Windows hỏi dừng batch job. Không copy `node_modules` hoặc `.venv` giữa Windows và Linux; để script cài lại trên hệ điều hành tương ứng.
-
-### Linux/macOS hoặc chạy thủ công
-
-Từ thư mục gốc, mở hai terminal:
-
-```bash
-python scripts/backend.py --run
-node scripts/frontend.mjs --run
-```
-
-Dùng `python3` nếu máy chỉ có lệnh này. Có thể chỉ chuẩn bị dependencies bằng cách bỏ `--run`. Các lệnh bên dưới dùng Python của virtual environment:
-
-```bash
-# Backend, từ backend/
-python -m venv .venv
-# Windows:
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-# Linux/macOS thay .venv\Scripts\python.exe bằng .venv/bin/python
-
-# Frontend, từ frontend/
-npm ci
-npm run dev
-```
-
-### Những lỗi thường gặp
-
-| Vấn đề | Cách xử lý |
-|---|---|
-| Không tìm thấy Python/Node/npm | Cài runtime ở trên, mở terminal mới; kiểm tra `python --version`/`py -3 --version` và `node --version`. |
-| Dashboard báo không gọi được API hoặc lỗi 500 proxy | Khởi chạy backend trước; kiểm tra `/api/health` và log terminal backend. Bấm **Thử lại**. |
-| Port 8000 hoặc 5173 đã được dùng | Dừng bản ứng dụng cũ. Vite dùng strict port để không tự đổi sang cổng ngoài cấu hình CORS. |
-| Cài dependency thất bại | Kiểm tra Internet, quyền ghi vào thư mục project và log package manager. Không bỏ TLS hoặc integrity verification. |
-| Đã đổi `.env` nhưng chưa có tác dụng | Khởi động lại Vite. Chỉ `frontend/.env.local` được Vite đọc cho cấu hình frontend. |
-| Môi trường ảo bị xóa một phần | Dừng backend, xóa `backend/.venv` rồi chạy lại script. Không xóa mã nguồn. |
-| `node_modules` bị xóa một phần | Dừng frontend, xóa `frontend/node_modules` rồi chạy lại script. |
-| Ngày dữ liệu không chạy theo ngày hôm nay | Đây là fixture 200 ngày cố định, kết thúc **20/10/2026**. “Last N days” tính từ ngày cuối fixture, được ghi trên Dashboard. |
-
 ## Dashboard được giữ từ v0.1
 
 - Giao diện tiếng Việt, giữ tên sản phẩm và thuật ngữ SEO phù hợp. Bảng màu theo ảnh tham chiếu mới: nền be ấm, thẻ trắng ngà, màu nhấn nâu đồng và sidebar nâu espresso; dùng chung qua CSS variables cho Dashboard, Settings và GSC Analytics. Số hiển thị theo `vi-VN`, ngày `dd/mm/yyyy`; dữ liệu API và giá trị số trong CSV giữ định dạng máy đọc được.
@@ -179,6 +252,8 @@ backend/
   app/providers/                MockProvider + SQLiteAnalyticsProvider
   app/gsc/                      Desktop OAuth, OS vault, Google/fixture clients, sync queue
   app/technical/                Safe crawler, extraction, graph, rules, persistent audits/reports
+  app/keywords/                 Keyword sets, rank history, import/export và GSC cache
+  app/ai/                       Agent, read-only tools, evidence và provider/cost controls
   app/db/                       SQLite engine và SQLAlchemy models
   migrations/                   Alembic schema revisions
   app/services/                 Aggregation và reporting
@@ -192,6 +267,8 @@ frontend/
   src/features/settings/        OAuth, property membership và đồng bộ
   src/features/gsc/             GSC Analytics, coverage và server reports
   src/features/technical/       Audit form, explorers, history, backlog và evidence panels
+  src/features/keywords/        Keyword Tracking và bảng rank theo tuần
+  src/features/ai/              Chat, nguồn dữ liệu, evidence, review và AI Settings
   src/services/                 Typed REST client + TanStack Query options
   src/types/                    TypeScript response contracts
   src/styles/                   Tailwind CSS 4 + theme/component styles
