@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.6 · Phase 6
+# Architecture · SEO Local Workspace v0.7 · Phase 7
+
+Phase 7 thêm `Keyword Research → stored source adapters → Research SQLite → review → explicit add-only Tracking transfer`, 10 bảng riêng trong migration005 và 7 read-only tools vào Agent hiện có. Không thêm provider live hoặc lịch chạy nền. Xem [kiến trúc Research](docs/KEYWORD_RESEARCH_ARCHITECTURE.md).
 
 Phase 6 thêm `AI Workspace → AIManager → ToolRegistry → existing SEO services`, evidence/review/history/usage riêng trong 6 bảng Agent. OpenAI là provider tùy chọn HTTPS cố định, OS keyring, consent/budget; mặc định local_report không dùng LLM. Không có publishing, arbitrary SQL/shell hoặc AI calls nền. Topical Map chưa có service, không đăng ký tool giả. Xem [kiến trúc Agent](docs/AI_AGENT_ARCHITECTURE.md) và [security](docs/AI_AGENT_SECURITY.md).
 

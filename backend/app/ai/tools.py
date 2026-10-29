@@ -26,6 +26,10 @@ from app.keywords import reports as keyword_reports
 from .schemas import Input, ToolEnvelope
 from .common import uid, now, fail, limited, view
 from .context import context, project, analytics, audit_run
+from app.research.agent_tools import (
+    SPECS as RESEARCH_SPECS,
+    execute as research_execute,
+)
 
 
 class Empty(Input):
@@ -124,6 +128,8 @@ TOOL_SPECS = {
         "Đại diện rank của tối đa 35 tuần; giữ snapshot profile/URL.",
     ),
 }
+
+TOOL_SPECS.update(RESEARCH_SPECS)
 
 
 def strict_schema(schema):
@@ -326,6 +332,8 @@ class ToolRegistry:
         return profile
 
     def _execute(self, name, args, p):
+        if name in RESEARCH_SPECS:
+            return research_execute(self, name, args, p)
         db = self.db
         if name in ("get_project_context", "get_data_source_status"):
             data = context(db, p["id"])

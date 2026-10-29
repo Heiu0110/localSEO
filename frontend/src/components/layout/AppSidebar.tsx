@@ -21,12 +21,12 @@ export function AppSidebar({ collapsed, toggle }: { collapsed: boolean; toggle: 
     <NavLink to={{ pathname: '/', search }} className="brand" aria-label="Trang chủ SEO Local Workspace"><span className="brand-mark"><ChartNoAxesCombined size={23} /></span><span className="brand-name">SEO Local<span>KHÔNG GIAN SEO</span></span></NavLink>
     <div className="sidebar-section">KHÔNG GIAN LÀM VIỆC</div>
     <nav aria-label="Điều hướng chính">{modules.slice(0, -1).map(({ path, label, icon: Icon }) => {
-      const link = <NavLink key={path} end={path === '/'} to={{ pathname: path, search }} className={`nav-item ${pathname === path ? 'active' : ''}`} aria-label={label}><Icon size={19} /><span>{label}</span>{path === '/' && <span className="nav-active-dot" />}</NavLink>;
+      const link = <NavLink key={path} end={path === '/'} to={{ pathname: path, search }} className={`nav-item ${(pathname === path || (path === '/keyword-tracking' && pathname === '/keyword-research')) ? 'active' : ''}`} aria-label={label}><Icon size={19} /><span>{label}</span>{path === '/' && <span className="nav-active-dot" />}</NavLink>;
       return collapsed ? <Tooltip text={label} key={path}>{link}</Tooltip> : link;
     })}</nav>
     <div className="sidebar-bottom"><div className="local-note"><Globe2 size={19} /><div><strong>Không gian làm việc riêng</strong><span>Riêng tư. Đơn giản. Tập trung.</span></div></div>
       <NavLink to={{ pathname: '/settings', search }} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} aria-label="Cài đặt"><Settings2 size={19} /><span>Cài đặt</span></NavLink>
-      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.6</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
+      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.7</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
     </div>
   </aside>;
 }

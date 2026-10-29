@@ -209,6 +209,22 @@ def context(db, key):
             "limitations": "Repo chỉ có placeholder; không có dữ liệu/mapping để phân tích.",
         },
     ]
+    from app.research.models import ResearchProject
+
+    with db.session() as s:
+        research_count = s.scalar(
+            select(func.count())
+            .select_from(ResearchProject)
+            .where(ResearchProject.local_project_id == key)
+        )
+    sources.append(
+        {
+            "id": "research",
+            "name": "Keyword Research",
+            "status": "available" if research_count else "not_configured",
+            "limitations": "Dữ liệu đã nhập có nguồn; SERP không phải rank live hoặc thị phần.",
+        }
+    )
     return {
         "project": p,
         "sources": sources,

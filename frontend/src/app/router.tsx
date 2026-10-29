@@ -11,6 +11,11 @@ const KeywordPage = lazy(() =>
     default: module.KeywordPage,
   })),
 );
+const ResearchPage = lazy(() =>
+  import("../features/research/ResearchPage").then((module) => ({
+    default: module.ResearchPage,
+  })),
+);
 const AIWorkspacePage = lazy(() =>
   import("../features/ai/AIWorkspacePage").then((module) => ({
     default: module.AIWorkspacePage,
@@ -26,6 +31,14 @@ export const router = createBrowserRouter([
       { path: "/settings", element: <SettingsPage /> },
       { path: "/gsc-analytics", element: <AnalyticsPage /> },
       { path: "/technical-seo", element: <TechnicalPage /> },
+      {
+        path: "/keyword-research",
+        element: (
+          <Suspense fallback={<p role="status">Đang tải Research…</p>}>
+            <ResearchPage />
+          </Suspense>
+        ),
+      },
       {
         path: "/ai-workspace",
         element: (

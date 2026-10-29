@@ -27,6 +27,7 @@ export function EvidenceDrawer({
       "/gsc-analytics?",
       "/technical-seo?",
       "/keyword-tracking?",
+      "/keyword-research?",
       "/ai-workspace?",
       "/?",
     ].some((prefix) => e.source_reference!.startsWith(prefix))

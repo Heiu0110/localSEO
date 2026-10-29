@@ -1,4 +1,30 @@
-# Validation evidence · v0.6 / Phase 6
+# Validation evidence · v0.7 / Phase 7 Core
+
+## Phase 7 Core — ngày 29/10/2026
+
+Baseline thực thi tại `70a4efb`: **170 backend, 58 Playwright, production build passed**. Đã kiểm tra head004 và backup SQLite trước migration005. Thay đổi giữ Mock/SQLite Analytics/OAuth/crawler/weekly Tracking/AI provider; Research không thêm dependencies hoặc request provider live.
+
+| Kiểm tra thực thi | Kết quả |
+|---|---|
+| Backend pytest toàn bộ | **207 passed**: 170 cũ + 37 Research tests, không failed/skipped/xfail |
+| TypeScript + Vite production build | **Passed**, Research route tải riêng khoảng46,3KB (gzip12,1KB) |
+| Playwright production preview toàn bộ | **68 passed**: 58 cũ + 10 Research, không failed/skipped |
+| Launcher tests | **17 passed**; launcher thực chuẩn bị0,0s, dependency không đổi và bỏ npm ci |
+| Dependencies | Không thêm dependency; lock ngoài root app version giống baseline; pip check không lỗi dependency |
+| Migration workspace | Nâng004→005, đối chiếu **toàn bộ giá trị 31 bảng cũ** ngay sau migrate: không bảng nào đổi; integrity_check=ok, FK không lỗi |
+| Migration/restore test | DB tạm từ004 có GSC facts và AI conversation: migrate hai lần giữ bảng cũ, backup bằng SQLite và đọc lại đúng dữ liệu/integrity |
+| Source integrations | Seed Unicode/NFC/duplicate/locale; demo và SQLite GSC fixture; Tracking import; Technical crawl fixture, không gọi domain thật |
+| Data integrity | CTR percent→ratio đúng; impressions không phải volume; paid competition/difficulty có unit/scale; missing values không thành0; GSC observation cùng kỳ/scope |
+| Clustering | Manual primary/move/split/merge/delete/review; lexical factors draft; SERP overlap1 và1/3 theo URL; thiếu dữ liệu unavailable |
+| SERP | JSON/CSV/XLSX imports; immutable/dedup; depth/completeness; paid/organic khác nhau; từ chối so profile khác; nhiều URL/domain đếm1 lần/SERP |
+| Tracking transfer | Approved-only, cùng website, separate preview/confirm, stale preview bị chặn, retry cùng job idempotent, skip duplicates cả trong lựa chọn khác locale; không ghi rank |
+| Agent/security | 7 tools mới scope theo conversation; extra SQL/project args bị chặn; snippets là untrusted data; giả reference Tracking khác website không đọc được dữ liệu nguồn; CSRF/Origin, malformed files/formulas/units bị chặn; SERP URLs không fetch |
+| UI | Tạo project, seed/GSC preview với đủ metrics/action, keyword edits/history, cluster review, opportunity review, SERP/profile/compare/cohorts, confirmed transfer và JSON download; responsive1366/768/390 |
+
+Đã xem screenshot thực tế ở1440×1000 và390×1000, không pageerror hoặc page overflow. Sửa select project trên mobile để nằm trong card; bảng rộng cuộn bên trong. Bản xem trước render từng object để không che metrics/action do giới hạn8cột của renderer dùng chung. Tests dùng dữ liệu có tên E2E/fixture, không có paid API calls.
+
+Google Ads/SERP API/Trends adapters live **chưa triển khai/kết nối** trong Core, không chỉ là một checkbox credentials còn thiếu. OpenAI/keyring Windows/Google OAuth live vẫn **Pending Live Verification** theo các phase trước. Native Windows chưa được chạy trong cloud; đã kiểm tra README/launcher args và scripts chung. Không claim current pricing, thị phần/traffic đối thủ hoặc rank Google live. AI clustering nâng cao, Topical Map, scheduler và Phase8–11 chưa triển khai. Một cảnh báo deprecation Starlette/httpx và NO_COLOR/FORCE_COLOR vẫn giống baseline, không có test bị tắt để vượt qua.
+
 
 ## Phase 6 — kiểm tra ngày 29/10/2026
 

@@ -1,4 +1,4 @@
-# SEO Local Workspace · v0.6 · AI Agent Foundation
+# SEO Local Workspace · v0.7 · Keyword & SERP Intelligence
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
 
@@ -61,6 +61,7 @@ Backend không có trang tại `http://127.0.0.1:8000/`. Vite proxy `/api` sang 
 - **AI Workspace:** chọn website, nhập “Phân tích hiệu suất SEO 28 ngày gần nhất”, chọn **Báo cáo ngoại tuyến** rồi gửi. Chế độ này đọc dữ liệu đã lưu theo quy tắc, không phải LLM và không cần API key.
 - **Technical SEO:** tạo dự án hoặc bộ thử nghiệm để xem URL, findings và bằng chứng.
 - **Theo dõi từ khóa:** tạo bộ từ khóa, nhập rank thủ công hoặc import dữ liệu.
+- **Keyword Research:** mở link tại Theo dõi từ khóa → tạo dự án → nhập seed/GSC/tệp → phân nhóm/review → nhập SERP đã quan sát. Chuyển keyword đã duyệt sang Tracking có bước xem trước/xác nhận riêng.
 - **Dữ liệu GSC thật:** vào **Cài đặt → Tích hợp Google Search Console**, làm theo [hướng dẫn OAuth](docs/GOOGLE_GSC_SETUP.md), thêm property và đồng bộ.
 
 Demo/bộ thử nghiệm dùng được khi chưa cấu hình Google hoặc OpenAI. Sau khi cài đủ dependency, các báo cáo đã lưu và API docs dùng được ngoại tuyến; đồng bộ Google, crawl website và gọi AI cloud cần Internet.
@@ -127,18 +128,28 @@ node scripts/frontend.mjs --run
 
 Mở http://127.0.0.1:5173 và giữ cả hai terminal chạy. Dùng `python` nếu máy không có lệnh `python3`. Có thể chỉ chuẩn bị dependency bằng cách bỏ `--run`. Cấu hình OpenAI dùng `backend/.venv/bin/python scripts/configure_ai_provider.py` và cần OS keyring khả dụng.
 
+## v0.7 Core: Keyword Research & SERP Intelligence
+
+Research Workspace tại `/keyword-research` bổ sung project theo website, seed/GSC/Tracking/crawl title và CSV/XLSX/JSON; Keyword Explorer có provenance và metric units/kỳ riêng; intent/group/cluster/review; manual/lexical/SERP-overlap clustering; immutable imported SERP snapshots, so sánh theo profile, domain cohorts và cơ hội có bằng chứng. Chỉ chuyển keyword đã duyệt vào bộ Tracking cùng website qua preview/confirmation; mặc định bỏ qua trùng, không sửa lịch sử rank.
+
+Migration005 thêm10bảng Research, giữ dữ liệu cũ. Agent Phase6 có thêm7tools read-only (tổng20), không có tool tự discovery/approve/transfer. GSC impressions không phải search volume, Ads competition không phải organic difficulty, SERP observed position không phải GSC Average Position hoặc rank MANUAL. Topical Map vẫn chưa triển khai.
+
+**Không cần provider trả phí để dùng Core.** Google Ads/SERP API/Trends live, AI clustering nâng cao, scheduled research và publishing chưa triển khai. Dữ liệu người dùng nhập được gắn nguồn, không được mô tả là live-verified.
+
+Tài liệu: [Hướng dẫn Research](docs/KEYWORD_RESEARCH_USER_GUIDE.md) · [Kiến trúc](docs/KEYWORD_RESEARCH_ARCHITECTURE.md) · [Dữ liệu & import](docs/KEYWORD_RESEARCH_DATA_MODEL.md) · [Clustering](docs/KEYWORD_CLUSTERING.md) · [SERP](docs/SERP_INTELLIGENCE.md) · [Providers](docs/KEYWORD_RESEARCH_PROVIDERS.md) · [Agent integration](docs/KEYWORD_RESEARCH_AI_INTEGRATION.md) · [Giới hạn](docs/KEYWORD_RESEARCH_LIMITATIONS.md).
+
 ## Phase 6: AI Workspace
 
 AI Analyst chỉ đọc dữ liệu hiện có, không tự thực hiện hành động SEO:
 
 - Hội thoại theo website, lịch sử/lưu phiên, kỳ báo cáo và URL được giữ khi hỏi tiếp.
-- Tool registry gồm 13 tool chỉ đọc, tái sử dụng GSC, Technical SEO và Keyword Tracking; không có SQL/shell/file hoặc external write tool.
+- Tool registry gồm 20 tool chỉ đọc, tái sử dụng GSC, Technical SEO và Keyword Tracking; không có SQL/shell/file hoặc external write tool.
 - Metric cards/bảng từ backend, bằng chứng có nguồn/kỳ/freshness/completeness và liên kết báo cáo; diễn giải/giả thuyết tách riêng.
 - Đề xuất có review/ghi chú; Approved chỉ lưu trạng thái, không tạo Technical backlog hoặc publishing.
 - Mặc định báo cáo theo quy tắc ngoại tuyến, ghi rõ không phải LLM. OpenAI là tùy chọn riêng, key OS keyring nhập qua terminal, có consent và ước tính/budget mỗi lượt.
 - Có token usage, dự phòng chi phí chưa rõ, idempotency và giới hạn tool/context/response; không gọi AI nền khi chỉ mở báo cáo.
 
-Topical Map chưa có triển khai trong repo nên Agent báo thiếu nguồn, không tạo mapping giả. Các phase 7–11 chỉ được lưu trong roadmap. Không có live API verification/giá hiện hành được ngầm bảo đảm: model ID được đối chiếu SDK chính thức, trang giá bị chặn truy cập trong môi trường triển khai, nên app để giá trống và yêu cầu người dùng xác minh/nhập ước tính trước khi bật OpenAI.
+Topical Map chưa có triển khai trong repo nên Agent báo thiếu nguồn, không tạo mapping giả. Phase7 Core đã bổ sung Research; các Phase8–11 còn trong roadmap. Không có live API verification/giá hiện hành được ngầm bảo đảm: model ID được đối chiếu SDK chính thức, trang giá bị chặn truy cập trong môi trường triển khai, nên app để giá trống và yêu cầu người dùng xác minh/nhập ước tính trước khi bật OpenAI.
 
 Bắt đầu ngay: **AI Workspace → chọn website → hỏi bằng Báo cáo ngoại tuyến**. Muốn OpenAI, xem [cấu hình provider](docs/AI_PROVIDER_SETUP.md); không gửi API key trong chat hoặc frontend.
 
@@ -254,6 +265,7 @@ backend/
   app/technical/                Safe crawler, extraction, graph, rules, persistent audits/reports
   app/keywords/                 Keyword sets, rank history, import/export và GSC cache
   app/ai/                       Agent, read-only tools, evidence và provider/cost controls
+  app/research/                 Research projects, keyword sources/metrics, SERP, clusters/review/transfer
   app/db/                       SQLite engine và SQLAlchemy models
   migrations/                   Alembic schema revisions
   app/services/                 Aggregation và reporting
@@ -269,6 +281,7 @@ frontend/
   src/features/technical/       Audit form, explorers, history, backlog và evidence panels
   src/features/keywords/        Keyword Tracking và bảng rank theo tuần
   src/features/ai/              Chat, nguồn dữ liệu, evidence, review và AI Settings
+  src/features/research/        Keyword Research và SERP Intelligence
   src/services/                 Typed REST client + TanStack Query options
   src/types/                    TypeScript response contracts
   src/styles/                   Tailwind CSS 4 + theme/component styles

@@ -372,7 +372,17 @@ class AIManager:
         window = message.data["window"]
         calls = []
         tool_errors = []
-        if any(x in q for x in ["topical", "chủ đề", "topic"]):
+        if any(
+            x in q for x in ["research", "nghiên cứu", "cluster", "serp", "đối thủ"]
+        ):
+            calls = [
+                ("get_keyword_research_summary", {}),
+                ("get_research_keyword_candidates", {}),
+                ("get_keyword_clusters", {}),
+                ("get_keyword_opportunities", {}),
+                ("get_competitor_serp_summary", {}),
+            ]
+        elif any(x in q for x in ["topical", "chủ đề", "topic"]):
             calls = []
         elif message.data.get("focus_url"):
             calls = [("get_url_diagnostics", {"url": message.data["focus_url"]})]
@@ -480,6 +490,12 @@ class AIManager:
                     )
                 else:
                     text = "URL diagnostics đã đọc từ snapshot; đây không phải Google URL Inspection."
+            elif source == "Keyword Research":
+                text = (
+                    d.get("reason")
+                    or "Đã đọc Research có giới hạn; mở evidence để xem draft/approval, kỳ và nguồn. Không tự sửa dữ liệu."
+                )
+                limitations.extend(e["limitations"])
             elif source == "Keyword Tracking":
                 if d.get("stats"):
                     text = f"Tuần {d['week']}: {d['stats']['dropped']} keyword giảm, {d['stats']['improved']} tăng; {d['stats']['not_checked']} chưa kiểm tra. Chỉ so quan sát cùng chuỗi."

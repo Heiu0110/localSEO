@@ -359,7 +359,7 @@ def test_tool_schema_rejects_project_sql_file_and_unbounded_arguments(args, env)
 def test_registry_metadata_and_output_schema_are_versioned_bounded_readonly(env):
     c, r = env
     rows = c.get("/api/ai/tools").json()
-    assert len(rows) == 13
+    assert len(rows) == 20
     assert all(
         x["version"] == "1.0"
         and x["permission"] == "read_only"

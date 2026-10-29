@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./keywords.css";
 @import "./ai.css";
+@import "./research.css";
 
 @theme inline {
   --color-background: var(--background);

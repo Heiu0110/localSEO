@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Plus, RefreshCw, Download, Target } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Sheet } from "../../components/ui/sheet";
@@ -274,6 +274,7 @@ export function KeywordPage() {
     }) || [];
   return (
     <div className="keyword-page">
+      <Link className="research-link" to="/keyword-research">Keyword Research → Nghiên cứu từ khóa & SERP</Link>
       <div className="page-title-row">
         <div>
           <div className="eyebrow">QUAN SÁT THỰC TẾ · LỊCH SỬ RÕ RÀNG</div>

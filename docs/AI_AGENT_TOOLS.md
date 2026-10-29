@@ -23,3 +23,7 @@ Không đăng ký get_topical_map_summary/get_topic_mappings vì nguồn chưa t
 Tool arguments được Pydantic kiểm tra extra=forbid, giới hạn days/limit/độ dài và enum sort. IDs khác website bị từ chối. GSC args lấy kỳ từ hội thoại; muốn kỳ khác hãy chọn lại ở composer. Native manual ranking week không bị suy ra từ GSC date range.
 
 HTTP của tool chỉ là API localhost phục vụ UI; model không được tự gọi API localhost tùy ý. Registry gọi service methods allowlist, không dùng model text để tạo SQL hoặc lệnh thực thi. SQL do các service kiểm soát và bind parameters.
+
+## Bổ sung Phase 7 — tổng 20 tools
+
+7 tools Research: `get_keyword_research_summary`, `get_research_keyword_candidates`, `get_keyword_clusters`, `get_serp_snapshot`, `compare_serp_snapshots`, `get_competitor_serp_summary`, `get_keyword_opportunities`. Tất cả chỉ đọc dữ liệu đã lưu thuộc website của hội thoại, cùng timeout/result/budget controls. Xem [phạm vi và evidence](KEYWORD_RESEARCH_AI_INTEGRATION.md). Không có discovery/fetch/review/transfer tool.

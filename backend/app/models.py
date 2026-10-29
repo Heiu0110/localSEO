@@ -131,4 +131,4 @@ class DataSource(BaseModel):
 class Health(BaseModel):
     status: Literal["ok"] = "ok"
     provider: Literal["hybrid"] = "hybrid"
-    version: str = "0.6.0"
+    version: str = "0.7.0"
