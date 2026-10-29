@@ -219,7 +219,7 @@ SQLite mặc định ở `backend/data/seo_workspace.db`, Git ignore. Migrations
 
 ## Dashboard được giữ từ v0.1
 
-- Giao diện tiếng Việt, giữ tên sản phẩm và thuật ngữ SEO phù hợp. Bảng màu theo ảnh tham chiếu mới: nền be ấm, thẻ trắng ngà, màu nhấn nâu đồng và sidebar nâu espresso; dùng chung qua CSS variables cho Dashboard, Settings và GSC Analytics. Số hiển thị theo `vi-VN`, ngày `dd/mm/yyyy`; dữ liệu API và giá trị số trong CSV giữ định dạng máy đọc được.
+- Giao diện tiếng Việt, giữ tên sản phẩm và thuật ngữ SEO phù hợp. Bảng màu theo ảnh tham chiếu mới: trắng–xám–bạc–đen, khung kính mờ trên nền đá, sidebar sáng với mục chọn màu đen, thẻ bo tròn và nút dạng pill. CSS variables dùng chung cho các module, gồm Dashboard, Settings, Technical SEO, Keyword Research và AI Workspace; nền WebP được đóng gói cục bộ, không cần CDN. Số hiển thị theo `vi-VN`, ngày `dd/mm/yyyy`; dữ liệu API và giá trị số trong CSV giữ định dạng máy đọc được.
 - Hai website minh họa: `xuongmaybalogiare.com` và `congtymaybalotuixach.com`.
 - Báo cáo 7/28/90 ngày; kỳ liền trước có cùng số ngày, không chồng lấn. Website/ngày lưu trong URL để refresh hoặc bookmark.
 - Clicks, impressions, CTR, position, so sánh và sparkline từ cùng dataset.
@@ -305,7 +305,7 @@ React 19, React Router 7 (declarative data router), Vite 7, TypeScript 5.9, Tail
 
 `package-lock.json` khóa frontend; `backend/requirements.txt` khóa phiên bản Python runtime và test dependencies đã kiểm chứng. FastAPI 0.156.4, Pydantic 2.14.1 và Uvicorn 0.54.0 không thay đổi stack yêu cầu. Các thư viện được kiểm chứng trên Linux/Python 3.12/Node 24; batch launchers Windows được cung cấp nhưng **chưa được chạy trên máy Windows thật**.
 
-Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu kem–be–nâu đồng–espresso theo ảnh tham chiếu. Có crawler chỉ đọc v0.3 Core và AI Workspace Phase 6; chưa triển khai GA4 hoặc backlinks. AI cloud là tùy chọn riêng, mặc định không gọi. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
+Giao diện giữ bố cục tiếng Việt của v0.1 và dùng bảng màu trắng–xám–đen và các bề mặt kính mờ theo ảnh tham chiếu. Có crawler chỉ đọc v0.3 Core và AI Workspace Phase 6; chưa triển khai GA4 hoặc backlinks. AI cloud là tùy chọn riêng, mặc định không gọi. Position là trung bình có trọng số impressions, không phải thứ hạng cố định; CTR là tổng clicks/impressions. Không dùng Demo/SQLite fixture để kết luận về hiệu quả SEO của domain thật. OAuth/live Google và Windows keyring trên máy thật còn Pending Live Verification.
 
 ## Bước tiếp theo
 

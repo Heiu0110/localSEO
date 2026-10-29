@@ -328,7 +328,7 @@
 }
 .kw-change.improved,
 .kw-change.entered {
-  color: #427046;
+  color: var(--trend-positive);
 }
 .kw-change.dropped,
 .kw-change.lost {

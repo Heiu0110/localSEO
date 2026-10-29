@@ -215,8 +215,8 @@
   overflow-wrap: anywhere;
 }
 .research-error {
-  background: #f6e9e4;
-  color: #713d2c;
+  background: var(--accent-soft);
+  color: var(--text-strong);
 }
 .research-notice {
   background: var(--surface-muted);

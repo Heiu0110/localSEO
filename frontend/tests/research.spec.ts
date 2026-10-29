@@ -217,6 +217,9 @@ test.describe("Research core workflow", () => {
     await expect(page.getByRole("dialog")).toContainText("comparable");
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Đối thủ", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Đối thủ", exact: true }),
+    ).toHaveClass(/active/);
     await expect(page.locator(".research-panel")).toContainText(
       "sampled_serps",
     );
@@ -235,6 +238,10 @@ test.describe("Research core workflow", () => {
     await page.getByLabel("Tìm từ khóa Research").fill("may balo học sinh");
     await page.getByLabel("Chọn may balo học sinh", { exact: true }).check();
     await page.getByRole("button", { name: "Duyệt từ khóa đã chọn" }).click();
+    // Approval clears the selection after the save; wait before reselecting.
+    await expect(page.getByRole("status")).toContainText(
+      "Đã lưu Research; chưa thay đổi Tracking.",
+    );
     await page.getByLabel("Chọn may balo học sinh", { exact: true }).check();
     await page
       .getByLabel("Bộ Tracking đích", { exact: true })

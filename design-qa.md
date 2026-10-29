@@ -1,30 +1,55 @@
-# Kiểm tra bảng màu theo ảnh tham chiếu
+# LocalSEO — monochrome UI review
 
-Phạm vi: yêu cầu đổi màu UI ngày 21/10/2026. Ảnh nguồn là ảnh người dùng đính kèm trong cuộc trò chuyện (736 × 1349 px, không có đường dẫn file local). Chỉ tham chiếu bảng màu kem/be/nâu đồng/nâu espresso. Bố cục landing page, serif display font và hình nội thất trong ảnh nằm ngoài phạm vi; không thay thế Dashboard bằng landing page.
+Date: 2026-10-29
 
-## Bằng chứng giao diện
+## Target and evidence
 
-- Browser-rendered captures bằng Playwright/Chromium trên ứng dụng local, không chỉ kiểm tra HTTP/build.
-- Desktop CSS viewport 1440 × 1080, deviceScaleFactor 1; ảnh full-page giữ chiều rộng 1440 px: `/tmp/seo-copper-dashboard.png`, `/tmp/seo-copper-settings.png`, `/tmp/seo-copper-analytics.png`, `/tmp/seo-copper-analytics-urls.png`.
-- Mobile CSS viewport/ảnh 390 × 844, density 1: `/tmp/seo-copper-mobile-dashboard.png`, `/tmp/seo-copper-mobile-settings.png`, `/tmp/seo-copper-mobile-analytics.png`.
-- Vùng chart, tab, nút và focus ring: `/tmp/seo-copper-controls.png` (1180 × 550 px, crop desktop).
-- Đã xem ảnh tham chiếu trong cuộc trò chuyện và các ảnh giao diện render. So sánh ở cấp palette; không chuẩn hóa hai bố cục khác nhau để tuyên bố khớp pixel. Ảnh chụp nội bộ ở `/tmp`, không chứa Google credentials.
+- Source visual truth: the user's latest inline reference image, 1152 × 2048 px, showing a white/silver glass dashboard with black panels and pill navigation. The original attachment is visible in the conversation but is not available as an image file in the execution workspace.
+- This is a style adaptation for the existing Vietnamese SEO application. The reference's calendar, people, file preview and French copy are not LocalSEO features.
+- Implementation: local Chromium at `http://127.0.0.1:5173`, Dashboard, demo `xuong-may`, 28 days, previous-period comparison enabled, sidebar expanded on desktop and collapsed on mobile.
+- Desktop: [full-page capture](docs/ui/monochrome-desktop.png), CSS viewport 1440 × 1000, image 1440 × 2073, deviceScaleFactor 1.
+- Mobile: [full-page capture](docs/ui/monochrome-mobile.png), CSS viewport 390 × 1000, image 390 × 3265, deviceScaleFactor 1.
+- Other rendered captures: `/tmp/localSEO-monochrome-{settings,gsc,technical,keywords,ai-settings}.png`, corresponding `-mobile.png` captures, and `/tmp/localSEO-monochrome-research-loaded{,-mobile}.png`.
+- Focused evidence: `/tmp/localSEO-monochrome-tooltip.png`, a 1440 × 1000 viewport capture with the first KPI tooltip open.
+- No density resampling was applied. The source includes a decorative outer stage; its dimensions do not describe the application's CSS viewport. Exact pixel correspondence is not asserted.
 
-## Đánh giá
+## Findings and iteration history
 
-- **Typography:** giữ font sans-serif, phân cấp KPI và tiếng Việt hiện tại; serif của ảnh không được áp dụng vì yêu cầu chỉ đổi màu.
-- **Spacing/layout:** giữ nguyên spacing, lưới, border radius và responsive. Không phát hiện overflow ở các breakpoint đã kiểm tra.
-- **Colors:** nền `#e9e1d7`, thẻ `#fffdf9`, primary `#895537`, sidebar `#472b1e`; tương ứng màu be, trắng ngà, nâu đồng và nâu sẫm trong ảnh. Hover, focus, selected, tooltip, warning, progress, biểu đồ, theme-color và favicon dùng màu đồng bộ.
-- **Contrast:** muted text trên nền be 4,69:1; subtle text 4,66:1; chữ nút 6,05:1; chữ badge 4,74:1; sidebar secondary 6,79:1. Xu hướng vẫn có mũi tên/dấu số; biểu đồ kỳ trước vẫn nét đứt.
-- **Assets:** giữ bộ icon và cấu trúc favicon hiện có, chỉ đổi fill/stroke của favicon; không cần ảnh trang trí cho tác vụ đổi màu.
-- **Copy/content:** không sửa nội dung báo cáo, số liệu, nhãn nguồn dữ liệu hoặc hành vi đồng bộ.
+1. [P2, fixed] The privacy-note icon inherited the former dark sidebar's white accent and became faint on the new light sidebar. Changed `.local-note > svg` to `--sidebar-text`. The final desktop capture and focused tooltip capture show a dark, readable icon.
+2. [P3, fixed] The Dashboard navigation dot remained visible on other routes. Hide `.nav-active-dot` outside `.active`. The selected navigation item remains a black pill, with a visible keyboard focus outline.
+3. [Evidence gap] A normalized, combined source-image/implementation comparison could not be produced because the original inline image has no local file or downloadable identifier. The rendered screens were inspected against the visible design direction in the conversation; this is not a side-by-side or pixel-level verification.
 
-## Lịch sử kiểm tra và xác minh
+## Required fidelity surfaces
 
-Trước capture, đã làm đậm muted/subtle text để đạt tối thiểu 4,5:1 trên nền be. Lượt capture Analytics đầu còn skeleton; đã chụp lại sau khi bảng có dữ liệu. Không phát hiện P0/P1/P2 trong phạm vi đổi màu sau kiểm tra cuối.
+- **Fonts and typography:** retain the existing offline Inter/system sans stack and Vietnamese copy. Desktop headings are 42 px, mobile 28 px; metrics scale between 25 and 38 px. Table values retain tabular numerals, existing truncation, horizontal scrolling and full labels in detail views. Font rendering can vary with installed system fonts; no remote font request was added.
+- **Spacing and layout rhythm:** a rounded glass shell, inset light sidebar, 24 px cards, soft shadows and pill controls follow the reference. Tables retain their existing data structure and density. Mobile margins, sidebar width and card padding are reduced to preserve content width. Sidebar position was checked before/after a 700 px page scroll at 1440 and 390 px.
+- **Colors and tokens:** shared porcelain `#fcfcfc`, silver/gray surfaces and ink `#111111`. The first KPI and source-status panel use an inverse palette. Chart series retain solid versus dashed strokes. Trends and severity remain explicit in text and direction icons. Tooltip foreground/background were verified as `#fafafa` / `#151515`.
+- **Image quality:** one generated 1672 × 941 WebP stone background, 56.1 KB, bundled locally. It preserves the reference's pale sculptural direction without replacing any functional screen with a raster image. Existing Lucide navigation/control icons and Recharts plots remain functional. The favicon was recolored without changing its existing geometry.
+- **Copy and content:** Vietnamese labels, SEO terminology, demo/SQLite distinctions, source warnings, offline mode, and SIWC Pending Live Verification are retained. No example team, calendar or fabricated SEO numbers were introduced.
 
-`npm run build`: passed. Toàn bộ 26 Playwright tests: passed, bao gồm chọn website/kỳ, chart/compare, tìm kiếm/sort/pagination, panel, CSV, Settings→Sync→Analytics và responsive 1366/1024/768/390 px. Các phiên browser chụp ảnh không có pageerror. Không chạy lại backend tests vì không sửa backend.
+## Interaction and regression checks
 
-Checklist hoàn tất: palette chung; trạng thái tương tác; ảnh desktop/mobile; bảng đã tải xong; tương phản chữ chính; regression tests và build.
+- Production build passed: `npm --prefix frontend run build`.
+- 62/62 tests outside Research passed in the full regression run.
+- Research rerun: 10/10 passed after making two existing test waits explicit: wait for the approval save before reselecting a keyword, and wait for the competitor tab to activate before inspecting its panel. Application business logic was not changed.
+- The full run before those wait fixes encountered Research timing failures; it was not a single green 72-test run. All 72 distinct scenarios have passed across the full run and scoped rerun.
+- Existing responsive checks cover 1366, 1024, 768 and 390 px where applicable. Additional captures of Settings, GSC, Technical SEO, Keyword Tracking, Research and AI Settings at desktop/mobile widths had no page overflow and no browser page/console errors.
+- Table search/sort/pagination/export, chart metric/series selection, source switching, detail sheets, sidebar navigation/collapse, form workflows, AI settings and mocked ChatGPT connection states passed regression checks.
+- No live Google or ChatGPT authentication/inference was performed for this presentation change. No backend, database schema, dependency or startup-script changes.
 
-final result: passed
+## Implementation checklist
+
+- [x] Apply shared monochrome tokens and reference-inspired surfaces.
+- [x] Preserve existing Vietnamese SEO/AI workflows.
+- [x] Verify desktop/mobile rendering and key interactions.
+- [x] Fix the light-sidebar icon contrast and capture the revised screen.
+- [ ] Produce the required combined comparison with the original source image when it is accessible as an image file.
+
+## Follow-up polish
+
+- The screenshot's people/calendar/file imagery is intentionally omitted because it does not represent LocalSEO data.
+- Owner review on localhost can assess the visual direction on the target Windows browser.
+
+final result: blocked
+
+The remaining blocker is the source-image comparison artifact, not a known functional or responsive defect. The Product Design QA skill requires source and implementation together in the same comparison input before a visual pass can be declared.
