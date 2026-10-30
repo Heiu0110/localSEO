@@ -24,7 +24,9 @@ Backend in `Application startup complete` và địa chỉ `127.0.0.1:8000` ngh�
 
 Launcher hiện đối chiếu dependency thực tế với lockfile và phiên bản đã cài. Đổi version app, định dạng JSON hoặc thiếu stamp từ launcher cũ không tự buộc cài lại toàn bộ. Bản cài hợp lệ từ `npm ci` cũng được dùng lại sau một kiểm tra Vite/esbuild/plugin ngoại tuyến. Giữ nguyên `frontend/node_modules`; đừng giải nén vào thư mục mới mỗi lần cập nhật nếu muốn giữ bản cài.
 
-Khi thật sự cần npm, launcher dùng cache chung của máy/cấu hình npm; nếu dự án đã có `.cache/npm` từ bản cũ thì giữ cache ấm đó. Log `npm http` cho biết đang tải gói nào hoặc cache hit. Request mạng mặc định giới hạn 60 giây, retry một lần, toàn lượt cài mặc định 180 giây. Quá hạn sẽ dừng cả tiến trình con và không đánh dấu cài thành công. Không tắt TLS, bỏ integrity hoặc tự cấp quyền install scripts.
+Khi thật sự cần npm, launcher dùng cache chung của máy/cấu hình npm; nếu dự án đã có `.cache/npm` từ bản cũ thì giữ cache ấm đó. Log `npm http` cho biết đang tải gói nào hoặc cache hit. Cấu hình npm `fetch-timeout` mặc định 120 giây, retry một lần; toàn lượt cài được phép tối đa **600 giây (10 phút)**. Giới hạn này chỉ dành cho bước cài, không làm chậm những lần chạy khi thư viện đã hợp lệ. Quá hạn thực sự sẽ dừng tiến trình con; chỉ ghi nhận thành công sau mã thoát npm bằng 0, đối chiếu dependency và kiểm tra Vite/esbuild/plugin.
+
+Trường hợp `added … packages in 3m` rồi launcher cũ báo quá 180 giây xảy ra khi tải gói gần chạm giới hạn, sau đó npm còn chạy postinstall/hoàn tất lượt cài. Launcher mới tăng thời gian cho cài lần đầu và nhận sự kiện kết thúc tiến trình npm ngay, không chờ đóng các handle sau khi tiến trình đã thoát. Nếu npm kết thúc bình thường đúng lúc bộ hẹn giờ hết hạn, mã thoát 0 vẫn được kiểm tra bằng bản cài và native probe; không chỉ dựa vào dòng `added … packages` để coi là thành công.
 
 Sau khi bản cài vừa hoàn tất như ảnh, cập nhật code rồi mở lại cùng thư mục:
 
@@ -35,10 +37,10 @@ git pull
 
 Bạn sẽ thấy `Dependency không đổi… bỏ qua npm ci` hoặc `Tìm thấy bản cài khớp lockfile… không tải lại npm`. Lần chuyển sang launcher mới chỉ thêm kiểm tra native một lần. Cài mới từ đầu vẫn cần Internet hoặc cache đầy đủ và phụ thuộc tốc độ mạng/ổ đĩa.
 
-Nếu mạng chậm nhưng log HTTP vẫn tiến triển, cho phép tối đa 10 phút **chỉ cho lần cài đó** (request mạng tối đa 120 giây):
+Nếu mạng chậm hơn 10 phút nhưng log HTTP vẫn tiến triển, cho phép tối đa 20 phút **chỉ cho lần cài đó** (cấu hình fetch-timeout vẫn 120 giây):
 
 ```powershell
-.\run-frontend.bat --install-timeout=600
+.\run-frontend.bat --install-timeout=1200
 ```
 
 Dừng cửa sổ frontend đang chạy trước. Chỉ khi bản cài bị hỏng hoặc kiểm tra native báo thiếu file, dùng cài lại có chủ ý (npm ci sẽ thay node_modules, giữ cache):

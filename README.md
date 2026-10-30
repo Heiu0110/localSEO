@@ -111,8 +111,9 @@ Bước cài thư viện (`npm`) và bước chạy Vite là hai bước riêng.
 | Vấn đề | Cách xử lý |
 |---|---|
 | Không tìm thấy Python/Node/npm | Cài runtime, mở terminal mới; kiểm tra các lệnh version ở bước 1. |
-| Frontend đang “cài thư viện” | Xem log `npm http`/`npm ERR` và kết nối tới `registry.npmjs.org`. Launcher mặc định giới hạn toàn lượt cài 180 giây; xem [chẩn đoán chi tiết](docs/TROUBLESHOOTING.md#frontend-khởi-động-lâu). |
-| Mạng chậm nhưng vẫn đang tải gói | Dừng frontend rồi chạy `.\run-frontend.bat --install-timeout=600` để cho phép tối đa 600 giây. Những lần sau dependency hợp lệ sẽ được dùng lại. |
+| Frontend đang “cài thư viện” | Xem log `npm http`/`npm ERR` và kết nối tới `registry.npmjs.org`. Lần cài đầu được phép tối đa **600 giây (10 phút)**; những lần sau dùng lại dependency hợp lệ. Xem [chẩn đoán chi tiết](docs/TROUBLESHOOTING.md#frontend-khởi-động-lâu). |
+| Đã hiện `added … packages` rồi launcher cũ báo quá 180 giây | Cập nhật code rồi chạy lại `.\run-frontend.bat` trong **cùng thư mục**, giữ `frontend/node_modules`. Launcher kiểm tra bản cài hoàn chỉnh để dùng lại; không cần chạy `--repair` trước. |
+| Mạng chậm hơn 10 phút nhưng vẫn đang tải gói | Dừng frontend rồi chạy `.\run-frontend.bat --install-timeout=1200` để cho phép tối đa 20 phút cho lượt cài đó. Thời gian này không áp dụng cho những lần chỉ dùng lại thư viện. |
 | Bản cài frontend bị hỏng | Dừng frontend rồi chạy `.\run-frontend.bat --repair`; tùy chọn này chủ động cài lại, không cần dùng mỗi lần. |
 | Giao diện báo không gọi được API hoặc proxy 500 | Kiểm tra backend đã hiện `Application startup complete.` và mở `/api/health`; xem lỗi tại terminal backend rồi bấm **Thử lại** trong app. |
 | Port 8000 hoặc 5173 đã được dùng | Dừng terminal ứng dụng cũ rồi chạy lại. Vite dùng strict port để giữ đúng cấu hình kết nối. |

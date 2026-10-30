@@ -18,6 +18,7 @@ import {
   stampDependencies,
 } from "../frontend-dependencies.mjs";
 import {
+  DEFAULT_INSTALL_TIMEOUT,
   acquireInstallLock,
   installArguments,
   prepareFrontend,
@@ -282,7 +283,9 @@ test("concurrent installers are blocked and abandoned locks can be recovered", (
 test("npm uses bounded requests/retry, shows downloads and reuses configured or warm cache", (t) => {
   const f = fixture(t);
   const args = installArguments(f.root);
-  assert.ok(args.includes("--fetch-timeout=60000"));
+  assert.equal(DEFAULT_INSTALL_TIMEOUT, 600_000);
+  assert.ok(args.includes("--fetch-timeout=120000"));
+  assert.ok(installArguments(f.root, 180_000).includes("--fetch-timeout=60000"));
   assert.ok(args.includes("--fetch-retries=1"));
   assert.ok(args.includes("--loglevel=http"));
   assert.equal(args.includes("--cache"), false); // Use shared OS/user cache for a new checkout.
@@ -292,6 +295,93 @@ test("npm uses bounded requests/retry, shows downloads and reuses configured or 
       installArguments(f.root).at(-1),
       resolve(f.root, ".cache/npm"),
     );
+});
+
+test("cold install receives ten minutes; a validated install is then reused without npm", async (t) => {
+  const f = fixture(t);
+  rmSync(resolve(f.frontend, "node_modules"), { recursive: true });
+  const calls = [];
+  await prepareFrontend({
+    root: f.root,
+    run: async (_, args, options) => {
+      calls.push({ args, options });
+      if (args[0] === "ci") f.install();
+    },
+  });
+  assert.equal(calls[0].options.timeoutMs, 600_000);
+  assert.equal(calls[0].options.installing, true);
+  assert.equal(calls[1].options.timeoutMs, 30_000);
+  assert.equal(inspectDependencies(f.frontend).needsProbe, false);
+  await prepareFrontend({
+    root: f.root,
+    run: async () => assert.fail("A completed install must not download again"),
+  });
+});
+
+test("successful exit is accepted without waiting for delayed stdio close", async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  const running = runCommand("npm-cli.js", ["ci"], {
+    timeoutMs: 20,
+    spawnProcess: () => {
+      queueMicrotask(() => {
+        child.exitCode = 0;
+        child.emit("exit", 0);
+        // No close event: inherited handles can outlive the npm process.
+      });
+      return child;
+    },
+  });
+  await running;
+});
+
+test("a queued successful exit at the deadline is not treated as a timeout", async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  await runCommand("npm-cli.js", ["ci"], {
+    timeoutMs: 10,
+    spawnProcess: () => {
+      queueMicrotask(() => { child.exitCode = 0; });
+      setTimeout(() => {
+        child.emit("exit", 0);
+        child.emit("close", 0);
+      }, 30);
+      return child;
+    },
+  });
+});
+
+test("normal zero exit wins a race with asynchronous timeout termination", async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  await runCommand("npm-cli.js", ["ci"], {
+    timeoutMs: 10,
+    spawnProcess: () => {
+      // No PID: simulate a pending asynchronous terminator without killing an
+      // actual process. npm reports success just after the deadline fired.
+      setTimeout(() => {
+        child.exitCode = 0;
+        child.emit("exit", 0);
+        child.emit("close", 0);
+      }, 30);
+      return child;
+    },
+  });
+});
+
+test("a nonzero npm exit is preserved when close is delayed", async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  await assert.rejects(runCommand("npm-cli.js", ["ci"], {
+    timeoutMs: 1000,
+    spawnProcess: () => {
+      queueMicrotask(() => {
+        child.exitCode = 7;
+        child.emit("exit", 7);
+      });
+      return child;
+    },
+  }), (error) => error.exitCode === 7);
 });
 
 test("runner supports executable paths with spaces without using a shell", async (t) => {

@@ -17,7 +17,9 @@ import {
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 export const repositoryRoot = resolve(scriptDirectory, "..");
-const DEFAULT_INSTALL_TIMEOUT = 180_000;
+// A cold Windows install can legitimately spend several minutes downloading
+// tarballs. This budget applies only when npm is needed, not on every launch.
+export const DEFAULT_INSTALL_TIMEOUT = 600_000;
 export function npmCli() {
   // Node -> npm-cli.js avoids cmd.exe quoting in Windows paths containing spaces.
   const dirs = [
@@ -115,9 +117,9 @@ export function stopProcessTree(
 export async function runCommand(
   script,
   args,
-  { cwd, timeoutMs = 0, installing = false } = {},
+  { cwd, timeoutMs = 0, installing = false, spawnProcess = spawn } = {},
 ) {
-  const child = spawn(process.execPath, [script, ...args], {
+  const child = spawnProcess(process.execPath, [script, ...args], {
     cwd,
     stdio: "inherit",
     shell: false,
@@ -141,6 +143,9 @@ export async function runCommand(
     : null;
   const timer = timeoutMs
     ? setTimeout(() => {
+        // The exit notification may still be queued at the deadline. Never
+        // terminate a process that Node already knows has finished.
+        if (child.exitCode !== null || child.signalCode != null) return;
         timedOut = true;
         stopProcessTree(child);
       }, timeoutMs)
@@ -148,16 +153,21 @@ export async function runCommand(
   try {
     const code = await new Promise((resolveCode, reject) => {
       child.once("error", reject);
-      child.once("close", (status) => resolveCode(status ?? 1));
+      // stdio is inherited, so no captured output needs draining. Waiting for
+      // close can keep the deadline alive after npm has exited successfully.
+      child.once("exit", (status) => resolveCode(status ?? 1));
     });
     if (interrupted) {
       const error = new Error("Đã dừng frontend theo yêu cầu.");
       error.exitCode = 130;
       throw error;
     }
-    if (timedOut) {
+    // On Windows taskkill is asynchronous: npm can finish normally between the
+    // deadline firing and termination. Its real zero exit status wins that race;
+    // prepareFrontend still checks the installed tree and native tools below.
+    if (timedOut && code !== 0) {
       const error = new Error(
-        `Cài/kiểm tra thư viện vượt giới hạn ${Math.round(timeoutMs / 1000)} giây. Đã dừng tiến trình con; không ghi nhận cài thành công. ${installing ? "Kiểm tra dòng npm http/ERR gần nhất. Có thể tăng giới hạn bằng --install-timeout=600 nếu kết nối chậm nhưng vẫn tải được." : "Kiểm tra cấu hình Vite và dependency; dùng --repair nếu bản cài bị hỏng."}`,
+        `Cài/kiểm tra thư viện vượt giới hạn ${Math.round(timeoutMs / 1000)} giây. Đã dừng tiến trình con; không ghi nhận cài thành công. ${installing ? "Giữ nguyên node_modules và chạy lại cùng thư mục: bản cài hoàn chỉnh sẽ được kiểm tra ngoại tuyến để dùng lại. Nếu vẫn cần tải qua mạng chậm, có thể tăng giới hạn bằng --install-timeout=1200. Xem dòng npm http/ERR gần nhất." : "Kiểm tra cấu hình Vite và dependency; dùng --repair nếu bản cài bị hỏng."}`,
       );
       error.exitCode = 124;
       throw error;
@@ -307,7 +317,7 @@ export async function main(argv = process.argv.slice(2)) {
         !arg.startsWith("--install-timeout="),
     )
   )
-    throw new Error("Tùy chọn hợp lệ: --run, --repair, --install-timeout=180.");
+    throw new Error("Tùy chọn hợp lệ: --run, --repair, --install-timeout=600.");
   await prepareFrontend({
     repair: argv.includes("--repair"),
     timeoutMs: seconds * 1000,
