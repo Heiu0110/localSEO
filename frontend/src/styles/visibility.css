@@ -1,0 +1,455 @@
+.visibility-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.visibility-page .page-title-row {
+  margin-bottom: 0;
+}
+.visibility-project-picker {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 22px;
+}
+.visibility-project-picker > label {
+  flex: 1;
+  max-width: 420px;
+}
+.visibility-project-picker > div {
+  flex: 1;
+  min-width: 0;
+}
+.visibility-project-picker p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.7;
+}
+.visibility-page label,
+.visibility-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.visibility-page :is(input:not([type="checkbox"]), select, textarea),
+.visibility-form :is(input:not([type="checkbox"]), select, textarea),
+.visibility-inline-review input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 12px;
+}
+.visibility-page textarea,
+.visibility-form textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.7;
+}
+.visibility-page select[multiple],
+.visibility-form select[multiple] {
+  min-height: 100px;
+}
+.visibility-panel {
+  padding: 24px;
+  min-width: 0;
+}
+.visibility-panel h2 {
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+.visibility-panel p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 10px 0;
+}
+.visibility-panel h3 {
+  font-size: 14px;
+  margin: 14px 0;
+}
+.visibility-tabs {
+  margin: 0;
+  width: 100%;
+}
+.visibility-tabs button {
+  flex-grow: 1;
+}
+.visibility-scope-note {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  font-size: 12px;
+  line-height: 1.8;
+  padding: 15px 18px;
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  color: var(--text-strong);
+}
+.visibility-scope-note svg {
+  flex: none;
+  margin-top: 3px;
+}
+.visibility-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.visibility-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.visibility-stats > div {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.visibility-stats > div > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.visibility-stats strong {
+  font-size: 28px;
+  font-weight: 550;
+}
+.visibility-stats small {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.visibility-panel .visibility-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--surface-muted);
+  border-radius: 18px;
+  margin: 18px 0;
+}
+.visibility-cohort {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.visibility-cohort > strong {
+  font-size: 16px;
+}
+.visibility-cohort > span {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.visibility-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.visibility-actions h2 {
+  flex: 1;
+  margin: 0;
+}
+.visibility-actions > .button {
+  white-space: normal;
+  text-align: center;
+}
+.visibility-table-scroll {
+  overflow: auto;
+  max-width: 100%;
+  margin: 18px 0 6px;
+}
+.visibility-table {
+  min-width: 720px;
+  font-size: 12px;
+}
+.visibility-table :is(th, td) {
+  text-align: left;
+  padding: 13px 14px;
+  vertical-align: top;
+  height: auto;
+}
+.visibility-table th {
+  font-size: 11px;
+}
+.visibility-table td {
+  white-space: normal;
+  min-width: 100px;
+  max-width: 330px;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.visibility-table small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-top: 6px;
+}
+.visibility-table .button {
+  min-height: 32px;
+  font-size: 11px;
+  padding: 7px 12px;
+}
+.visibility-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 18px 0 0;
+}
+.visibility-notice {
+  font-size: 12px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  color: var(--foreground);
+  line-height: 1.8;
+}
+.visibility-text-button {
+  text-align: left;
+  color: var(--primary);
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.visibility-link {
+  display: inline-block;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  margin: 8px 0;
+}
+.visibility-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.visibility-form p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.visibility-form > .button {
+  align-self: flex-start;
+  white-space: normal;
+}
+.visibility-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.visibility-check,
+.visibility-page label.visibility-check,
+.visibility-form label.visibility-check {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.visibility-check input {
+  flex: none;
+  accent-color: var(--primary);
+  margin-top: 4px;
+}
+.visibility-form details {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 12px;
+}
+.visibility-form summary,
+.visibility-panel summary {
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.visibility-domain {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--surface-muted);
+  border-radius: 12px;
+}
+.visibility-domain .button {
+  align-self: flex-start;
+}
+.visibility-form fieldset {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  min-width: 0;
+  font-size: 12px;
+}
+.visibility-source {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.visibility-source strong {
+  font-size: 13px;
+}
+.visibility-inline-review {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.visibility-meta {
+  display: grid;
+  grid-template-columns: 135px minmax(0, 1fr);
+  gap: 10px;
+  font-size: 12px;
+  margin: 20px 0;
+}
+.visibility-meta dt {
+  color: var(--muted);
+}
+.visibility-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.visibility-response {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.9;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: var(--surface);
+  margin: 16px 0;
+}
+.visibility-response mark {
+  background: var(--accent-soft);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--primary);
+  border-radius: 3px;
+}
+.visibility-evidence {
+  padding: 14px;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-size: 12px;
+}
+.visibility-evidence summary {
+  cursor: pointer;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+.visibility-import-preview {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .visibility-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .visibility-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .visibility-tabs button {
+    font-size: 10px;
+    padding-inline: 10px;
+  }
+  .visibility-panel {
+    padding: 20px;
+  }
+}
+@media (max-width: 700px) {
+  .visibility-project-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px;
+  }
+  .visibility-project-picker > label {
+    max-width: none;
+  }
+  .visibility-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .visibility-panel .visibility-stats {
+    grid-template-columns: 1fr;
+  }
+  .visibility-page .page-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .visibility-panel {
+    padding: 16px;
+  }
+  .visibility-actions {
+    align-items: flex-start;
+  }
+  .visibility-actions h2 {
+    flex-basis: 100%;
+  }
+  .visibility-stats {
+    gap: 10px;
+  }
+  .visibility-stats > div {
+    padding: 16px 12px;
+  }
+  .visibility-stats strong {
+    font-size: 24px;
+  }
+  .visibility-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .visibility-inline-review {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .visibility-meta {
+    grid-template-columns: 1fr;
+  }
+  .visibility-meta dt {
+    margin-top: 6px;
+  }
+  .visibility-cohort > strong {
+    font-size: 14px;
+  }
+  .visibility-tabs {
+    gap: 3px;
+    border-radius: 20px;
+  }
+  .visibility-response {
+    padding: 13px;
+    font-size: 12px;
+  }
+  .visibility-page h1 {
+    font-size: 28px;
+  }
+}

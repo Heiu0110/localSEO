@@ -21,6 +21,7 @@ const AIWorkspacePage = lazy(() =>
     default: module.AIWorkspacePage,
   })),
 );
+const VisibilityPage = lazy(() => import('../features/visibility/VisibilityPage').then(module => ({default:module.VisibilityPage})));
 import { TechnicalPage } from "../features/technical/TechnicalPage";
 
 export const router = createBrowserRouter([
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "/settings", element: <SettingsPage /> },
       { path: "/gsc-analytics", element: <AnalyticsPage /> },
       { path: "/technical-seo", element: <TechnicalPage /> },
+      { path: "/ai-visibility", element: <Suspense fallback={<p role="status">Đang tải AI Visibility…</p>}><VisibilityPage/></Suspense> },
       {
         path: "/keyword-research",
         element: (
@@ -65,6 +67,7 @@ export const router = createBrowserRouter([
               "/technical-seo",
               "/keyword-tracking",
               "/ai-workspace",
+              "/ai-visibility",
             ].includes(module.path),
         )
         .map((module) => ({ path: module.path, element: <PlaceholderPage /> })),

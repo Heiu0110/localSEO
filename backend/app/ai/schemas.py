@@ -2,6 +2,7 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
+from app.visibility.schemas import GEOAnalysisScope
 
 
 class Input(BaseModel):
@@ -75,6 +76,7 @@ class MessageCreate(Input):
         default=None, ge=0, le=1000, allow_inf_nan=False
     )
     request_key: str = Field(min_length=8, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")
+    geo_scope: GEOAnalysisScope | None = None
 
 
 class Review(Input):

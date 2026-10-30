@@ -1,4 +1,4 @@
-import { BrainCircuit, Activity, ChartNoAxesCombined, ChevronLeft, ChevronRight, FileChartColumn, Globe2, Layers3, LayoutDashboard, Link2, Network, Settings2, Target } from 'lucide-react';
+import { BrainCircuit, Eye, Activity, ChartNoAxesCombined, ChevronLeft, ChevronRight, FileChartColumn, Globe2, Layers3, LayoutDashboard, Link2, Network, Settings2, Target } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Tooltip } from '../ui/tooltip';
@@ -9,6 +9,7 @@ export const modules = [
   { path: '/technical-seo', label: 'Technical SEO', icon: Activity },
   { path: '/keyword-tracking', label: 'Theo dõi từ khóa', icon: Target },
   { path: '/ai-workspace', label: 'AI Workspace', icon: BrainCircuit },
+  { path: '/ai-visibility', label: 'AI Visibility', icon: Eye },
   { path: '/topical-map', label: 'Topical Map', icon: Network },
   { path: '/internal-links', label: 'Liên kết nội bộ', icon: Link2 },
   { path: '/seo-reports', label: 'Báo cáo SEO', icon: FileChartColumn },
@@ -26,7 +27,7 @@ export function AppSidebar({ collapsed, toggle }: { collapsed: boolean; toggle: 
     })}</nav>
     <div className="sidebar-bottom"><div className="local-note"><Globe2 size={19} /><div><strong>Không gian làm việc riêng</strong><span>Riêng tư. Đơn giản. Tập trung.</span></div></div>
       <NavLink to={{ pathname: '/settings', search }} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} aria-label="Cài đặt"><Settings2 size={19} /><span>Cài đặt</span></NavLink>
-      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.7</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
+      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.8</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
     </div>
   </aside>;
 }

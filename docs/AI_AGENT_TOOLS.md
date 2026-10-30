@@ -27,3 +27,7 @@ HTTP của tool chỉ là API localhost phục vụ UI; model không được t�
 ## Bổ sung Phase 7 — tổng 20 tools
 
 7 tools Research: `get_keyword_research_summary`, `get_research_keyword_candidates`, `get_keyword_clusters`, `get_serp_snapshot`, `compare_serp_snapshots`, `get_competitor_serp_summary`, `get_keyword_opportunities`. Tất cả chỉ đọc dữ liệu đã lưu thuộc website của hội thoại, cùng timeout/result/budget controls. Xem [phạm vi và evidence](KEYWORD_RESEARCH_AI_INTEGRATION.md). Không có discovery/fetch/review/transfer tool.
+
+## Phase 8 · 9 Visibility read-only tools
+
+Catalog hiện có 29 tools: 20 tool cũ + `get_ai_visibility_overview`, `get_visibility_prompt_cohort`, `get_visibility_observation`, `get_brand_mentions`, `get_brand_citations`, `get_competitor_visibility`, `get_cited_source_summary`, `get_geo_opportunities`, `get_geo_opportunity_evidence`. Scope website/project do server giữ, không thu thập hoặc ghi mới. Lượt GEO chỉ quảng bá nhóm tool liên quan, giữ request/result budget. Xem [contract và verifier](GEO_AGENT_INTEGRATION.md).

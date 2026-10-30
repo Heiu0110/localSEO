@@ -1,0 +1,107 @@
+{
+  "reference_cases": 26,
+  "text_examples": 14,
+  "scenario_examples_verified_by_pytest": 12,
+  "entity_decisions": {
+    "true_positives": 7,
+    "true_negatives": 20,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "ambiguous_abstained": 1,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "citation_attribution": {
+    "true_positives": 3,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "abstained_examples": 1
+  },
+  "scope": "Small synthetic, manually labelled fixture set. Citation checks validate reported attribution only, not URL availability or claim support. Scenario assertions run separately in pytest. No production-wide accuracy claim.",
+  "examples": [
+    {
+      "id": 1,
+      "case": "Exact brand mention",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 2,
+      "case": "Valid alias",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 3,
+      "case": "Generic ambiguous brand",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 4,
+      "case": "Competitor mention",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 5,
+      "case": "Competitor citation",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 6,
+      "case": "Owned citation",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 7,
+      "case": "URL mention not citation",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 8,
+      "case": "Wrong reported citation domain",
+      "citation_attribution_abstained": true,
+      "passed": true
+    },
+    {
+      "id": 9,
+      "case": "Mention without citation",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 10,
+      "case": "Citation without mention",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 11,
+      "case": "Missing citation metadata",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 12,
+      "case": "Complete capable zero citations",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 22,
+      "case": "Mention is not recommendation",
+      "citation_attribution_abstained": false,
+      "passed": true
+    },
+    {
+      "id": 24,
+      "case": "Multiple aliases one response",
+      "citation_attribution_abstained": false,
+      "passed": true
+    }
+  ]
+}

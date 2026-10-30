@@ -1,3 +1,15 @@
+# Phase 8 · AI Visibility & GEO Core · 30/10/2026
+
+Baseline thực chạy trước thay đổi: **271 backend / 74 Playwright / 22 launcher tests passed**, production build pass; không có baseline failures. Sau triển khai: **319 backend / 79 Playwright / 22 launcher tests passed**, TypeScript/Vite build pass. Có một warning Starlette/httpx giống baseline. Launcher probe xác nhận reuse node_modules và bỏ qua npm ci khi dependency graph không đổi.
+
+26 reference examples (14 text +12 scenarios): entity7TP/20TN/0FP/0FN,1 ambiguous abstention, precision/recall1.0 trên mẫu xác định; citation attribution3TP/0FP/0FN,1 wrong-domain abstention. Không suy rộng production accuracy hoặc tuyên bố factual/URL verification. Verifier gate tests bao gồm evidence ID bịa, valid-ID unsupported causality, stale revisions/registry/mapping, action prerequisites và generic task suggestions không được bypass gate.
+
+Migration006 thêm15 bảng. Backup SQLite trước nâng cấp; **41/41 bảng cũ giữ nguyên logical rows**, integrity_check=ok, foreign_key_check=0. Dedicated005→006 migration test giữ nguyên toàn bộ bảng/giá trị cũ sau upgrade lặp lại. Runtime backup/database được ignore trong Git. Không reset dữ liệu.
+
+Regression bao gồm Dashboard/GSC/Technical/Tracking/Research/AI/ChatGPT; Visibility UI1440/1024/768/390px không tràn viewport/pageerror. Focused smoke sau chỉnh verifier/task projection và race tải catalog: **5/5 Visibility Playwright pass** trên build/backend cuối; migration smoke **1/1 pass**. Không live OAuth/inference/search/grounding. SIWC và Windows native vault vẫn Pending Live Verification. [Báo cáo A–J](docs/PHASE8_COMPLETION_REPORT.md), [reference results](docs/AI_VISIBILITY_REFERENCE_RESULTS.json), [desktop](docs/ui/visibility-overview-desktop.png), [mobile](docs/ui/visibility-overview-mobile.png).
+
+---
+
 # Sửa callback/Windows Vault ChatGPT · 30/10/2026
 
 Ảnh người dùng cho thấy callback localhost trả lỗi chung; nút làm mới chưa giúp xác định nguyên nhân. Chưa có mã lỗi của lần live đó nên không gán nguyên nhân chắc chắn cho tài khoản người dùng.

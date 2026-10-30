@@ -30,6 +30,10 @@ from app.research.agent_tools import (
     SPECS as RESEARCH_SPECS,
     execute as research_execute,
 )
+from app.visibility.agent_tools import (
+    SPECS as VISIBILITY_SPECS,
+    execute as visibility_execute,
+)
 
 
 class Empty(Input):
@@ -130,6 +134,7 @@ TOOL_SPECS = {
 }
 
 TOOL_SPECS.update(RESEARCH_SPECS)
+TOOL_SPECS.update(VISIBILITY_SPECS)
 
 
 def strict_schema(schema):
@@ -171,7 +176,7 @@ class ToolRegistry:
     def close(self):
         self.executor.shutdown(wait=True, cancel_futures=True)
 
-    def definitions(self):
+    def definitions(self, names=None):
         return [
             {
                 "type": "function",
@@ -181,6 +186,7 @@ class ToolRegistry:
                 "strict": True,
             }
             for name, (model, description) in TOOL_SPECS.items()
+            if names is None or name in names
         ]
 
     def execute(self, name, args, project_id, timeout=5):
@@ -332,6 +338,8 @@ class ToolRegistry:
         return profile
 
     def _execute(self, name, args, p):
+        if name in VISIBILITY_SPECS:
+            return visibility_execute(self, name, args, p)
         if name in RESEARCH_SPECS:
             return research_execute(self, name, args, p)
         db = self.db

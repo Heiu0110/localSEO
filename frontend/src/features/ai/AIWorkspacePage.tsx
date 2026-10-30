@@ -128,6 +128,12 @@ export function AIWorkspacePage() {
     setMessagePage(1);
     setHistoryPage(1);
   }, [project?.id]);
+  const geoProject = params.get('visibility');
+  const geoOpportunity = params.get('geo');
+  useEffect(() => {
+    if (geoProject && geoOpportunity && project?.id)
+      setQuestion('Phân tích cơ hội GEO đã chọn theo evidence. Phân biệt fact/giả thuyết, nêu counterevidence và kế hoạch xác minh; cho phép không đề xuất thay đổi.');
+  }, [geoProject, geoOpportunity, project?.id]);
   const loaded = useRef("");
   useEffect(() => {
     if (!conversation || loaded.current === id) return;
@@ -203,6 +209,7 @@ export function AIWorkspacePage() {
         mode === "chatgpt" ? estimate?.connection_id || null : null,
       approved_max_estimate_usd: estimate?.turn_upper_estimate_usd ?? null,
       request_key: String(crypto.randomUUID()),
+      ...(geoProject && geoOpportunity ? {geo_scope:{visibility_project_id:geoProject,opportunity_id:geoOpportunity}} : {}),
     };
   }
   async function send() {
@@ -218,6 +225,7 @@ export function AIWorkspacePage() {
         data.days,
         data.end_date,
         data.provider,
+        data.geo_scope,
       ]);
       if (pendingRequest.current?.signature !== signature)
         pendingRequest.current = { signature, key: crypto.randomUUID() };
@@ -286,6 +294,7 @@ export function AIWorkspacePage() {
   return (
     <div className="ai-workspace">
       {title}
+      {geoProject && geoOpportunity && <div className="ai-readonly"><p>Đang phân tích cơ hội GEO đã chọn. Evidence bị khóa theo website và opportunity; provider, consent và ngân sách bên dưới vẫn áp dụng. Chưa gửi request cho đến khi bạn xác nhận gửi.</p></div>}
       <div className="ai-readonly">
         <ShieldCheck size={16} />
         <p>

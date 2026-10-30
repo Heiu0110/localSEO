@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.7 · Phase 7
+# Architecture · SEO Local Workspace v0.8 Core · Phase 8
+
+Phase 8 thêm AI Visibility: immutable observations/extraction revisions → cohort metrics → 9 deterministic GEO rules → existing AIManager verification/review. Migration006 thêm 15 bảng; 9 read-only tools mới, không thêm AI stack/live provider. [Kiến trúc](docs/AI_VISIBILITY_ARCHITECTURE.md), [dữ liệu](docs/AI_VISIBILITY_DATA_MODEL.md), [Agent](docs/GEO_AGENT_INTEGRATION.md).
 
 Phase 7 thêm `Keyword Research → stored source adapters → Research SQLite → review → explicit add-only Tracking transfer`, 10 bảng riêng trong migration005 và 7 read-only tools vào Agent hiện có. Không thêm provider live hoặc lịch chạy nền. Xem [kiến trúc Research](docs/KEYWORD_RESEARCH_ARCHITECTURE.md).
 

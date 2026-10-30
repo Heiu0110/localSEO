@@ -1,6 +1,16 @@
-# SEO Local Workspace · v0.7 · Keyword & SERP Intelligence
+# SEO Local Workspace · v0.8 Core · AI Visibility & GEO
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
+
+## Phase 8: AI Visibility & GEO Opportunity Finder
+
+Mở **AI Visibility** ở sidebar: tạo project gắn website → khai báo brand/đối thủ/domain → Prompt Library → nhập quan sát AI hoặc preview/import JSON/CSV → đọc mention/citation theo cohort → phát hiện GEO opportunities → xem evidence và human review. Phân tích ngoại tuyến không cần API key; phân tích sâu tái sử dụng AI Workspace với consent/model/ngân sách hiện có.
+
+Migration `006_ai_visibility` thêm 15 bảng, tự chạy khi khởi động backend; không reset SQLite hoặc sửa totals GSC. Không có dependency mới. Sao lưu SQLite trước nâng cấp, giữ cả credential vault của máy. Dashboard demo và dữ liệu GSC thực tiếp tục tách riêng.
+
+Chỉ đo tập quan sát được nhập: **mention ≠ citation ≠ recommendation**, Unknown citation không phải zero. Các provider/model/locale/grounding/branded cohorts được giữ riêng. Core không có live collector, scheduler, tự crawl citation hoặc publishing. ChatGPT auth tiếp tục **Pending Live Verification**, không cần login để dùng Core.
+
+Xem [hướng dẫn từng bước](docs/AI_VISIBILITY_USER_GUIDE.md), [metrics](docs/AI_VISIBILITY_METRICS.md), [9 rule GEO](docs/GEO_OPPORTUNITY_ENGINE.md), [verifier/accuracy](docs/GEO_EVIDENCE_VERIFICATION.md), [giới hạn](docs/AI_VISIBILITY_LIMITATIONS.md) và [báo cáo nghiệm thu](docs/PHASE8_COMPLETION_REPORT.md).
 
 ## Hướng dẫn chạy trên Windows 10/11
 
