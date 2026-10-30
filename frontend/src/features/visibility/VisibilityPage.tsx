@@ -1,3 +1,4 @@
+import { LiveResearchPanel } from "./LiveResearchPanel";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +39,7 @@ import { intents, Options } from "../research/shared";
 const tabs = {
   overview: "Tổng quan",
   prompts: "Prompt Library",
+  live: "AI Search",
   observations: "Quan sát",
   citations: "Citations",
   competitors: "Đối thủ",
@@ -130,6 +132,12 @@ function GroupCard({
           {labels[group.cohort.collection_method || ""]} ·{" "}
           {stamp(group.collection_start)} — {stamp(group.collection_end)}
         </span>
+        {group.cohort.measurement_profile && (
+          <span>
+            Measurement profile: {group.cohort.measurement_profile} · locale là
+            context yêu cầu, không xác minh vị trí vật lý
+          </span>
+        )}
       </div>
       <div className="visibility-stats">
         <div>
@@ -259,7 +267,8 @@ export function VisibilityPage() {
     [intent, setIntent] = useState(""),
     [cohort, setCohort] = useState("neutral"),
     [method, setMethod] = useState(""),
-    [competitor, setCompetitor] = useState("");
+    [competitor, setCompetitor] = useState(""),
+    [reviewedOnly, setReviewedOnly] = useState(false);
   const [job, setJob] = useState<VisibilityJob | null>(null),
     [kind, setKind] = useState<"prompts" | "observations">("observations"),
     [run, setRun] = useState<VisibilityRun | null>(null),
@@ -275,6 +284,7 @@ export function VisibilityPage() {
     ...(category ? { category } : {}),
     ...(intent ? { intent } : {}),
     cohort_type: cohort,
+    ...(reviewedOnly ? { require_human_review: "true" } : {}),
     ...(method ? { collection_method: method } : {}),
     ...(competitor ? { competitor_id: competitor } : {}),
   };
@@ -424,7 +434,7 @@ export function VisibilityPage() {
           </div>
           <h1>
             <Eye size={28} />
-            AI Visibility<span className="badge badge-neutral">v0.8 Core</span>
+            AI Visibility<span className="badge badge-neutral">v0.8.1</span>
           </h1>
           <p>
             Brand mentions, citations và GEO Opportunity Finder trên tập mẫu xác
@@ -524,8 +534,8 @@ export function VisibilityPage() {
             <SearchCheck size={17} />
             <p>
               Chỉ đo mẫu quan sát đã lưu. Mention ≠ citation ≠ recommendation;
-              không phải traffic, search volume hoặc thị phần AI. Live
-              collection chưa triển khai.
+              không phải traffic, search volume hoặc thị phần AI. Web Search chỉ
+              chạy sau preflight và xác nhận từng lượt.
             </p>
           </div>
           {[
@@ -628,6 +638,22 @@ export function VisibilityPage() {
                 </select>
               </Field>
             </div>
+          )}
+          {[
+            "overview",
+            "observations",
+            "opportunities",
+            "competitors",
+            "citations",
+          ].includes(tab) && (
+            <label className="visibility-check">
+              <input
+                type="checkbox"
+                checked={reviewedOnly}
+                onChange={(e) => setReviewedOnly(e.target.checked)}
+              />
+              Chỉ dùng extraction được xác nhận trong QA review
+            </label>
           )}
           {tab === "overview" && (
             <>
@@ -755,6 +781,19 @@ export function VisibilityPage() {
                       >
                         Sửa prompt
                       </Button>
+                      <Button
+                        variant="outline"
+                        disabled={p.status !== "active"}
+                        onClick={() =>
+                          navigate({
+                            tab: "live",
+                            live_prompt: p.id,
+                            collection: "",
+                          })
+                        }
+                      >
+                        Kiểm tra với AI Search
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -766,6 +805,13 @@ export function VisibilityPage() {
                 onChange={setPage}
               />
             </section>
+          )}
+          {tab === "live" && (
+            <LiveResearchPanel
+              key={pid}
+              project={project}
+              openObservation={setObs}
+            />
           )}
           {tab === "observations" && (
             <section className="card visibility-panel">

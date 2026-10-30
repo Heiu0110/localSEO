@@ -190,6 +190,7 @@ class Cohort(Input):
     brand_id: str | None = Field(default=None, max_length=100)
     competitor_id: str | None = Field(default=None, max_length=100)
     require_complete: bool = True
+    require_human_review: bool = False
 
     @model_validator(mode="after")
     def dates(self):

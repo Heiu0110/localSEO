@@ -4,7 +4,7 @@
 |---|---|---|
 | 6 | Analyst chỉ đọc, project context, evidence, hội thoại, review, usage | Đã triển khai; live OpenAI/keyring Windows chờ credentials/kiểm chứng |
 | 7 | Keyword/SERP intelligence, intent, clustering và mapping có review | Core đã triển khai: stored research/import/SERP/clustering/review/transfer; provider live v0.7.1 chưa triển khai |
-| 8 | Brand mention/citation và AI visibility trên tập quan sát xác định | v0.8 Core đã triển khai: manual/import, cohort metrics, 9 GEO rule và Agent/human review; live v0.8.1+ chưa triển khai |
+| 8 | Brand mention/citation và AI visibility trên tập quan sát xác định | v0.8 Core và v0.8.1 OpenAI adapter đã triển khai; live account verification Pending. Không scheduling/publishing |
 | 9 | Content research, brief/draft/editorial workflow | Chưa triển khai |
 | 10 | Local SEO/GBP với API được cấp quyền | Chưa triển khai |
 | 11 | Automation/publishing có preview, xác nhận và rollback | Chưa triển khai; làm cuối |
@@ -18,3 +18,7 @@ Khi phát triển tiếp, tái sử dụng context, evidence, registry, review v
 ## Phase 8 Core · 30/10/2026
 
 Manual/import observations, explicit citation attribution, immutable evidence, 9 GEO rules và existing Agent integration đã có. Không triển khai Phase 9–11. Live OpenAI web search/Gemini grounding chưa kết nối; chỉ xem xét sau Core acceptance và provider eligibility/cost/retention verification. Xem [báo cáo Core](PHASE8_COMPLETION_REPORT.md).
+
+## v0.8.1 · 30/10/2026
+
+Controlled OpenAI Web Search, consent/cost/recovery, native citation/source separation và live QA đã triển khai trên Phase 8. [Báo cáo](PHASE8_1_COMPLETION_REPORT.md). Model/key/account/pricing live vẫn Pending Live Verification. Chỉ đề xuất v0.8.2 Gemini Grounding sau current acceptance và scope riêng; chưa làm Phase 9–11.

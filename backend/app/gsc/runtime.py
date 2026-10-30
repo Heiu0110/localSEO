@@ -8,6 +8,7 @@ from app.gsc.vault import CredentialVault
 from app.technical.jobs import AuditManager
 from app.keywords.gsc import KeywordSyncManager
 from app.ai.agent import AIManager
+from app.visibility.live_collection import LiveCollectionManager
 
 
 class Runtime:
@@ -19,6 +20,7 @@ class Runtime:
         self.technical = AuditManager(self.db)
         self.keywords = KeywordSyncManager(self.db, client_factory or self.client)
         self.ai = AIManager(self.db, self.oauth.vault)
+        self.visibility_live = LiveCollectionManager(self.db, self.oauth.vault, self.ai)
 
     def client(self, prop, on_retry=None):
         return FixtureGSCClient() if prop.source_type == "fixture" else GoogleGSCClient(self.oauth, prop.connection_id, on_retry)

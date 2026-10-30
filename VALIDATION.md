@@ -1,3 +1,15 @@
+# v0.8.1 · OpenAI Web Search / GEO · 30/10/2026
+
+Baseline đã thực chạy:319 backend,79 Playwright,22 launcher passed, production build pass. Sau triển khai: **403 backend,86 Playwright,22 launcher passed**, TypeScript/Vite build pass; một warning Starlette/httpx giống baseline. Launcher dependency probe dùng lại node_modules/bỏ npm ci. Không paid calls trong tests. Focused provider→Observation→GEO→existing offline Agent→human review smoke trên test cuối cũng **1/1 pass**, giữ một usage entry duy nhất cho collection. Trên backend cuối, focused Visibility Core + live UI cũng **12/12 pass**.
+
+20 native-format goldens:14 citation URL TP,0FP/0FN, precision/recall1.0 trong synthetic fixtures;11 complete eligible citation samples,9 partial/ineligible/quarantined. Không là production accuracy/live verification; span mapping giữ unavailable, references riêng. [Results](docs/AI_VISIBILITY_LIVE_REFERENCE_RESULTS.json).
+
+Migration007 thêm3 bảng và reuse ai_usage_records. Backup/inventory logical SHA256: **56/56 bảng cũ nguyên vẹn**, integrity=ok,FK errors=0; backup restore cũng so lại cả56 bảng và pass. Scoped provider HTTP mocks, concurrency/key rotation/stale consent/shared budget/recovery, source/citation/zero/missing distinction, human QA và original provider immutability được test. Browser fixtures sau migration là dữ liệu thử có chủ đích.
+
+Actual OpenAI model/tool/account/pricing eligibility, source content và Windows native vault runtime còn **Pending Live Verification**. SDK schema được đọc ở commit05992039b9f7b78a48cf1e5a35727ba27d96db6e; guide/reference/pricing bị Tunnel403. [Báo cáo A–K](docs/PHASE8_1_COMPLETION_REPORT.md), [quy trình localhost](docs/GEO_LIVE_VERIFICATION.md).
+
+---
+
 # Phase 8 · AI Visibility & GEO Core · 30/10/2026
 
 Baseline thực chạy trước thay đổi: **271 backend / 74 Playwright / 22 launcher tests passed**, production build pass; không có baseline failures. Sau triển khai: **319 backend / 79 Playwright / 22 launcher tests passed**, TypeScript/Vite build pass. Có một warning Starlette/httpx giống baseline. Launcher probe xác nhận reuse node_modules và bỏ qua npm ci khi dependency graph không đổi.

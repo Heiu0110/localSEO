@@ -1039,7 +1039,7 @@ def test_additive_migration_preserves_all_existing_tables_and_values(tmp_path):
             connection.exec_driver_sql(
                 "SELECT count(*) FROM sqlite_master WHERE type='table' AND name LIKE 'visibility_%'"
             ).scalar()
-            == 15
+            == 18
         )
         assert connection.exec_driver_sql("PRAGMA integrity_check").scalar() == "ok"
         assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []

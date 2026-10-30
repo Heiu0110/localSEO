@@ -34,6 +34,15 @@ def check_evidence(s, p, eid, db):
     value = e.data["value"]
     if e.source_type == "observation":
         row = core.scoped(s, VisibilityObservation, e.source_id, p.id)
+        from .live_review import latest_review
+
+        review = latest_review(s, row)
+        if review and review.decision == "rejected":
+            fail(
+                "geo_stale_evidence",
+                "Extraction đã bị người dùng từ chối; không dùng để phân tích GEO.",
+                409,
+            )
         latest = core.latest_extraction(s, row.id)
         if (
             not latest
@@ -62,6 +71,15 @@ def check_evidence(s, p, eid, db):
         if not revision:
             fail("geo_missing_evidence", "Bản ghi mention/citation không còn.", 409)
         obs = core.scoped(s, VisibilityObservation, revision.observation_id, p.id)
+        from .live_review import latest_review
+
+        review = latest_review(s, obs)
+        if review and review.decision == "rejected":
+            fail(
+                "geo_stale_evidence",
+                "Extraction đã bị từ chối; phát hiện lại GEO sau khi review nguồn.",
+                409,
+            )
         if core.latest_extraction(s, obs.id).id != revision.id or s.scalar(
             select(VisibilityObservation.id).where(
                 VisibilityObservation.supersedes_id == obs.id

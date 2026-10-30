@@ -1,6 +1,16 @@
-# SEO Local Workspace · v0.8 Core · AI Visibility & GEO
+# SEO Local Workspace · v0.8.1 · OpenAI Web Search & GEO
 
 Ứng dụng phân tích SEO chạy local cho một người dùng: React Dashboard + FastAPI + SQLite. Dashboard giữ Mock Provider, GSC dùng SQLite Analytics Provider riêng; Technical SEO có crawler chỉ đọc và audit snapshots độc lập. Có bộ thử nghiệm ngoại tuyến để kiểm tra từng luồng mà không cần Google hoặc crawl domain thật. Không có login ứng dụng, Docker hoặc cloud deployment; không tự truy cập các domain demo.
+
+## v0.8.1: kiểm tra AI Search có xác nhận từng lượt
+
+Mở **AI Visibility → AI Search** hoặc action trên Prompt Library. Cấu hình OpenAI API key tại **AI Workspace → AI Settings** (OS Credential Vault cũ), chọn API model/giá trong AI Search, kiểm tra model access, xem preflight rồi xác nhận đúng một lượt trả phí. App lưu native answer/citations, tách Search Sources, kiểm tra actual search execution và dùng lại Observation/GEO/Agent/Human Review Phase 8.
+
+**Implementation Complete; Pending Live Verification.** Chưa có OpenAI thật được chạy để nghiệm thu. ChatGPT SIWC không mặc định cấp quyền Web Search/API credit và không là fallback. Không chạy trả phí khi mở trang hoặc tự retry sau timeout. USD chỉ là ước tính/reservation, không provider billing cap. Manual/import vẫn hoạt động khi chưa có key.
+
+Migration007 thêm3 bảng, không reset SQLite; ledger API usage dùng chung Agent. Không thêm dependencies. Launcher đã xác nhận dùng lại node_modules, bỏ qua npm ci khi dependency không đổi. Khởi động lại backend/frontend sau cập nhật.
+
+[Setup Web Search](docs/OPENAI_WEB_SEARCH_SETUP.md) · [Chi phí/consent](docs/AI_VISIBILITY_COST_CONTROL.md) · [Native citations](docs/OPENAI_CITATION_PARSING.md) · [Nghiệm thu localhost](docs/GEO_LIVE_VERIFICATION.md) · [Báo cáo A–K](docs/PHASE8_1_COMPLETION_REPORT.md).
 
 ## Phase 8: AI Visibility & GEO Opportunity Finder
 
@@ -8,7 +18,7 @@ Mở **AI Visibility** ở sidebar: tạo project gắn website → khai báo br
 
 Migration `006_ai_visibility` thêm 15 bảng, tự chạy khi khởi động backend; không reset SQLite hoặc sửa totals GSC. Không có dependency mới. Sao lưu SQLite trước nâng cấp, giữ cả credential vault của máy. Dashboard demo và dữ liệu GSC thực tiếp tục tách riêng.
 
-Chỉ đo tập quan sát được nhập: **mention ≠ citation ≠ recommendation**, Unknown citation không phải zero. Các provider/model/locale/grounding/branded cohorts được giữ riêng. Core không có live collector, scheduler, tự crawl citation hoặc publishing. ChatGPT auth tiếp tục **Pending Live Verification**, không cần login để dùng Core.
+Chỉ đo tập quan sát được nhập: **mention ≠ citation ≠ recommendation**, Unknown citation không phải zero. Các provider/model/locale/grounding/branded cohorts được giữ riêng. Core giữ manual/import; controlled OpenAI Web Search có trong v0.8.1, không có scheduler, tự crawl citation hoặc publishing. ChatGPT auth tiếp tục **Pending Live Verification**, không cần login để dùng Core.
 
 Xem [hướng dẫn từng bước](docs/AI_VISIBILITY_USER_GUIDE.md), [metrics](docs/AI_VISIBILITY_METRICS.md), [9 rule GEO](docs/GEO_OPPORTUNITY_ENGINE.md), [verifier/accuracy](docs/GEO_EVIDENCE_VERIFICATION.md), [giới hạn](docs/AI_VISIBILITY_LIMITATIONS.md) và [báo cáo nghiệm thu](docs/PHASE8_COMPLETION_REPORT.md).
 

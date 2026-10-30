@@ -24,7 +24,7 @@ LIMITATIONS = [
     "Chỉ đo tập quan sát đã lưu, không phải thị phần, traffic, ranking hoặc trải nghiệm của mọi người dùng AI.",
     "Mention, citation, URL xuất hiện trong văn bản và lời khuyên mua hàng là các khái niệm riêng.",
     "Citation được nguồn báo cáo không chứng minh URL đang hoạt động hoặc nội dung hỗ trợ một khẳng định.",
-    "Không có provider live, tự crawl nguồn trích dẫn, lịch chạy hàng loạt hoặc thay đổi website trong v0.8 Core.",
+    "Live Web Search chỉ chạy sau preflight/consent; không tự crawl nguồn trích dẫn, chạy lịch hoặc thay đổi website.",
 ]
 
 
@@ -210,6 +210,18 @@ def save_prompt(s, p, data, id=None):
     remaining = {k: v for k, v in values.items() if k not in fields}
     if id:
         row = scoped(s, VisibilityPrompt, id, p.id)
+        from .live_models import CollectionRequest
+
+        if s.scalar(
+            select(CollectionRequest.id).where(
+                CollectionRequest.prompt_id == id, CollectionRequest.active_slot == 1
+            )
+        ):
+            fail(
+                "live_prompt_busy",
+                "Prompt đang có collection đã xác nhận. Hủy trước dispatch hoặc chờ hoàn tất rồi sửa để giữ metadata đúng lượt đã duyệt.",
+                409,
+            )
         s.add(
             VisibilityReview(
                 id=uid(),
@@ -335,6 +347,18 @@ def ingest(s, p, data, *, supersedes=None, reason=None, import_job=None):
         fail("visibility_limit", "Đã đạt giới hạn quan sát cho project.")
     if supersedes:
         old = scoped(s, VisibilityObservation, supersedes, p.id)
+        from .live_models import CollectionRequest
+
+        if s.scalar(
+            select(CollectionRequest.id).where(
+                CollectionRequest.observation_id == old.id
+            )
+        ):
+            fail(
+                "live_response_immutable",
+                "Giữ nguyên output provider. Review/re-extract nhận diện hoặc nhập observation thủ công riêng; không sửa bản live.",
+                409,
+            )
         if s.scalar(
             select(VisibilityObservation.id).where(
                 VisibilityObservation.supersedes_id == old.id

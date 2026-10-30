@@ -1,0 +1,18 @@
+# Cấu hình OpenAI Web Search trên localhost
+
+1. Cập nhật mã nguồn, sao lưu SQLite và khởi động lại backend/frontend theo README. Migration007 tự chạy; không xóa DB. Manual/import tiếp tục dùng được khi chưa có credentials.
+2. Mở **AI Workspace → AI Settings**, cấu hình OpenAI API key qua giao diện hoặc công cụ setup/vault hiện có. Không gửi key trong chat, không đặt vào SQLite/source/log hoặc prompt. Windows dùng OS Credential Vault hiện có.
+3. Mở **AI Visibility → AI Search → Cấu hình model, Web Search và giá ước tính**. Đây là cấu hình chung trên máy, tham chiếu API key đã lưu; không thêm credential store. Bật thao tác kiểm tra, chọn API model có quyền Responses + Web Search. Không suy ra khả năng từ tên model hoặc GET/models thành công.
+4. Kiểm tra giá hiện hành ở [pricing](https://platform.openai.com/pricing/). Nhập đủ input/output USD/1M tokens, search tool USD/1000 calls, ngày kiểm tra và ghi chú. Chọn cách search-content được tính, cùng giả định token/call. Các giá là ước tính do bạn cấu hình, không là giá app tự xác minh. Thiếu thành phần bắt buộc thì preflight bị chặn; phần chưa biết được hiển thị Unknown và cần consent riêng.
+5. Nhấn **Kiểm tra model access · không chạy search**. Đây là GET model, không Responses inference. Model Accessible không phải Web Search Supported. Nếu lỗi401/403/quota, kiểm tra tài khoản/quyền/billing; không tìm cách dùng token ChatGPT hoặc scraping để vượt giới hạn.
+6. Chọn một prompt đang active; có thể dùng nút **Kiểm tra với AI Search** từ Prompt Library. Prompt giữ nguyên, không tự thêm brand/domain. Xem preflight, country/language/city/region yêu cầu và khoản dự phòng USD. App không lấy vị trí thật của máy. Country approximate không đồng nghĩa Google Search locale hoặc kết quả từ người đang đứng tại thành phố đó.
+7. Preflight chưa gọi API trả phí. Đọc model, tool configuration, giá/ngày/nguồn, token/tool assumptions, unknown components, reservation và thời hạn10 phút. Xác nhận đúng prompt/context, external processing và không có provider-side monetary cap. Khi Web Search chưa được kiểm chứng, phải đồng ý rõ đây cũng là capability test có thể thất bại và phát sinh phí.
+8. Nhấn **Xác nhận và gửi một lượt trả phí**. Theo dõi request; prompt đang queued/running được giữ nguyên, hủy trước dispatch hoặc chờ kết thúc trước khi sửa. Một complete search phải có native search action status completed và answer hoàn tất. Không có search hoặc response thiếu/refusal sẽ không thành completed Web Search cohort.
+9. Mở observation để xem nguyên văn, citation liên kết, search sources riêng, model thật, requested context, raw response, tokens/estimated cost và QA. Review không biến citation thành fact/source-content verification.
+10. Chạy GEO Opportunity Finder thủ công sau review; có thể bật bộ lọc chỉ evidence đã xác nhận. Agent phân tích qua luồng có sẵn với consent/ngân sách riêng, không tự gọi inference sau collection.
+
+ChatGPT Plus/SIWC và OpenAI API là hai cơ chế riêng. Kết nối ChatGPT không chứng minh quyền Web Search và không cấp mặc định API credit cho luồng này. Ứng dụng không chuyển credential/provider khi hết hạn mức.
+
+Khi UNKNOWN_REMOTE_OUTCOME/timeout: kiểm tra request/usage, đối chiếu trang usage của tài khoản nếu cần. Không có auto replay. Một preflight mới là một yêu cầu trả phí mới; đừng giả định `store=false` cho phép truy xuất lại response. Nếu ứng dụng restart, request đã dispatch giữ trạng thái unknown và khoản dự phòng; queued chưa dispatch thành interrupted và không tính như đã gửi.
+
+Trạng thái release khi bàn giao: **Implementation Complete; Pending Live Verification**. Không có API request trả phí thật được chạy để nghiệm thu môi trường phát triển. Kiểm chứng trên máy cá nhân theo [GEO live verification](GEO_LIVE_VERIFICATION.md).

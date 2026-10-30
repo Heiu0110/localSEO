@@ -43,3 +43,7 @@ backend\.venv\Scripts\python.exe scripts\configure_ai_provider.py --remove-key
 ```
 
 Live OpenAI, model permissions, pricing hiện hành và Windows keyring của người dùng là **Pending Credentials / Pending Live Verification**. Không yêu cầu gửi key trong cuộc trò chuyện Codex này.
+
+## v0.8.1 · OpenAI Web Search trong AI Visibility
+
+API key OS Vault ở đây được tái sử dụng, không cần credential thứ hai. Cấu hình model/tool/prices cho collector tại AI Visibility → AI Search; enable riêng và explicit consent từng request. Model Accessible không là Web Search Supported. Không dùng token ChatGPT SIWC hoặc chuyển provider tự động. [Setup](OPENAI_WEB_SEARCH_SETUP.md), [cost policy](AI_VISIBILITY_COST_CONTROL.md), [live verification](GEO_LIVE_VERIFICATION.md).

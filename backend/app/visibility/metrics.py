@@ -15,6 +15,7 @@ CONTEXT = (
     "grounding",
     "cohort_type",
     "collection_method",
+    "measurement_profile",
 )
 
 
@@ -56,6 +57,31 @@ def selected(s, p, scope):
             reason = "invalid_observation"
         elif scope.require_complete and row.completeness != "complete":
             reason = "incomplete_observation"
+        live_meta = row.original.get("source_metadata", {})
+        if (
+            row.collection_method == "PROVIDER_API"
+            and live_meta.get("collection_request_id")
+            and (
+                row.completeness != "complete"
+                or live_meta.get("search_execution") != "SEARCH_COMPLETED"
+            )
+        ):
+            # Diagnostic inclusion must not turn a no-search/incomplete live
+            # response into eligible grounded measurement or GEO evidence.
+            reason = "ineligible_live_search_observation"
+        if (
+            row.original.get("source_metadata", {}).get("collection_request_id")
+            or scope.require_human_review
+        ):
+            from .live_review import latest_review
+
+            review = latest_review(s, row)
+            if review and review.decision == "rejected":
+                reason = "human_rejected_extraction"
+            elif scope.require_human_review and (
+                not review or review.decision != "confirmed"
+            ):
+                reason = "extraction_not_human_confirmed"
         if row.id in superseded:
             reason = "superseded_by_auditable_correction"
         if reason:
@@ -123,6 +149,9 @@ def context(row):
             for k in ("country", "language", "location", "grounding")
         },
         "cohort_type": row.original["prompt_context"]["cohort_type"],
+        "measurement_profile": row.original.get("source_metadata", {}).get(
+            "measurement_profile"
+        ),
     }
 
 
@@ -158,6 +187,7 @@ def citation_eligible(bundle):
         row.completeness == "complete"
         and revision is not None
         and revision.data["citation_complete"]
+        and not any(c["ownership"] == "AMBIGUOUS" for c in bundle["citations"])
     )
 
 
@@ -242,7 +272,7 @@ def group_report(key, rows, registry, scope):
         warnings.append(
             "Có quan sát lặp cùng prompt; số lần chạy không phải số nguồn độc lập."
         )
-    if any(value is None for value in key):
+    if any(value is None for value in key[:8]):
         warnings.append(
             "Metadata model/locale/thời gian chưa đầy đủ; giá trị Unknown không chứng minh context thực tế giống nhau."
         )

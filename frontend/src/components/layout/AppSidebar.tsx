@@ -27,7 +27,7 @@ export function AppSidebar({ collapsed, toggle }: { collapsed: boolean; toggle: 
     })}</nav>
     <div className="sidebar-bottom"><div className="local-note"><Globe2 size={19} /><div><strong>Không gian làm việc riêng</strong><span>Riêng tư. Đơn giản. Tập trung.</span></div></div>
       <NavLink to={{ pathname: '/settings', search }} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} aria-label="Cài đặt"><Settings2 size={19} /><span>Cài đặt</span></NavLink>
-      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.8</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
+      <div className="sidebar-footer"><span><Layers3 size={14} /> Nền tảng v0.8.1</span><Button variant="ghost" size="icon" className="collapse-button" onClick={toggle} aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'} aria-expanded={!collapsed}>{collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}</Button></div>
     </div>
   </aside>;
 }

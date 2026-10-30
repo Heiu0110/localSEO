@@ -1,0 +1,116 @@
+{
+  "fixture_count": 20,
+  "eligible_complete_citation_samples": 11,
+  "citation_true_positives": 14,
+  "citation_false_positives": 0,
+  "citation_false_negatives": 0,
+  "citation_precision": 1.0,
+  "citation_recall": 1.0,
+  "ineligible_or_partial_or_quarantined_examples": 9,
+  "span_mapping": "Not verified; separate references, no guessed inline highlight.",
+  "source": "Synthetic, manually labelled API-shaped fixtures based on official OpenAI SDK 05992039b9f7b78a48cf1e5a35727ba27d96db6e; not captured live responses.",
+  "production_accuracy_claim": false,
+  "live_provider_verified": false,
+  "results": [
+    {
+      "id": 1,
+      "name": "Owned native answer citation",
+      "passed": true
+    },
+    {
+      "id": 2,
+      "name": "Competitor citation",
+      "passed": true
+    },
+    {
+      "id": 3,
+      "name": "Search sources retrieved but not cited",
+      "passed": true
+    },
+    {
+      "id": 4,
+      "name": "Prose URL is not an answer citation",
+      "passed": true
+    },
+    {
+      "id": 5,
+      "name": "Complete zero citations and zero sources",
+      "passed": true
+    },
+    {
+      "id": 6,
+      "name": "Missing annotations remain unknown",
+      "passed": true
+    },
+    {
+      "id": 7,
+      "name": "Tool definition is not search execution",
+      "passed": true
+    },
+    {
+      "id": 8,
+      "name": "Open page alone not qualifying search",
+      "passed": true
+    },
+    {
+      "id": 9,
+      "name": "Failed search",
+      "passed": true
+    },
+    {
+      "id": 10,
+      "name": "Incomplete response excluded",
+      "passed": true
+    },
+    {
+      "id": 11,
+      "name": "Refusal is not ordinary observation",
+      "passed": true
+    },
+    {
+      "id": 12,
+      "name": "Multiple output messages traversed",
+      "passed": true
+    },
+    {
+      "id": 13,
+      "name": "Identical annotation deduplicated",
+      "passed": true
+    },
+    {
+      "id": 14,
+      "name": "Vietnamese emoji supplementary characters",
+      "passed": true
+    },
+    {
+      "id": 15,
+      "name": "Unsafe URL quarantined",
+      "passed": true
+    },
+    {
+      "id": 16,
+      "name": "Invalid offsets not highlighted",
+      "passed": true
+    },
+    {
+      "id": 17,
+      "name": "Shared third party source not owned",
+      "passed": true
+    },
+    {
+      "id": 18,
+      "name": "Cited URL absent from optional source list",
+      "passed": true
+    },
+    {
+      "id": 19,
+      "name": "Multiple search actions retained separately",
+      "passed": true
+    },
+    {
+      "id": 20,
+      "name": "Malformed output quarantined",
+      "passed": true
+    }
+  ]
+}

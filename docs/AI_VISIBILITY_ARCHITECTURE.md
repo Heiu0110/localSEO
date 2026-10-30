@@ -13,3 +13,7 @@ Giới hạn Core: 100 project, 2.000 prompt và 2.000 quan sát/project; import
 Nguồn đã lưu được liên kết bằng reference/URL đích tường minh. GSC là dữ liệu Google Search, không là AI traffic. Technical evidence giữ ngày/tuổi, >30 ngày hoặc không biết ngày là stale. Nguồn document/identity/coverage là context hiện tại có provenance riêng, không được coi tự động đồng thời hoặc nhân quả với observation cohort.
 
 Xem [hướng dẫn](AI_VISIBILITY_USER_GUIDE.md), [data model](AI_VISIBILITY_DATA_MODEL.md), [metrics](AI_VISIBILITY_METRICS.md), [engine](GEO_OPPORTUNITY_ENGINE.md), [verification](GEO_EVIDENCE_VERIFICATION.md), [Agent](GEO_AGENT_INTEGRATION.md), [limits](AI_VISIBILITY_LIMITATIONS.md).
+
+## v0.8.1 provider extension
+
+`provider_contracts.py` mở rộng envelope normalized candidate + raw response/actions/sources/usage; `OpenAIWebSearchVisibilityAdapter` là implementation đầu tiên. Ba bảng migration007, dùng chung AI usage ledger và OS Vault. Model/eligibility live không suy ra từ credential presence/GET model hoặc SIWC. Xem [contract/security](AI_VISIBILITY_LIVE_PROVIDER.md), [state/financial safety](AI_VISIBILITY_COST_CONTROL.md), [acceptance](GEO_LIVE_VERIFICATION.md).

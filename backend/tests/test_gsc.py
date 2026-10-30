@@ -63,7 +63,7 @@ def sync(runtime, property_id, days=14, search_type="web", mode="initial", end=N
 def test_migration_idempotent_foreign_keys_wal_and_persistence(runtime):
     runtime.db.migrate()
     with runtime.db.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "006_ai_visibility"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "007_visibility_live_provider"
         assert connection.scalar(text("PRAGMA foreign_keys")) == 1
         assert connection.scalar(text("PRAGMA journal_mode")) == "wal"
     p = prop(runtime)

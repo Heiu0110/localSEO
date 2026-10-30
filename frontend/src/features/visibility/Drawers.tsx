@@ -1,3 +1,4 @@
+import { LiveObservationEvidence } from "./LiveObservationEvidence";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -212,6 +213,7 @@ export function ObservationDrawer({
               ))}
             </section>
           ))}
+          <LiveObservationEvidence row={row} project={project} />
           <h3>URL xuất hiện trong văn bản · không phải citation</h3>
           <DataView data={row.extraction.data.url_mentions} />
           <h3>Metadata thiếu / cảnh báo</h3>
@@ -238,7 +240,15 @@ export function ObservationDrawer({
           <div className="visibility-actions">
             <Button
               variant="outline"
-              disabled={!!row.corrections.length}
+              disabled={
+                !!row.corrections.length ||
+                (row.collection_method === "PROVIDER_API" &&
+                  !!(
+                    row.original.source_metadata as
+                      | { collection_request_id?: string }
+                      | undefined
+                  )?.collection_request_id)
+              }
               onClick={() => onCorrect(row)}
             >
               Tạo bản sửa có lý do

@@ -1,3 +1,9 @@
+# Cập nhật v0.8.1
+
+OpenAI Web Search adapter đã có, chỉ dispatch sau preflight/consent mỗi request. **Pending Live Verification**; giá/eligibility/Unicode conventions chưa được xác minh live, SDK schema đã đối chiếu. Gemini chưa triển khai. Search sources khác answer citations; source content chưa được app fetch/verify. Không scheduler/publishing. Xem [hướng dẫn live](OPENAI_WEB_SEARCH_SETUP.md), [chi phí](AI_VISIBILITY_COST_CONTROL.md), [parser limits](OPENAI_CITATION_PARSING.md).
+
+Các phần v0.8 Core bên dưới là nền tảng manual/import và giới hạn lịch sử; availability mới của OpenAI được mô tả tại [báo cáo v0.8.1](PHASE8_1_COMPLETION_REPORT.md).
+
 # Giới hạn v0.8 Core
 
 - Nguồn khả dụng: manual observations, JSON/CSV response imports, CSV/JSON/XLSX prompts; Research/Tracking/Technical/GSC đọc dữ liệu đã lưu theo website. Có thể nhập prompt draft do AI đề xuất và gắn provenance; chưa có riêng batch prompt generator.

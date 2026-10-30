@@ -1,8 +1,10 @@
-"""Future live collection boundary; Core deliberately has no implementation or credentials."""
+"""Visibility provider boundary, extended for explicit live observation envelopes."""
 
 from dataclasses import dataclass
-from typing import Protocol
-from .schemas import ObservationInput
+from typing import Protocol, TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .live_schemas import LiveSettings
 
 
 @dataclass(frozen=True)
@@ -16,14 +18,22 @@ class ProviderCapabilities:
 
 
 class LiveVisibilityAdapter(Protocol):
-    """Implement only after provider terms, tool eligibility, cost and consent are verified.
+    """Explicitly consented live collection; adapters preserve native response metadata.
 
-    Inference credentials alone do not establish web search/grounding capability.
-    Implementations must preserve original answer/annotations and actual collection context.
-    No adapter is constructed or invoked in v0.8 Core.
+    The envelope carries both a raw provider response and a normalized candidate,
+    search actions/sources and usage; the manager persists via existing core.ingest.
+    A parser failure carries a safe diagnostic, never a fabricated observation.
     """
 
     def capabilities(self) -> ProviderCapabilities: ...
     def observe(
-        self, *, prompt_snapshot: str, consent_receipt_id: str
-    ) -> ObservationInput: ...
+        self,
+        *,
+        prompt_snapshot: str,
+        consent_receipt_id: str,
+        settings: "LiveSettings",
+        context: dict,
+        prompt_id: str,
+        collection_request_id: str,
+        credential_tag: str,
+    ) -> dict[str, Any]: ...

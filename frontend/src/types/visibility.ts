@@ -70,6 +70,7 @@ export interface VisibilityCitation {
   entity_id: string | null;
   observation_id?: string;
   data: {
+    annotation_id?: string | null;
     start: number | null;
     end: number | null;
     quote: string | null;

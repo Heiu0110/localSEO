@@ -1,0 +1,1361 @@
+{
+  "source": "Synthetic, manually labelled API-shaped fixtures based on official OpenAI SDK 05992039b9f7b78a48cf1e5a35727ba27d96db6e; not captured live responses.",
+  "cases": [
+    {
+      "id": 1,
+      "name": "Owned native answer citation",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 2,
+      "name": "Competitor citation",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://beta.test/cited",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://beta.test/cited"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 3,
+      "name": "Search sources retrieved but not cited",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": []
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 4,
+      "name": "Prose URL is not an answer citation",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Read https://acme.test/prose",
+                "annotations": []
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 5,
+      "name": "Complete zero citations and zero sources",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": []
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": []
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 0,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 6,
+      "name": "Missing annotations remain unknown",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc."
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "partial",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 7,
+      "name": "Tool definition is not search execution",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "NO_SEARCH_EXECUTED",
+        "eligible": false,
+        "citation_metadata": "missing",
+        "source_count": 0,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 8,
+      "name": "Open page alone not qualifying search",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "open_page",
+              "url": "https://acme.test/page"
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "NO_SEARCH_EXECUTED",
+        "eligible": false,
+        "citation_metadata": "missing",
+        "source_count": 0,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 9,
+      "name": "Failed search",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "failed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_FAILED",
+        "eligible": false,
+        "citation_metadata": "missing",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 10,
+      "name": "Incomplete response excluded",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "incomplete",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": false,
+        "citation_metadata": "partial",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 11,
+      "name": "Refusal is not ordinary observation",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "refusal",
+                "refusal": "Cannot answer"
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": false,
+        "citation_metadata": null,
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 12,
+      "name": "Multiple output messages traversed",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "message",
+            "id": "msg_second",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Beta Bags",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://beta.test/a",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://beta.test/a",
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 13,
+      "name": "Identical annotation deduplicated",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  },
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 14,
+      "name": "Vietnamese emoji supplementary characters",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "😀 Acme Balo tiếng Việt 𠀀.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 15,
+      "name": "Unsafe URL quarantined",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "javascript:alert(1)",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "partial",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 16,
+      "name": "Invalid offsets not highlighted",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 999999
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "partial",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 17,
+      "name": "Shared third party source not owned",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://third.example/a",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://third.example/a"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 18,
+      "name": "Cited URL absent from optional source list",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 0,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 19,
+      "name": "Multiple search actions retained separately",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": [
+          {
+            "id": "ws_second",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "reasoning",
+            "id": "rs_fixture",
+            "summary": []
+          },
+          {
+            "id": "ws_fixture",
+            "type": "web_search_call",
+            "status": "completed",
+            "action": {
+              "type": "search",
+              "queries": [
+                "xưởng may balo"
+              ],
+              "sources": [
+                {
+                  "type": "url",
+                  "url": "https://beta.test/retrieved-not-cited"
+                },
+                {
+                  "type": "url",
+                  "url": "https://acme.test/source"
+                }
+              ]
+            }
+          },
+          {
+            "type": "message",
+            "id": "msg_fixture",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Acme Balo và Beta Bags có thể được nhắc.",
+                "annotations": [
+                  {
+                    "type": "url_citation",
+                    "url": "https://acme.test/source",
+                    "title": "Acme official source",
+                    "start_index": 0,
+                    "end_index": 9
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [
+          "https://acme.test/source"
+        ],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 4,
+        "parse_error": false
+      }
+    },
+    {
+      "id": 20,
+      "name": "Malformed output quarantined",
+      "response": {
+        "id": "resp_fixture_001",
+        "status": "completed",
+        "model": "fixture-model",
+        "output": {
+          "unexpected": "not a list"
+        },
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 120,
+          "total_tokens": 470
+        }
+      },
+      "expected": {
+        "citation_urls": [],
+        "search_execution": "SEARCH_COMPLETED",
+        "eligible": true,
+        "citation_metadata": "complete",
+        "source_count": 2,
+        "parse_error": true
+      }
+    }
+  ]
+}

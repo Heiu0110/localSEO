@@ -1,4 +1,6 @@
-# Architecture · SEO Local Workspace v0.8 Core · Phase 8
+# Architecture · SEO Local Workspace v0.8.1 · Controlled live provider
+
+v0.8.1 thêm OpenAI Web Search adapter vào provider contract hiện có: scoped preflight/consent → one-shot HTTPS → native response parser → core.ingest. Migration007 thêm request/consent/search_sources; API usage giữ chung ledger/lock của Agent. No-search/incomplete/refusal không vào complete grounded cohort; retrieved sources không là answer citations. Không đổi SIWC/crawler/SEO modules. [Kiến trúc và contract](docs/AI_VISIBILITY_LIVE_PROVIDER.md).
 
 Phase 8 thêm AI Visibility: immutable observations/extraction revisions → cohort metrics → 9 deterministic GEO rules → existing AIManager verification/review. Migration006 thêm 15 bảng; 9 read-only tools mới, không thêm AI stack/live provider. [Kiến trúc](docs/AI_VISIBILITY_ARCHITECTURE.md), [dữ liệu](docs/AI_VISIBILITY_DATA_MODEL.md), [Agent](docs/GEO_AGENT_INTEGRATION.md).
 

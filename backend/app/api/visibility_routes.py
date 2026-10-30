@@ -47,15 +47,15 @@ Scope = Annotated[Cohort, Depends()]
 @router.get("/capabilities")
 def capabilities():
     return {
-        "release": "0.8 Core",
+        "release": "0.8.1",
         "manual_entry": True,
         "import": ["json", "csv", "prompts_xlsx"],
-        "live_collection": False,
+        "live_collection": "explicit_confirmation_only",
         "providers": [
             {
                 "id": name,
-                "status": "not_connected",
-                "reason": "Adapter live có citation thuộc v0.8.1/v0.8.2; không suy ra quyền từ ChatGPT login.",
+                "status": "adapter_available_pending_verification" if name == "openai_web_search" else "not_implemented",
+                "reason": "OpenAI có adapter xác nhận từng lượt; xem /providers để biết trạng thái. Gemini chưa triển khai; không suy ra quyền từ ChatGPT login.",
             }
             for name in ("openai_web_search", "gemini_grounding")
         ],
@@ -215,7 +215,7 @@ def create_prompt(project_id: str, data: PromptInput, runtime: Runtime):
 
 @router.patch("/prompts/{id}")
 def edit_prompt(id: str, project_id: str, data: PromptInput, runtime: Runtime):
-    with runtime.db.session.begin() as s:
+    with runtime.ai.lock, runtime.db.session.begin() as s:
         row, _ = core.save_prompt(s, core.project(s, project_id), data, id)
         return core.prompt_view(row)
 

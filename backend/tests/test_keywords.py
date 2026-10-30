@@ -821,7 +821,7 @@ def test_upgrade_from_v03_preserves_gsc_fact_values_and_adds_only_tables(tmp_pat
         assert conn.exec_driver_sql("SELECT * FROM gsc_daily_metrics").all() == before
         assert (
             conn.exec_driver_sql("SELECT version_num FROM alembic_version").scalar()
-            == "006_ai_visibility"
+            == "007_visibility_live_provider"
         )
         assert conn.exec_driver_sql("PRAGMA integrity_check").scalar() == "ok"
         assert conn.exec_driver_sql("PRAGMA foreign_key_check").all() == []
