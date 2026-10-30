@@ -14,6 +14,7 @@ import httpx
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes
 from .common import fail
+from .chatgpt_diagnostics import MESSAGES
 
 ISSUER = "https://auth.openai.com"
 AUTHORIZE = ISSUER + "/api/accounts/authorize"
@@ -211,6 +212,28 @@ def provider_error(status):
     fail(code, message, status if status in (400, 401, 403, 429, 503) else 502)
 
 
+def token_error(status, data):
+    """Classify only known OAuth identifiers; never echo provider descriptions."""
+    try:
+        raw = json_object(data).get("error")
+        code = raw.get("code") if isinstance(raw, dict) else raw
+    except (ValueError, UnicodeError):
+        code = None
+    errors = {
+        "invalid_grant": "chatgpt_oauth_invalid_grant",
+        "invalid_client": "chatgpt_oauth_invalid_client",
+        "unauthorized_client": "chatgpt_oauth_invalid_client",
+        "invalid_request": "chatgpt_oauth_invalid_request",
+        "unsupported_grant_type": "chatgpt_oauth_invalid_request",
+        "invalid_scope": "chatgpt_oauth_invalid_scope",
+        "invalid_target": "chatgpt_oauth_invalid_scope",
+    }
+    if status in (400, 401, 403) and isinstance(code, str) and code in errors:
+        safe = errors[code]
+        fail(safe, MESSAGES[safe], status)
+    provider_error(status)
+
+
 class ChatGPTTransport:
     def __init__(self, transport=None):
         self.transport = transport
@@ -237,7 +260,7 @@ class ChatGPTTransport:
                 data=form,
                 headers={"Authorization": "Bearer " + token} if token else {},
             ) as response:
-                if response.status_code >= 300:
+                if response.status_code >= 300 and url != TOKEN:
                     provider_error(response.status_code)
                 data = bytearray()
                 deadline = time.monotonic() + 45
@@ -249,6 +272,8 @@ class ChatGPTTransport:
                             "Phản hồi ChatGPT vượt giới hạn.",
                             502,
                         )
+                if response.status_code >= 300:
+                    token_error(response.status_code, data)
                 if not data:
                     return {}
                 try:

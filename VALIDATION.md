@@ -1,3 +1,19 @@
+# Sửa callback/Windows Vault ChatGPT · 30/10/2026
+
+Ảnh người dùng cho thấy callback localhost trả lỗi chung; nút làm mới chưa giúp xác định nguyên nhân. Chưa có mã lỗi của lần live đó nên không gán nguyên nhân chắc chắn cho tài khoản người dùng.
+
+| Kiểm tra thực thi | Kết quả |
+|---|---|
+| Toàn bộ backend pytest | **271 passed**: 254 cũ + 9 OAuth/diagnostic + 8 OS-vault storage cases; một cảnh báo Starlette/httpx giống baseline |
+| AI Workspace + ChatGPT Playwright | **18 passed**: thêm manual-refresh feedback và failure-stage/retry UI; các test khác của module SEO không chạy lại trong lượt này |
+| TypeScript/Vite production build | **Passed**, không thêm dependency hoặc đổi lockfile |
+| Windows credential-size contract | Mô phỏng giới hạn2560byte UTF-16: cách ghi một blob cũ bị từ chối; token dài chia phần roundtrip, refresh ghi lỗi giữ bộ cũ, legacy read, thiếu/sai checksum bị chặn, Disconnect quét cả slot và phần dư |
+| OAuth error diagnostics | Missing issued client, invalid grant/client/request/scope và lỗi không biết được phân loại an toàn; không echo provider description/code/token; state/PKCE/JWT validations giữ nguyên |
+| Restart | Metadata chỉ chứa mã lỗi/tên bước; đọc lại lỗi sau restart, pending OAuth bị hủy có thông báo bắt đầu lượt mới |
+| Callback browser smoke | Chromium mở **listener thật với mock issuer**, lỗi đăng ký động hiển thị mã/bước, History API loại query khỏi URL, không pageerror; capture1100×800 và390×844 tại `/tmp/localSEO-callback-diagnostic{,-mobile}.png` |
+
+Không dùng authorization code trong ảnh, không đăng nhập OpenAI thật hoặc thực hiện inference. Windows Credential Manager native, eligibility và live OAuth vẫn **Pending Live Verification**; bộ giả lập giới hạn kích thước không thay thế xác minh trên máy cá nhân. Dashboard/module SEO không đổi; SQLite không migrate/reset. Xem [hướng dẫn thử lại](docs/CHATGPT_CONNECTION_SETUP.md#callback-báo-chưa-hoàn-tất-hoặc-nút-làm-mới-không-có-kết-quả).
+
 # SIWC — Sign in with ChatGPT validation · 29/10/2026
 
 Bổ sung duy nhất OAuth/Plan Usage và các phụ thuộc trực tiếp vào AI Workspace. Baseline `fef7068`: đã chạy **207 backend tests, 12 AI browser tests và production build passed** trước thay đổi; 68 browser tests trước đó là kết quả Phase7 được lưu trong lịch sử.

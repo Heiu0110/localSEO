@@ -28,6 +28,27 @@ Các bước trên là quy trình để người dùng xác minh, **chưa đư�
 
 ## Expiry, disconnect và lỗi
 
+### Callback báo chưa hoàn tất hoặc nút làm mới không có kết quả
+
+Cập nhật source rồi **dừng và chạy lại cả backend lẫn frontend**. Đóng tab callback cũ, vào AI Settings và bắt đầu một lượt **Continue with ChatGPT** mới. Không tải lại URL callback hoặc gửi authorization code vào chat.
+
+Bản sửa ngày 30/10/2026 bổ sung:
+
+- Trang callback hiển thị **mã lỗi và bước thất bại**, kèm hướng dẫn bắt đầu lại. Với JavaScript hoạt động, code/state được bỏ khỏi thanh địa chỉ bằng History API; không đưa chúng vào HTML, logs hay thông báo lỗi.
+- **Làm mới trạng thái ChatGPT** luôn thông báo đang chờ, đã kết nối, thất bại hoặc chưa có kết quả. Nếu backend đã khởi động lại, cần tạo lượt OAuth mới vì state/PKCE của lượt cũ chỉ tồn tại trong RAM.
+- Mã lỗi/bước OAuth được lưu làm metadata để có thể đọc lại sau restart; không lưu code/state/token, phản hồi thô của OpenAI hoặc dữ liệu tài khoản vào metadata này.
+- Token ChatGPT dài được chia thành các mục nhỏ **trong OS Credential Vault** để đáp ứng giới hạn CredentialBlob của Windows. Không có fallback sang file, SQLite hay frontend. Bản cài cũ vẫn đọc được; lượt ghi mới chỉ thay bộ token đang dùng sau khi ghi đủ các phần.
+
+| Mã/bước | Cách xử lý |
+|---|---|
+| `secure_storage_unavailable` · Lưu vào OS Credential Vault | Kiểm tra Windows Credential Manager. Sau cập nhật, thử lượt đăng nhập mới. Nếu token bị hỏng, dùng **Disconnect ChatGPT** rồi kết nối lại; thao tác này vẫn có thể xóa bản ghi chia phần bị thiếu. |
+| `chatgpt_invalid_client` · Xác nhận client đăng ký động | Callback không có issued client ID hợp lệ. Không tự tạo ID hoặc dùng `dynamic_agent_client` để exchange; cần đối chiếu contract/eligibility SIWC. |
+| `chatgpt_oauth_invalid_grant` · Đổi authorization code lấy token | Code/refresh token hết hạn, đã dùng, bị thu hồi hoặc không khớp PKCE/redirect. Tạo lượt đăng nhập mới; không dùng lại callback cũ. |
+| `chatgpt_invalid_state`, `chatgpt_oauth_interrupted` | Phiên cũ không còn khớp backend hiện tại. Bắt đầu lại trong AI Settings. |
+| `chatgpt_invalid_id_token` · Xác minh ID token | Dừng đăng nhập; không bỏ kiểm tra chữ ký, audience hoặc nonce để vượt lỗi. |
+
+Ảnh callback chung không đủ xác nhận nguyên nhân của một lần đăng nhập thực tế. Lỗi kích thước Windows đã được tái hiện bằng backend mô phỏng giới hạn 2560 byte; đăng nhập thật trên máy cá nhân vẫn **Pending Live Verification**. Nếu lỗi còn, chỉ gửi **mã lỗi và bước**, không gửi URL callback hay token.
+
 - Access token dùng `expires_in` của token response; refresh trước khi còn60giây. Refresh token lưu riêng an toàn, thời hạn30ngày theo handoff, thay cùng access token dưới một khóa để không refresh trùng. Nếu OpenAI thu hồi sớm, đăng nhập lại.
 - `401`: token/refresh bị thu hồi hoặc hết hạn → cần kết nối lại. `403`: quyền/eligibility chưa đáp ứng. `429`: rate/quota giới hạn. `503`: dịch vụ hoặc kiểm tra hạn mức chưa khả dụng. Không tự retry inference hoặc fallback trả phí.
 - Callback state hết hạn sau10phút; code/state dùng một lần. Restart backend hủy phiên đang chờ, cần bắt đầu lại.

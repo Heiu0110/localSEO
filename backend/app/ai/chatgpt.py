@@ -7,6 +7,7 @@ import re
 import secrets
 import threading
 import time
+from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlencode, urlsplit, parse_qs
@@ -16,6 +17,7 @@ from app.db.models import Setting
 from app.gsc.errors import GSCError
 from .common import fail, now
 from .chatgpt_protocol import *
+from .chatgpt_diagnostics import OAUTH_DIAGNOSTIC, STAGES, diagnostic
 
 TOKENS = "ai.chatgpt.tokens.v1"
 REGISTRATION = "ai.chatgpt.registration.v1"
@@ -82,6 +84,16 @@ class ChatGPTConnection:
         with self.db.session.begin() as s:
             s.merge(Setting(key=key, value=json.dumps(value)))
 
+    def _record_oauth_error(self, code, stage):
+        self.last_error = diagnostic(code, stage)
+        try:
+            # Only static identifiers survive a backend restart, never query
+            # parameters, provider response bodies, account data or tokens.
+            self._put(OAUTH_DIAGNOSTIC, {"code": self.last_error["code"],
+                                         "stage": self.last_error["stage"]})
+        except Exception:
+            pass  # Keep the original diagnostic if SQLite is itself unavailable.
+
     def _clear_models(self):
         self._put(MODELS, {"session_id": None, "models": [], "fetched_at": 0})
         self._put(MODEL, {"session_id": None, "slug": None})
@@ -122,19 +134,24 @@ class ChatGPTConnection:
             if self.pending and secrets.compare_digest(self.pending["state"], state):
                 self.pending = None
                 self.phase = "failed"
-                self.last_error = {
-                    "code": "chatgpt_oauth_expired",
-                    "detail": "Phiên đăng nhập ChatGPT đã hết hạn; bắt đầu lại.",
-                }
+                self._record_oauth_error("chatgpt_oauth_expired", "callback_validation")
                 self._stop_listener()
 
     def close(self):
         with self.lock:
+            if self.pending:
+                self._record_oauth_error("chatgpt_oauth_interrupted", "callback_validation")
+                self.phase = "failed"
             self.pending = None
             self._stop_listener()
 
     def status(self):
         with self.lock:
+            last_error = self.last_error
+            if not last_error and self.phase == "idle":
+                saved = self._get(OAUTH_DIAGNOSTIC, {})
+                if isinstance(saved, dict) and saved.get("code"):
+                    last_error = diagnostic(saved.get("code"), saved.get("stage"))
             secure = True
             try:
                 raw = self.vault.get(TOKENS) or {}
@@ -183,7 +200,7 @@ class ChatGPTConnection:
                 "provider": "chatgpt",
                 "status": state,
                 "secure_storage_available": secure,
-                "authorization_status": self.phase,
+                "authorization_status": "failed" if self.phase == "idle" and last_error else self.phase,
                 "pending_authorization": self.phase in ("waiting", "exchanging"),
                 "account": raw.get("account") if raw else None,
                 "connection_id": raw.get("session_id"),
@@ -196,7 +213,7 @@ class ChatGPTConnection:
                 "models": models,
                 "selected_model": model,
                 "models_stale": self.clock() - cached.get("fetched_at", 0) > 300,
-                "last_error": self.last_error,
+                "last_error": last_error,
                 "eligibility": {
                     "status": "pending_live_verification",
                     "repository_license_found": license_found,
@@ -245,6 +262,7 @@ class ChatGPTConnection:
             self._oidc()
             self._stop_listener()
             self.last_error = None
+            self._put(OAUTH_DIAGNOSTIC, {})
             owner = self
 
             class Callback(BaseHTTPRequestHandler):
@@ -261,6 +279,7 @@ class ChatGPTConnection:
                 def do_GET(self):
                     status = 400
                     success = False
+                    failure = diagnostic("chatgpt_callback")
                     try:
                         if (
                             len(self.path) > 16384
@@ -299,26 +318,33 @@ class ChatGPTConnection:
                         status = 200
                     except GSCError as error:
                         status = error.status
+                        failure = diagnostic(error.code, getattr(error, "oauth_stage", "callback_validation"))
                     except Exception:
                         status = 400
+                    nonce = secrets.token_urlsafe(24)
                     self.send_response(status)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
                     self.send_header("Cache-Control", "no-store")
                     self.send_header(
                         "Content-Security-Policy",
-                        "default-src 'none'; frame-ancestors 'none'",
+                        f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; frame-ancestors 'none'; base-uri 'none'",
                     )
                     self.send_header("Referrer-Policy", "no-referrer")
+                    self.send_header("X-Content-Type-Options", "nosniff")
                     self.end_headers()
                     self.wfile.write(
                         (
-                            '<!doctype html><html lang="vi"><meta charset="utf-8"><title>LocalSEO · ChatGPT</title><p>'
+                            '<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>LocalSEO · ChatGPT</title>'
+                            + f'<script nonce="{nonce}">try{{history.replaceState(null,"","/auth/callback")}}catch{{}}</script>'
+                            + f'<style nonce="{nonce}">body{{font:16px/1.7 system-ui,sans-serif;margin:48px auto;padding:24px;max-width:680px;background:#f0f0ef;color:#171717}}main{{background:#fff;padding:32px;border-radius:24px}}h1{{font-size:24px}}code{{overflow-wrap:anywhere}}p{{margin:16px 0}}</style><main><h1>'
                             + (
                                 "Đã hoàn tất đăng nhập. Quay lại AI Settings của LocalSEO."
                                 if success
                                 else "Chưa hoàn tất đăng nhập. Quay lại AI Settings để xem trạng thái và thử lại."
                             )
-                            + "</p></html>"
+                            + "</h1>"
+                            + ("" if success else '<p><strong>Mã lỗi:</strong> <code>' + escape(failure["code"]) + '</code><br><strong>Bước:</strong> ' + escape(STAGES[failure["stage"]]) + '</p><p>' + escape(failure["detail"]) + '</p>')
+                            + '<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra; nếu thất bại, bắt đầu lại bằng <strong>Continue with ChatGPT</strong>.</p><p>Không tải lại callback cũ hoặc chia sẻ URL đăng nhập, code hay token.</p></main></html>'
                         ).encode()
                     )
                     if owner.phase not in ("waiting", "exchanging"):
@@ -382,6 +408,7 @@ class ChatGPTConnection:
 
     def callback(self, query):
         with self.lock:
+            stage = "callback_validation"
             pending = self.pending
             if (
                 not pending
@@ -415,6 +442,7 @@ class ChatGPTConnection:
                         "Callback chưa có authorization code hợp lệ.",
                         400,
                     )
+                stage = "client_registration"
                 client = issued_client(
                     query.get("client_id")
                     or (
@@ -432,6 +460,7 @@ class ChatGPTConnection:
                         "Client ID không khớp phiên đăng nhập.",
                         400,
                     )
+                stage = "token_exchange"
                 result = self.http.request(
                     "POST",
                     TOKEN,
@@ -444,33 +473,38 @@ class ChatGPTConnection:
                         "resource": RESOURCE,
                     },
                 )
+                stage = "id_token_validation"
                 account = self._validate(
                     result.get("id_token"), client, pending["nonce"]
                 )
                 value = self._credentials(result, client, account)
-                self.vault.put(TOKENS, value)
+                stage = "credential_storage"
                 self.vault.put(
                     REGISTRATION, {"client_id": client, "sub": account["sub"]}
                 )
+                self.vault.put(TOKENS, value)
+                stage = "model_listing"
                 self._clear_models()
                 self.phase = "completed"
                 self.last_error = None
+                self._put(OAUTH_DIAGNOSTIC, {})
                 if DIRECT in value["scopes"]:
                     try:
                         self._refresh_models_locked()
                     except GSCError as error:
                         self.last_error = {"code": error.code, "detail": error.message}
+                        self.last_error["stage"] = "model_listing"
             except GSCError as error:
                 self.phase = "failed"
-                self.last_error = {"code": error.code, "detail": error.message}
+                error.oauth_stage = stage
+                self._record_oauth_error(error.code, stage)
                 raise
             except Exception:
                 self.phase = "failed"
-                self.last_error = {
-                    "code": "chatgpt_oauth_failed",
-                    "detail": "Chưa hoàn tất OAuth ChatGPT. Không lưu token chưa được xác minh.",
-                }
-                fail("chatgpt_oauth_failed", self.last_error["detail"], 502)
+                self._record_oauth_error("chatgpt_oauth_failed", stage)
+                error = GSCError("chatgpt_oauth_failed", self.last_error["detail"], 502)
+                error.oauth_stage = stage
+                raise error from None
 
     def _credentials(self, result, client, account, previous=None):
         access = result.get("access_token")
@@ -584,6 +618,8 @@ class ChatGPTConnection:
                         "chatgpt_request_rejected",
                         "chatgpt_reauthorization_required",
                         "chatgpt_invalid_id_token",
+                        "chatgpt_oauth_invalid_grant",
+                        "chatgpt_oauth_invalid_client",
                     ):
                         self._invalidate(raw)
                         fail(
@@ -743,7 +779,10 @@ class ChatGPTConnection:
             self._stop_listener()
             self.phase = "idle"
             self.last_error = None
-            raw = self.vault.get(TOKENS)
+            try:
+                raw = self.vault.get(TOKENS)
+            except GSCError:
+                raw = None  # A corrupt chunk must not prevent explicit Disconnect.
             revoked = False
             try:
                 endpoint = (
@@ -767,6 +806,7 @@ class ChatGPTConnection:
             finally:
                 self.vault.delete(TOKENS)
                 self._clear_models()
+                self._put(OAUTH_DIAGNOSTIC, {})
             return {
                 "local_credentials_removed": True,
                 "remote_revoked": revoked,

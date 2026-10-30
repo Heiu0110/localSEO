@@ -33,6 +33,46 @@ const base: ChatGPTStatus = {
   fallback_to_api_key: false,
 };
 
+test("manual refresh explicitly reports no connection result instead of silently doing nothing", async ({ page }) => {
+  let reads = 0;
+  await page.route("**/api/ai/chatgpt/status", route => {
+    reads++;
+    return route.fulfill({ json: base });
+  });
+  await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+  const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+  await panel.getByRole("button", { name: "Làm mới trạng thái ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("chưa có kết nối hoặc kết quả đăng nhập");
+  await expect(panel.getByRole("status")).toContainText("không tải lại callback cũ");
+  expect(reads).toBeGreaterThan(1);
+});
+
+test("callback failure shows the error code and stage and can start a fresh attempt", async ({ page }) => {
+  let state: ChatGPTStatus = { ...base, authorization_status: "failed", last_error: {
+    code: "secure_storage_unavailable",
+    detail: "Không thể ghi token vào kho khóa hệ điều hành.",
+    stage: "credential_storage",
+  } };
+  await page.addInitScript(() => { window.open = () => null; });
+  await page.route("**/api/ai/chatgpt/status", route => route.fulfill({ json: state }));
+  await page.route("**/api/ai/chatgpt/connect", route => {
+    state = { ...base, authorization_status: "waiting", pending_authorization: true };
+    return route.fulfill({ json: { authorization_url: "https://auth.openai.com/api/accounts/authorize?state=fresh-test" } });
+  });
+  await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+  const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+  await expect(panel.getByRole("alert")).toContainText("secure_storage_unavailable");
+  await expect(panel.getByRole("alert")).toContainText("Lưu vào OS Credential Vault");
+  await panel.getByRole("button", { name: "Làm mới trạng thái ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("Xem mã lỗi và bước xử lý");
+  await panel.getByLabel("Xác nhận đã rà soát eligibility ChatGPT").check();
+  await panel.getByLabel("Trình duyệt cùng máy LocalSEO").check();
+  await panel.getByRole("button", { name: "Continue with ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("alert")).toHaveCount(0);
+  await expect(panel.getByRole("link", { name: /Tiếp tục đến trang đăng nhập ChatGPT/ })).toHaveAttribute("href", /state=fresh-test/);
+  await expect(panel).toContainText("Pending Live Verification");
+});
+
 test("Continue with ChatGPT requires explicit eligibility and local-browser review, opens only OAuth URL (mocked)", async ({
   page,
 }) => {

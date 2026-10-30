@@ -21,6 +21,14 @@ const labels: Record<string, string> = {
   failed: "Đăng nhập chưa hoàn tất",
   completed: "Đã hoàn tất OAuth",
 };
+const stages: Record<string, string> = {
+  callback_validation: "Kiểm tra callback",
+  client_registration: "Xác nhận client đăng ký động",
+  token_exchange: "Đổi authorization code lấy token",
+  id_token_validation: "Xác minh ID token",
+  credential_storage: "Lưu vào OS Credential Vault",
+  model_listing: "Đọc model được cấp quyền",
+};
 export function ChatGPTConnectionPanel() {
   const localBrowser = ["127.0.0.1", "localhost"].includes(
     window.location.hostname,
@@ -83,6 +91,9 @@ export function ChatGPTConnectionPanel() {
         <span className="badge badge-neutral">
           {labels[data.status] || data.status}
         </span>
+        {data.authorization_status === "failed" && (
+          <span className="badge badge-neutral">Đăng nhập chưa hoàn tất</span>
+        )}
         <span className="badge badge-neutral">
           {data.live_verification === "verified_for_this_session"
             ? "Đã nhận response.completed trong phiên này"
@@ -107,9 +118,14 @@ export function ChatGPTConnectionPanel() {
         </p>
       )}
       {(error || data.last_error) && (
-        <p role="alert" className="report-warning">
-          {error || data.last_error?.detail}
-        </p>
+        <div role="alert" className="report-warning">
+          <div>
+            <p>{error || data.last_error?.detail}</p>
+            {data.last_error && <p>Mã lỗi: <code>{data.last_error.code}</code>
+              {data.last_error.stage && <> · Bước: {stages[data.last_error.stage] || "Xử lý kết nối ChatGPT"}</>}
+            </p>}
+          </div>
+        </div>
       )}
       {message && <p role="status">{message}</p>}
       {!localBrowser && (
@@ -208,9 +224,19 @@ export function ChatGPTConnectionPanel() {
         <Button
           variant="outline"
           disabled={busy}
+          aria-busy={busy || query.isFetching}
           onClick={() =>
             void action(async () => {
-              await query.refetch();
+              const result = await query.refetch({ throwOnError: true });
+              const current = result.data;
+              if (current?.last_error || current?.authorization_status === "failed")
+                setMessage("Đã kiểm tra: đăng nhập chưa hoàn tất. Xem mã lỗi và bước xử lý ở trên; dùng Continue with ChatGPT để bắt đầu lượt mới.");
+              else if (current?.pending_authorization)
+                setMessage("Đã kiểm tra: đang chờ đăng nhập. Hoàn tất ở tab OpenAI trên cùng máy LocalSEO.");
+              else if (current?.account)
+                setMessage(`Đã kiểm tra: ${labels[current.status] || "đã có kết nối ChatGPT"}.`);
+              else
+                setMessage("Đã kiểm tra: chưa có kết nối hoặc kết quả đăng nhập. Nếu backend đã khởi động lại, nhấn Continue with ChatGPT để tạo phiên mới; không tải lại callback cũ.");
             })
           }
         >
@@ -218,7 +244,7 @@ export function ChatGPTConnectionPanel() {
         </Button>
         <Button
           variant="outline"
-          disabled={busy || (!data.account && !data.pending_authorization)}
+          disabled={busy || (!data.account && !data.pending_authorization && !data.last_error && data.secure_storage_available)}
           onClick={() =>
             void action(async () => {
               const r = await aiWrite<{ message: string }>(

@@ -39,6 +39,8 @@ class Issuer:
         self.nonce_override = None
         self.jwt_changes = {}
         self.refresh_status = 200
+        self.authorization_status = 200
+        self.oauth_error = "invalid_grant"
         self.models_status = 200
         self.inference_status = 200
         self.model_rows = [
@@ -111,6 +113,12 @@ class Issuer:
             return httpx.Response(200, json=self.keys)
         if url == TOKEN:
             refreshing = body["grant_type"] == ["refresh_token"]
+            if not refreshing and self.authorization_status != 200:
+                return httpx.Response(self.authorization_status, json={
+                    "error": self.oauth_error,
+                    "error_description": "sensitive provider fixture must never echo",
+                    "access_token": "fake-secret-in-error-response",
+                })
             if refreshing:
                 self.refreshes += 1
             if refreshing and self.refresh_status != 200:
@@ -315,6 +323,124 @@ def test_actual_loopback_callback_completes_and_replay_fails_without_code_echo(s
             }
         )
     assert len([call for call in f.calls if call[1] == TOKEN]) == 1
+
+
+def test_loopback_shows_safe_error_stage_and_persists_only_identifiers(siwc):
+    from app.ai.chatgpt_diagnostics import OAUTH_DIAGNOSTIC
+    c, r, f = siwc
+    started, p = begin(siwc)
+    with httpx.Client(trust_env=False, timeout=3) as local:
+        response = local.get(started["redirect_uri"], params={
+            "state": p["state"], "code": "sensitive-fake-code",
+            "error_description": "<script>untrusted fixture</script>",
+        })
+    assert response.status_code == 400
+    assert "chatgpt_invalid_client" in response.text and "đăng ký động" in response.text
+    assert "sensitive-fake-code" not in response.text and p["state"] not in response.text
+    assert "untrusted fixture" not in response.text
+    assert "history.replaceState" in response.text
+    assert "unsafe-inline" not in response.headers["content-security-policy"]
+    assert response.headers["referrer-policy"] == "no-referrer"
+    status = c.get("/api/ai/chatgpt/status").json()
+    assert status["last_error"]["stage"] == "client_registration"
+    assert r.ai.chatgpt._get(OAUTH_DIAGNOSTIC) == {
+        "code": "chatgpt_invalid_client", "stage": "client_registration"}
+    reopened = ChatGPTConnection(r.db, r.ai.vault, httpx.MockTransport(f), clock=lambda: f.time)
+    try:
+        after = reopened.status()
+        assert after["authorization_status"] == "failed"
+        assert after["last_error"]["code"] == "chatgpt_invalid_client"
+        assert after["live_verification"] == "pending_live_verification"
+    finally:
+        reopened.close()
+
+
+@pytest.mark.parametrize("provider_code,expected", [
+    ("invalid_grant", "chatgpt_oauth_invalid_grant"),
+    ("invalid_client", "chatgpt_oauth_invalid_client"),
+    ("invalid_request", "chatgpt_oauth_invalid_request"),
+    ("invalid_scope", "chatgpt_oauth_invalid_scope"),
+    ("unrecognized-sensitive-value", "chatgpt_request_rejected"),
+])
+def test_token_exchange_failures_have_safe_actionable_diagnostics(provider_code, expected, siwc):
+    c, r, f = siwc
+    f.authorization_status = 400
+    f.oauth_error = provider_code
+    _, p = begin(siwc)
+    with pytest.raises(GSCError) as error:
+        r.ai.chatgpt.callback({"state": p["state"], "code": "sensitive-fake-code",
+                               "client_id": "oaiapp_test"})
+    assert error.value.code == expected
+    status = c.get("/api/ai/chatgpt/status")
+    assert status.json()["last_error"]["code"] == expected
+    assert status.json()["last_error"]["stage"] == "token_exchange"
+    assert all(value not in status.text for value in (
+        "sensitive provider fixture", "fake-secret", "sensitive-fake-code", "unrecognized-sensitive-value"))
+    assert not r.ai.vault.get(TOKENS)
+    assert len([call for call in f.calls if call[1] == TOKEN]) == 1
+
+
+def test_shutdown_during_authorization_is_diagnosable_after_restart(siwc):
+    c, r, f = siwc
+    begin(siwc)
+    r.ai.chatgpt.close()
+    reopened = ChatGPTConnection(r.db, r.ai.vault, httpx.MockTransport(f), clock=lambda: f.time)
+    try:
+        assert not reopened.status()["pending_authorization"]
+        assert reopened.status()["last_error"]["code"] == "chatgpt_oauth_interrupted"
+        r.ai.chatgpt = reopened
+        begin(siwc)
+        assert reopened.status()["last_error"] is None
+    finally:
+        reopened.close()
+
+
+def test_real_vault_adapter_handles_windows_sized_tokens_and_can_disconnect_corruption(siwc, monkeypatch):
+    from app.gsc.vault import CredentialVault
+    from test_vault import SimulatedWinVault
+    c, r, f = siwc
+    backend = SimulatedWinVault()
+    vault = CredentialVault()
+    monkeypatch.setattr(vault, "_backend", lambda: backend)
+    r.ai.vault = r.ai.chatgpt.vault = vault
+    request = r.ai.chatgpt.http.request
+
+    def long_tokens(method, url, **kwargs):
+        result = request(method, url, **kwargs)
+        if url == TOKEN:
+            result.update(access_token="fake-access-" + "a" * 6000,
+                          refresh_token="fake-refresh-" + "b" * 3000)
+        return result
+
+    r.ai.chatgpt.http.request = long_tokens
+    login(siwc, False)
+    assert r.ai.chatgpt.status()["status"] == "connected_authorized"
+    manifest = json.loads(backend.values[TOKENS])
+    del backend.values[f"{TOKENS}.part.{manifest['slot']}.0"]
+    assert not r.ai.chatgpt.status()["secure_storage_available"]
+    result = c.post("/api/ai/chatgpt/disconnect", json={"confirm": True, "revoke": True})
+    assert result.status_code == 200 and result.json()["local_credentials_removed"]
+    assert not result.json()["remote_revoked"]
+    assert not any(key.startswith(TOKENS) for key in backend.values)
+
+
+def test_native_vault_write_error_is_reported_at_storage_step_without_token_leak(siwc, monkeypatch):
+    from app.gsc.vault import CredentialVault
+    from test_vault import SimulatedWinVault
+    c, r, f = siwc
+    backend = SimulatedWinVault()
+    vault = CredentialVault()
+    monkeypatch.setattr(vault, "_backend", lambda: backend)
+    r.ai.vault = r.ai.chatgpt.vault = vault
+    _, p = begin(siwc)
+    backend.fail_write = lambda key: key.startswith(TOKENS)
+    with pytest.raises(GSCError):
+        r.ai.chatgpt.callback({"state": p["state"], "code": "sensitive-fake-code",
+                               "client_id": "oaiapp_test"})
+    status = c.get("/api/ai/chatgpt/status")
+    assert status.json()["last_error"]["code"] == "secure_storage_unavailable"
+    assert status.json()["last_error"]["stage"] == "credential_storage"
+    assert "fake-secret" not in status.text and not vault.get(TOKENS)
 
 
 @pytest.mark.parametrize(
