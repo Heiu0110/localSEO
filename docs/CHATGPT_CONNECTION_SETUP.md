@@ -47,6 +47,27 @@ Bản sửa ngày 30/10/2026 bổ sung:
 | `chatgpt_invalid_state`, `chatgpt_oauth_interrupted` | Phiên cũ không còn khớp backend hiện tại. Bắt đầu lại trong AI Settings. |
 | `chatgpt_invalid_id_token` · Xác minh ID token | Đọc thêm **Chi tiết kiểm tra** trên callback hoặc AI Settings theo bảng bên dưới. Không bỏ kiểm tra chữ ký, audience hoặc nonce để vượt lỗi. |
 
+### Đã đăng nhập nhưng không có model · cập nhật 31/10/2026
+
+Ảnh người dùng cho thấy callback đăng nhập thành công, sau đó AI Settings báo `chatgpt_response_limit` ở bước **Đọc model được cấp quyền**. Đây là lỗi tải catalog sau OAuth, không tự chứng minh tài khoản không có model hoặc OAuth thất bại.
+
+Code cũ dùng chung giới hạn **512 KiB** và mã lỗi cho cả kích thước/thời gian đọc. Bản sửa tách riêng catalog `/v1/models` thành **8 MiB sau giải nén**, đọc theo chunk64KiB và vẫn giới hạn thời gian đọc45giây. Token/Discovery/JWKS giữ512KiB; Responses SSE giữ giới hạn cũ1MiB. Catalog vẫn tối đa1000 entries. Không tăng vô hạn hoặc đổi endpoint/model/token để che lỗi.
+
+Chỉ `visibility=list` được đưa vào picker, chỉ lưu `slug`/`display_name` cùng session/timestamp; capabilities, instructions và metadata thô không được ghi vào SQLite hoặc trả về frontend. Không hardcode model hoặc tự chọn model khác. Nếu model đã lưu biến mất khỏi listing mới, app bỏ lựa chọn cũ và yêu cầu người dùng chọn lại.
+
+Để thử lại:
+
+1. Chạy `git pull origin main`, dừng/chạy lại backend và frontend.
+2. Vào **AI Workspace → AI Settings → ChatGPT Connection**, nhấn **Lấy danh sách model ChatGPT**. Nếu phiên còn hợp lệ, app tái sử dụng token trong OS Vault; không cần Disconnect hoặc đăng nhập mới. Token hết hạn có refresh hợp lệ sẽ được làm mới theo luồng hiện có; token hết hạn/bị thu hồi vẫn cần kết nối lại.
+3. Chọn một model trả về rồi nhấn **Lưu model ChatGPT**. Chưa có inference ở bước này.
+4. Nếu tải thành công nhưng danh sách rỗng, UI nói rõ OpenAI chưa trả model `visibility=list`; không tự chuyển sang API Key Provider.
+
+`Làm mới trạng thái ChatGPT` chỉ đọc trạng thái cục bộ, không tải lại catalog hoặc gửi inference. Lỗi tải model có trạng thái riêng, sống qua restart; không biến OAuth đã hoàn tất thành OAuth failed. Khi lần tải tiếp theo thành công, lỗi model cũ được xóa trên cả RAM/metadata và UI cập nhật danh sách ngay. Nếu tải thất bại nhưng có cache hợp lệ, app giữ cache cũ và hiển thị lỗi; không giả vờ lần tải mới thành công.
+
+Mã lỗi mới phân biệt `chatgpt_models_response_limit` (catalog vượt8MiB sau giải nén) với `chatgpt_response_timeout` (quá thời gian). Nếu còn lỗi, gửi mã lỗi/bước xử lý; không gửi payload model, URL callback hay token.
+
+**Trạng thái xác minh:** người dùng đã cung cấp ảnh callback OAuth thành công. Catalog/model selection/inference thật trên máy người dùng vẫn **Pending Live Verification**; cloud chỉ kiểm thử bằng mock issuer/catalog và RSA keys, không có live inference hoặc API trả phí.
+
 ### Chi tiết xác minh ID token · cập nhật 31/10/2026
 
 Mã `chatgpt_invalid_id_token` trước đây gộp nhiều lỗi nên không xác định được nhánh thất bại. Bản cập nhật hiển thị thêm **Chi tiết kiểm tra** trên callback và AI Settings; nhấn **Làm mới trạng thái ChatGPT** để đọc lại. Mã chi tiết được giữ sau restart. Chỉ lưu các identifier từ danh mục tĩnh, không lưu JWT, claims, client ID thực tế, nonce, exception hoặc phản hồi OpenAI vào chẩn đoán.

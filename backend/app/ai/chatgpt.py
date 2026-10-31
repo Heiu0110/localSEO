@@ -104,6 +104,15 @@ class ChatGPTConnection:
         self._put(MODELS, {"session_id": None, "models": [], "fetched_at": 0})
         self._put(MODEL, {"session_id": None, "slug": None})
 
+    def _clear_model_error(self):
+        # A successful model fetch must not leave an old model failure in the
+        # UI or on disk. Preserve diagnostics for a separate OAuth/inference.
+        if self.last_error and self.last_error.get("stage") == "model_listing":
+            self.last_error = None
+        saved = self._get(OAUTH_DIAGNOSTIC, {})
+        if isinstance(saved, dict) and saved.get("stage") == "model_listing":
+            self._put(OAUTH_DIAGNOSTIC, {})
+
     def _host(self):
         # A SQLite backup copied to another machine must not clone the host identity.
         value = self.vault.get(HOST) or {}
@@ -188,11 +197,30 @@ class ChatGPTConnection:
                         else "reauthorization_required"
                     )
             cached = self._get(MODELS, {})
-            models = (
-                cached.get("models", [])
-                if raw and cached.get("session_id") == raw.get("session_id")
-                else []
+            cache_matches = bool(raw) and cached.get("session_id") == raw.get(
+                "session_id"
             )
+            models = cached.get("models", []) if cache_matches else []
+            authorized = state in (
+                "connected_authorized",
+                "token_expired_refresh_available",
+            )
+            model_error = bool(
+                last_error and last_error.get("stage") == "model_listing"
+            )
+            listing_status = "unavailable"
+            if authorized:
+                listing_status = "not_loaded"
+                if cache_matches and cached.get("fetched_at"):
+                    listing_status = "ready" if models else "empty"
+                if model_error:
+                    listing_status = "failed"
+            authorization_status = self.phase
+            if self.phase == "idle":
+                if last_error and not model_error:
+                    authorization_status = "failed"
+                elif raw and not raw.get("reauthorization_required"):
+                    authorization_status = "completed"
             selected = self._get(MODEL, {})
             model = (
                 selected.get("slug")
@@ -208,19 +236,19 @@ class ChatGPTConnection:
                 "provider": "chatgpt",
                 "status": state,
                 "secure_storage_available": secure,
-                "authorization_status": "failed" if self.phase == "idle" and last_error else self.phase,
+                "authorization_status": authorization_status,
                 "pending_authorization": self.phase in ("waiting", "exchanging"),
                 "account": raw.get("account") if raw else None,
                 "connection_id": raw.get("session_id"),
                 "granted_scopes": raw.get("scopes", []),
-                "plan_usage_authorized": state
-                in ("connected_authorized", "token_expired_refresh_available")
-                and DIRECT in raw.get("scopes", []),
+                "plan_usage_authorized": authorized and DIRECT in raw.get("scopes", []),
                 "access_expires_at": raw.get("expires_at"),
                 "refresh_expires_at": raw.get("refresh_expires_at"),
                 "models": models,
                 "selected_model": model,
-                "models_stale": self.clock() - cached.get("fetched_at", 0) > 300,
+                "models_stale": not cache_matches
+                or self.clock() - cached.get("fetched_at", 0) > 300,
+                "model_listing_status": listing_status,
                 "last_error": last_error,
                 "eligibility": {
                     "status": "pending_live_verification",
@@ -287,6 +315,7 @@ class ChatGPTConnection:
                 def do_GET(self):
                     status = 400
                     success = False
+                    outcome = None
                     failure = diagnostic("chatgpt_callback")
                     try:
                         if (
@@ -321,7 +350,7 @@ class ChatGPTConnection:
                         )
                         if any(len(v) != 1 for v in query.values()):
                             fail("chatgpt_callback", "Query callback bị trùng.", 400)
-                        owner.callback({k: v[0] for k, v in query.items()})
+                        outcome = owner.callback({k: v[0] for k, v in query.items()})
                         success = True
                         status = 200
                     except GSCError as error:
@@ -356,6 +385,20 @@ class ChatGPTConnection:
                             )
                             + "</h1>"
                             + (
+                                "<p>Đã xác thực tài khoản nhưng chưa tải được danh sách model. "
+                                "Quay lại AI Settings, xem lỗi ở bước Đọc model được cấp quyền "
+                                "và nhấn <strong>Lấy danh sách model ChatGPT</strong> để thử lại.</p>"
+                                if success
+                                and outcome.get("model_listing_status") == "failed"
+                                else (
+                                    "<p>OpenAI chưa cấp quyền ChatGPT Plan Usage cho kết nối này. Đăng nhập thành công chưa cho phép inference.</p>"
+                                    if success
+                                    and outcome.get("status")
+                                    == "connected_not_authorized"
+                                    else ""
+                                )
+                            )
+                            + (
                                 ""
                                 if success
                                 else "<p><strong>Mã lỗi:</strong> <code>"
@@ -374,7 +417,12 @@ class ChatGPTConnection:
                                 + escape(failure["detail"])
                                 + "</p>"
                             )
-                            + "<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra; nếu thất bại, bắt đầu lại bằng <strong>Continue with ChatGPT</strong>.</p><p>Không tải lại callback cũ hoặc chia sẻ URL đăng nhập, code hay token.</p></main></html>"
+                            + (
+                                "<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra và chọn model khả dụng.</p>"
+                                if success
+                                else "<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra; nếu thất bại, bắt đầu lại bằng <strong>Continue with ChatGPT</strong>.</p>"
+                            )
+                            + "<p>Không tải lại callback cũ hoặc chia sẻ URL đăng nhập, code hay token.</p></main></html>"
                         ).encode()
                     )
                     if owner.phase not in ("waiting", "exchanging"):
@@ -521,9 +569,9 @@ class ChatGPTConnection:
                 if DIRECT in value["scopes"]:
                     try:
                         self._refresh_models_locked()
-                    except GSCError as error:
-                        self.last_error = {"code": error.code, "detail": error.message}
-                        self.last_error["stage"] = "model_listing"
+                    except GSCError:
+                        pass  # OAuth completed; model diagnostics are separate.
+                return self.status()
             except GSCError as error:
                 self.phase = "failed"
                 error.oauth_stage = stage
@@ -672,13 +720,19 @@ class ChatGPTConnection:
     def _refresh_models_locked(self):
         raw = self.credentials()
         try:
-            result = self.http.request(
-                "GET", RESOURCE + "/models", token=raw["access_token"]
-            )
+            models = self._fetch_models(raw)
         except GSCError as error:
             if error.status == 401:
                 self._invalidate(raw)
+            self._record_oauth_error(error.code, "model_listing")
             raise
+        self._clear_model_error()
+        return models
+
+    def _fetch_models(self, raw):
+        result = self.http.request(
+            "GET", RESOURCE + "/models", token=raw["access_token"]
+        )
         entries = result.get("models")
         if not isinstance(entries, list) or len(entries) > 1000:
             fail(
@@ -707,6 +761,8 @@ class ChatGPTConnection:
                 )
             models.append({"slug": slug, "display_name": label})
             seen.add(slug)
+        # Cache only the picker projection, never instructions/capabilities or
+        # the full provider response. Replace only after complete validation.
         self._put(
             MODELS,
             {
@@ -715,6 +771,12 @@ class ChatGPTConnection:
                 "fetched_at": self.clock(),
             },
         )
+        selected = self._get(MODEL, {})
+        if (
+            selected.get("session_id") == raw["session_id"]
+            and selected.get("slug") not in seen
+        ):
+            self._put(MODEL, {"session_id": raw["session_id"], "slug": None})
         return models
 
     def refresh_models(self):

@@ -1,3 +1,25 @@
+# Sửa tải model ChatGPT sau khi OAuth thành công · 31/10/2026
+
+Người dùng cung cấp ảnh callback đăng nhập thành công và AI Settings có lỗi `chatgpt_response_limit` tại bước Đọc model được cấp quyền. Code cũ dùng chung512KiB cho JSON OAuth và catalog, cùng mã lỗi cho quá kích thước/quá thời gian; không thể suy từ ảnh rằng tài khoản không có model.
+
+| Kiểm tra thực thi | Kết quả |
+|---|---|
+| Toàn bộ backend pytest | **461 passed** (440 trước đó +21 mới); một warning Starlette/httpx có sẵn |
+| AI Workspace + ChatGPT Playwright | **24 passed** (21 cũ +3 mới): retry model giữ account, populate picker/select/save, empty khác fetch failed, manual failure cập nhật diagnostic ngay và không gửi inference/reconnect |
+| TypeScript/Vite production build | **Passed**, Vite4,55giây; không đổi dependencies/lockfile |
+| Tái hiện trước/sau bằng transport ở HEAD trước sửa | Catalog synthetic786533byte: code cũ trả chatgpt_response_limit, code mới đọc1model thành công |
+| Size bounds | Chỉ GET /v1/models dùng8MiB decoded; token/discovery/JWKS giữ512KiB. Test đúng8MiB chấp nhận, vượt1byte từ chối; gzip có compressed body nhỏ vẫn bị chặn khi decoded vượt cap; stream đóng sau thành công/thất bại |
+| Thời gian | Test deadline trả chatgpt_response_timeout riêng, không giả thành lỗi kích thước; không tự retry |
+| Catalog và selection | OAuth+catalog nhiều metadata/Unicode vượt512KiB thành công; cache/status chỉ giữ slug/display_name của visibility=list, không instructions/capabilities. Empty/hidden-only khác malformed/non-list/>1000entries; model biến mất thì bỏ lựa chọn, không tự thay model |
+| Recovery | Callback giữ OAuth completed khi models503; diagnostic model sống qua restart, GET status không gọi provider; retry thành công cùng session, chỉ1token exchange, xóa đúng model error trên RAM/SQLite. Giữ cache/selection cũ khi fetch429; giữ diagnostic OAuth khác |
+| Callback thật với mock issuer | Thành công OAuth nhưng fetch model lỗi hiển thị thêm cảnh báo và hướng dẫn Lấy danh sách model ChatGPT; không lộ code/state/claims/token |
+
+Không thay Dashboard/GSC/SEO modules, vault storage hoặc migration; không thêm dependency hay paid/live inference. Chỉ sửa transport SIWC, model lifecycle, ChatGPT Settings và tài liệu/kiểm thử liên quan. `GET status` chỉ đọc local; `POST models/refresh` là thao tác riêng do người dùng bấm.
+
+**Live verification:** ảnh người dùng xác nhận callback OAuth đã hoàn tất. Catalog/model selection/inference thật trên máy người dùng vẫn **Pending Live Verification**, không suy entitlement/model khả dụng từ kết quả mock. Sau pull/restart có thể bấm Lấy danh sách model ChatGPT với phiên hiện có, không cần Disconnect nếu token còn hợp lệ. [Hướng dẫn](docs/CHATGPT_CONNECTION_SETUP.md#đã-đăng-nhập-nhưng-không-có-model--cập-nhật-31102026).
+
+---
+
 # Sửa xác minh ID token ChatGPT · 31/10/2026
 
 Ảnh người dùng xác nhận lỗi ở `chatgpt_invalid_id_token` / bước xác minh ID token. Người dùng xác nhận Windows tự động đồng bộ và hiển thị đúng giờ; **chưa xác nhận nguyên nhân của lần OAuth thật**, không gán lỗi chắc chắn cho lệch giờ.

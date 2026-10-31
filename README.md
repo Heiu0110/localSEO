@@ -92,6 +92,8 @@ Vào **AI Workspace → AI Settings → ChatGPT Connection → Continue with Cha
 
 **Pending Live Verification:** LocalSEO chưa được xác nhận eligibility; repo chưa có LICENSE ở thư mục gốc. Người sở hữu cần rà soát điều kiện và quyền sử dụng mã nguồn trước khi chọn các checkbox xác nhận. App không tự công bố license. Đăng nhập thiếu `chatgpt.tokens.use.direct` sẽ bị chặn Plan Usage; app không bịa hạn mức còn lại hoặc tự chuyển API trả phí khi bị giới hạn. Full Preview Limitations chưa được đối chiếu độc lập do docs bị Tunnel403; contract triển khai theo handoff người dùng cung cấp ngày29/10/2026.
 
+Nếu đăng nhập thành công nhưng chưa thấy model hoặc báo `chatgpt_response_limit`, cập nhật source và khởi động lại backend/frontend, rồi nhấn **Lấy danh sách model ChatGPT** trong AI Settings. Phiên hợp lệ được tái sử dụng; không cần Disconnect. Nút **Làm mới trạng thái ChatGPT** chỉ đọc trạng thái, không tải lại model. [Chi tiết lỗi tải model](docs/CHATGPT_CONNECTION_SETUP.md#đã-đăng-nhập-nhưng-không-có-model--cập-nhật-31102026).
+
 Sau khi được cấp quyền: chọn/lưu model ChatGPT → về chat chọn **ChatGPT · Plan Usage** → kiểm tra quyền/model và xác nhận gửi dữ liệu cho lượt này. Responses dùng streaming; kết quả chỉ hoàn tất sau `response.completed` và kiểm tra evidence. Xem [hướng dẫn & bước xác minh localhost](docs/CHATGPT_CONNECTION_SETUP.md) và [kiến trúc/bảo mật](docs/CHATGPT_CONNECTION_ARCHITECTURE.md). Chưa thực hiện login/inference thật trong cloud.
 
 ### 6. Bật OpenAI API Key Provider (tùy chọn)

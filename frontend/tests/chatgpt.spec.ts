@@ -331,3 +331,107 @@ for (const failure of [
     expect(commands).toEqual([]);
   });
 }
+
+const authorizedAccount: ChatGPTStatus = {
+  ...base,
+  status: "connected_authorized",
+  authorization_status: "completed",
+  account: { sub: "fixture", name: "Tài khoản mô phỏng" },
+  connection_id: "same-connected-session",
+  plan_usage_authorized: true,
+  granted_scopes: ["chatgpt.tokens.use.direct"],
+  model_listing_status: "not_loaded",
+};
+
+test("connected account recovers model catalogue without reconnecting or inference (mocked)", async ({ page }) => {
+  let state: ChatGPTStatus = {
+    ...authorizedAccount,
+    model_listing_status: "failed",
+    last_error: {
+      code: "chatgpt_response_limit",
+      stage: "model_listing",
+      detail: "Phản hồi OpenAI vượt giới hạn cho phép.",
+    },
+  };
+  const commands: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() !== "GET" && request.url().includes("/api/ai/"))
+      commands.push(new URL(request.url()).pathname);
+  });
+  await page.route("**/api/ai/chatgpt/status", (route) => route.fulfill({ json: state }));
+  await page.route("**/api/ai/chatgpt/models/refresh", (route) => {
+    state = {
+      ...authorizedAccount,
+      model_listing_status: "ready",
+      models_stale: false,
+      models: [{ slug: "account-model", display_name: "Model tài khoản" }],
+    };
+    return route.fulfill({ json: state });
+  });
+  let selected: unknown;
+  await page.route("**/api/ai/chatgpt/model", (route) => {
+    selected = route.request().postDataJSON();
+    state = { ...state, selected_model: "account-model" };
+    return route.fulfill({ json: state });
+  });
+  await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+  const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+  await expect(panel.getByRole("alert")).toContainText("Đã kết nối tài khoản");
+  await expect(panel).toContainText("chưa thể kết luận tài khoản không có model");
+  await panel.getByRole("button", { name: "Làm mới trạng thái ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("không cần đăng nhập lại");
+  expect(commands).toEqual([]);
+  await panel.getByRole("button", { name: "Lấy danh sách model ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("alert")).toHaveCount(0);
+  await expect(panel.getByRole("status")).toContainText("Đã tải 1 model ChatGPT khả dụng");
+  const picker = panel.getByLabel("Model ChatGPT của tài khoản");
+  await expect(picker.locator("option")).toHaveText(["Chọn model khả dụng", "Model tài khoản · account-model"]);
+  await expect(picker).toHaveValue("");
+  await picker.selectOption("account-model");
+  await panel.getByRole("button", { name: "Lưu model ChatGPT", exact: true }).click();
+  await expect(panel).toContainText("Đã chọn model ChatGPT. Chưa gửi inference.");
+  expect(selected).toEqual({ slug: "account-model" });
+  expect(commands).toEqual(["/api/ai/chatgpt/models/refresh", "/api/ai/chatgpt/model"]);
+  await expect(panel).toContainText("Pending Live Verification");
+});
+
+test("empty successful model catalogue is distinct from a fetch error (mocked)", async ({ page }) => {
+  let state = { ...authorizedAccount };
+  await page.route("**/api/ai/chatgpt/status", (route) => route.fulfill({ json: state }));
+  await page.route("**/api/ai/chatgpt/models/refresh", (route) => {
+    state = { ...authorizedAccount, model_listing_status: "empty", models_stale: false };
+    return route.fulfill({ json: state });
+  });
+  await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+  const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+  await panel.getByRole("button", { name: "Lấy danh sách model ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("status")).toContainText("OpenAI chưa trả model visibility=list");
+  await expect(panel.getByRole("alert")).toHaveCount(0);
+  await expect(panel.getByRole("button", { name: "Lưu model ChatGPT", exact: true })).toBeDisabled();
+});
+
+test("failed manual model fetch refreshes diagnostics while retaining the connected account (mocked)", async ({ page }) => {
+  let state = { ...authorizedAccount };
+  await page.route("**/api/ai/chatgpt/status", (route) => route.fulfill({ json: state }));
+  await page.route("**/api/ai/chatgpt/models/refresh", (route) => {
+    state = {
+      ...authorizedAccount,
+      model_listing_status: "failed",
+      last_error: {
+        code: "chatgpt_models_response_limit", stage: "model_listing",
+        detail: "Danh sách model OpenAI vượt giới hạn 8 MiB sau giải nén.",
+      },
+    };
+    return route.fulfill({ status: 502, json: {
+      code: "chatgpt_models_response_limit", detail: state.last_error?.detail,
+    } });
+  });
+  await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+  const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+  await panel.getByRole("button", { name: "Lấy danh sách model ChatGPT", exact: true }).click();
+  await expect(panel.getByRole("alert")).toContainText("chatgpt_models_response_limit");
+  await expect(panel.getByRole("alert")).toContainText("Đã kết nối tài khoản");
+  await expect(panel.getByRole("alert")).toContainText("Đọc model được cấp quyền");
+  await expect(panel).toContainText("chưa thể kết luận tài khoản không có model");
+  await expect(panel.getByLabel("Model ChatGPT của tài khoản")).toBeEnabled();
+});

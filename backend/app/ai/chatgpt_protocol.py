@@ -28,6 +28,12 @@ RESOURCE = "https://api.openai.com/v1"
 DIRECT = "chatgpt.tokens.use.direct"
 SCOPES = "openid profile email offline_access resource.invoke " + DIRECT
 MAX_BYTES = 1024 * 1024
+# Model catalogues include capabilities/instructions that LocalSEO does not
+# persist. Give only this endpoint a larger, still bounded decoded JSON budget.
+MAX_JSON_BYTES = 512 * 1024
+MAX_MODEL_CATALOG_BYTES = 8 * 1024 * 1024
+JSON_CHUNK_BYTES = 64 * 1024
+JSON_READ_SECONDS = 45
 # Bounded OIDC clock leeway, applied consistently to exp/iat/nbf. No expiry
 # bypass and no reliance on unverified claims or provider Date headers.
 ID_TOKEN_CLOCK_SKEW_SECONDS = 60
@@ -322,6 +328,8 @@ class ChatGPTTransport:
             url.startswith(ISSUER + "/") and form and "token_type_hint" in form
         ):
             fail("chatgpt_endpoint", "Endpoint không được phép.", 403)
+        is_models = method == "GET" and url == RESOURCE + "/models"
+        max_bytes = MAX_MODEL_CATALOG_BYTES if is_models else MAX_JSON_BYTES
         try:
             with self.client() as client, client.stream(
                 method,
@@ -332,15 +340,28 @@ class ChatGPTTransport:
                 if response.status_code >= 300 and url != TOKEN:
                     provider_error(response.status_code)
                 data = bytearray()
-                deadline = time.monotonic() + 45
-                for chunk in response.iter_bytes():
-                    data.extend(chunk)
-                    if len(data) > 512 * 1024 or time.monotonic() > deadline:
+                deadline = time.monotonic() + JSON_READ_SECONDS
+                # iter_bytes measures decoded bytes, including gzip responses;
+                # never trust Content-Length as a decoded-size bound.
+                for chunk in response.iter_bytes(chunk_size=JSON_CHUNK_BYTES):
+                    if time.monotonic() > deadline:
                         fail(
-                            "chatgpt_response_limit",
-                            "Phản hồi ChatGPT vượt giới hạn.",
+                            "chatgpt_response_timeout",
+                            MESSAGES["chatgpt_response_timeout"],
+                            504,
+                        )
+                    if len(data) + len(chunk) > max_bytes:
+                        code = (
+                            "chatgpt_models_response_limit"
+                            if is_models
+                            else "chatgpt_response_limit"
+                        )
+                        fail(
+                            code,
+                            MESSAGES[code],
                             502,
                         )
+                    data.extend(chunk)
                 if response.status_code >= 300:
                     token_error(response.status_code, data)
                 if not data:

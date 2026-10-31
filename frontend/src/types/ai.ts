@@ -201,6 +201,7 @@ export interface ChatGPTStatus {
   models: { slug: string; display_name: string }[];
   selected_model: string | null;
   models_stale: boolean;
+  model_listing_status?: "unavailable" | "not_loaded" | "ready" | "empty" | "failed";
   last_error: { code: string; detail: string; stage?: string; reason?: string } | null;
   eligibility: {
     status: string;

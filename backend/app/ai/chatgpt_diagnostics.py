@@ -61,6 +61,9 @@ MESSAGES = {
     "chatgpt_unavailable": "Dịch vụ OpenAI tạm thời không khả dụng; thử đăng nhập mới sau.",
     "chatgpt_network": "Không kết nối được OpenAI hoặc request hết thời gian; kiểm tra kết nối backend rồi tạo lượt đăng nhập mới.",
     "chatgpt_response_limit": "Phản hồi OpenAI vượt giới hạn cho phép.",
+    "chatgpt_models_response_limit": "Danh sách model OpenAI vượt giới hạn 8 MiB sau giải nén. Phiên đăng nhập được giữ; chưa tải được model.",
+    "chatgpt_response_timeout": "Đọc phản hồi OpenAI vượt thời gian cho phép. Không tự gửi lại request.",
+    "chatgpt_models_invalid": "OpenAI chưa trả danh sách model SIWC hợp lệ. Phiên đăng nhập được giữ; chưa tải được model.",
     "chatgpt_invalid_response": "OpenAI trả phản hồi JSON không hợp lệ.",
     "chatgpt_provider_error": "OpenAI chưa hoàn tất request SIWC; không tự retry hoặc chuyển provider.",
     "chatgpt_oauth_failed": "Chưa hoàn tất đăng nhập ChatGPT. Quay lại AI Settings để tạo lượt đăng nhập mới.",
@@ -80,6 +83,10 @@ def diagnostic(code, stage="callback_validation", reason=None):
             else "callback_validation"
         ),
     }
+    if result["stage"] == "model_listing" and code == "chatgpt_network":
+        result["detail"] = (
+            "Không tải được model do kết nối OpenAI hoặc request hết thời gian. Kiểm tra mạng rồi nhấn Lấy danh sách model ChatGPT để thử lại; không tự gửi lại request."
+        )
     if (
         code == "chatgpt_invalid_id_token"
         and isinstance(reason, str)

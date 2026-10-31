@@ -1167,3 +1167,232 @@ def test_unknown_token_diagnostic_is_never_persisted_or_echoed():
     message = diagnostic("chatgpt_invalid_id_token", "id_token_validation", "sensitive-token-text")
     assert "reason" not in message and "sensitive-token-text" not in json.dumps(message)
     assert "reason" not in diagnostic("chatgpt_network", reason="nonce_missing")
+
+
+class CatalogChunks(httpx.SyncByteStream):
+    def __init__(self, chunks):
+        self.chunks = chunks
+        self.closed = False
+        self.bytes_read = 0
+
+    def __iter__(self):
+        for chunk in self.chunks:
+            self.bytes_read += len(chunk)
+            yield chunk
+
+    def close(self):
+        self.closed = True
+
+
+@pytest.mark.parametrize("method,url,expected", [
+    ("GET", RESOURCE + "/models", None),
+    ("POST", TOKEN, "chatgpt_response_limit"),
+    ("GET", DISCOVERY, "chatgpt_response_limit"),
+    ("GET", JWKS, "chatgpt_response_limit"),
+])
+def test_large_json_allowance_is_scoped_to_model_catalog(method, url, expected):
+    content = json.dumps({"models": [], "extra": "x" * (MAX_JSON_BYTES + 1000)}).encode()
+    stream = CatalogChunks([content[:200001], content[200001:]])
+    transport = ChatGPTTransport(httpx.MockTransport(lambda req: httpx.Response(200, stream=stream)))
+    if expected:
+        with pytest.raises(GSCError) as error:
+            transport.request(method, url)
+        assert error.value.code == expected
+    else:
+        assert transport.request(method, url)["models"] == []
+    assert stream.closed
+
+
+@pytest.mark.parametrize("over_limit", [False, True])
+def test_model_catalog_decoded_byte_limit_boundary(over_limit):
+    prefix, suffix = b'{"models":[],"extra":"', b'"}'
+    padding = MAX_MODEL_CATALOG_BYTES - len(prefix) - len(suffix) + int(over_limit)
+    # Split the valid JSON into chunks; no reliance on Content-Length.
+    content = prefix + b"x" * padding + suffix
+    stream = CatalogChunks(content[i:i + 65535] for i in range(0, len(content), 65535))
+    transport = ChatGPTTransport(httpx.MockTransport(lambda req: httpx.Response(200, stream=stream)))
+    if over_limit:
+        with pytest.raises(GSCError) as error:
+            transport.request("GET", RESOURCE + "/models", token="fake-access")
+        assert error.value.code == "chatgpt_models_response_limit"
+    else:
+        assert transport.request("GET", RESOURCE + "/models")["models"] == []
+    assert stream.closed
+
+
+def test_compressed_catalog_is_bounded_by_decoded_size():
+    import gzip
+    compressed = gzip.compress(b"x" * (MAX_MODEL_CATALOG_BYTES + 1))
+    assert len(compressed) < MAX_JSON_BYTES
+    stream = CatalogChunks([compressed])
+    transport = ChatGPTTransport(httpx.MockTransport(lambda req: httpx.Response(
+        200, headers={"content-encoding": "gzip", "content-length": str(len(compressed))}, stream=stream)))
+    with pytest.raises(GSCError) as error:
+        transport.request("GET", RESOURCE + "/models")
+    assert error.value.code == "chatgpt_models_response_limit" and stream.closed
+
+
+def test_model_read_timeout_is_distinct_from_response_size(monkeypatch):
+    from types import SimpleNamespace
+    import app.ai.chatgpt_protocol as protocol
+    clock_values = iter([0, JSON_READ_SECONDS + 1])
+    monkeypatch.setattr(protocol, "time", SimpleNamespace(monotonic=lambda: next(clock_values)))
+    stream = CatalogChunks([b'{"models":[]}'])
+    transport = ChatGPTTransport(httpx.MockTransport(lambda req: httpx.Response(200, stream=stream)))
+    with pytest.raises(GSCError) as error:
+        transport.request("GET", RESOURCE + "/models")
+    assert error.value.code == "chatgpt_response_timeout" and error.value.status == 504
+    assert stream.closed
+
+
+def test_large_model_catalog_completes_oauth_and_stores_only_picker_fields(siwc):
+    c, r, issuer = siwc
+    issuer.model_rows[0]["capabilities"] = {"instructions": "Mô tả model. " * 100000}
+    assert len(json.dumps({"models": issuer.model_rows}).encode()) > MAX_JSON_BYTES
+    login(siwc, False)
+    status = c.get("/api/ai/chatgpt/status").json()
+    assert status["authorization_status"] == "completed" and status["plan_usage_authorized"]
+    assert status["model_listing_status"] == "ready" and status["last_error"] is None
+    assert status["models"] == [{"slug": "plan-test-model", "display_name": "Model tài khoản thử nghiệm"}]
+    assert status["selected_model"] is None
+    cached = r.ai.chatgpt._get(MODELS)
+    assert len(json.dumps(cached).encode()) < 1000 and "instructions" not in json.dumps(cached)
+    assert "capabilities" not in json.dumps(status)
+    assert c.patch("/api/ai/chatgpt/model", json={"slug": "plan-test-model"}).status_code == 200
+    assert r.ai.chatgpt.preflight()["model"] == "plan-test-model"
+    assert not any(call[1] == RESOURCE + "/responses" for call in issuer.calls)
+
+
+def test_model_fetch_failure_keeps_login_and_success_clears_saved_error(siwc):
+    from app.ai.chatgpt_diagnostics import OAUTH_DIAGNOSTIC
+    c, r, issuer = siwc
+    issuer.models_status = 503
+    login(siwc, False)
+    before = c.get("/api/ai/chatgpt/status").json()
+    session_id = before["connection_id"]
+    assert before["status"] == "connected_authorized" and before["authorization_status"] == "completed"
+    assert before["model_listing_status"] == "failed" and before["last_error"]["stage"] == "model_listing"
+    reopened = ChatGPTConnection(r.db, r.ai.vault, httpx.MockTransport(issuer), clock=lambda: issuer.time)
+    try:
+        # Reading status, including after restart, never reissues the model call.
+        count = len(issuer.calls)
+        after_restart = reopened.status()
+        assert after_restart["authorization_status"] == "completed" and after_restart["model_listing_status"] == "failed"
+        assert after_restart["last_error"] == before["last_error"]
+        assert len(issuer.calls) == count
+        issuer.models_status = 200
+        issuer.model_rows[0]["extra"] = "x" * (MAX_JSON_BYTES + 1)
+        refreshed = c.post("/api/ai/chatgpt/models/refresh")
+        assert refreshed.status_code == 200
+        ready = refreshed.json()
+        assert ready["connection_id"] == session_id and ready["status"] == "connected_authorized"
+        assert ready["model_listing_status"] == "ready" and ready["last_error"] is None
+        assert r.ai.chatgpt._get(OAUTH_DIAGNOSTIC) == {}
+        assert reopened.status()["last_error"] is None
+        assert len([call for call in issuer.calls if call[1] == TOKEN]) == 1
+        assert not any(call[1] == RESOURCE + "/responses" for call in issuer.calls)
+    finally:
+        reopened.close()
+
+
+def test_manual_model_failure_is_visible_and_does_not_destroy_last_good_catalog(siwc):
+    c, r, issuer = siwc
+    login(siwc)
+    previous = r.ai.chatgpt.status()
+    issuer.models_status = 429
+    assert c.post("/api/ai/chatgpt/models/refresh").status_code == 429
+    failed = c.get("/api/ai/chatgpt/status").json()
+    assert failed["status"] == "connected_authorized" and failed["model_listing_status"] == "failed"
+    assert failed["models"] == previous["models"] and failed["selected_model"] == previous["selected_model"]
+    assert failed["last_error"]["code"] == "chatgpt_quota" and failed["last_error"]["stage"] == "model_listing"
+    issuer.models_status = 200
+    recovered = c.post("/api/ai/chatgpt/models/refresh").json()
+    assert recovered["last_error"] is None and recovered["selected_model"] == "plan-test-model"
+
+
+@pytest.mark.parametrize("rows", [[], [{"visibility": "hidden", "slug": "hidden"}]])
+def test_empty_visible_catalog_is_distinct_from_failed_loading(siwc, rows):
+    c, r, issuer = siwc
+    issuer.model_rows = rows
+    login(siwc, False)
+    status = r.ai.chatgpt.status()
+    assert status["model_listing_status"] == "empty" and status["last_error"] is None
+    assert status["models"] == [] and not status["models_stale"]
+    assert status["selected_model"] is None and status["status"] == "connected_authorized"
+    with pytest.raises(GSCError) as error:
+        r.ai.chatgpt.preflight()
+    assert error.value.code == "chatgpt_model_unavailable"
+
+
+def test_successful_catalog_refresh_removes_unavailable_selection_without_replacement(siwc):
+    c, r, issuer = siwc
+    login(siwc)
+    issuer.model_rows = [{"visibility": "list", "slug": "other-model", "display_name": "Other"}]
+    refreshed = c.post("/api/ai/chatgpt/models/refresh").json()
+    assert refreshed["model_listing_status"] == "ready" and refreshed["selected_model"] is None
+    with pytest.raises(GSCError):
+        r.ai.chatgpt.preflight()
+
+
+def test_callback_warns_about_model_failure_without_claiming_oauth_failed(siwc):
+    c, r, issuer = siwc
+    issuer.models_status = 503
+    started, pending = begin(siwc)
+    with httpx.Client(trust_env=False, timeout=5) as local:
+        response = local.get(started["redirect_uri"], params={
+            "state": pending["state"], "code": "fake-sensitive-code",
+            "client_id": "oaiapp_test",
+        })
+    assert response.status_code == 200 and "Đã hoàn tất đăng nhập" in response.text
+    assert "chưa tải được danh sách model" in response.text and "Lấy danh sách model ChatGPT" in response.text
+    assert "fake-sensitive-code" not in response.text and pending["state"] not in response.text
+    assert r.ai.chatgpt.status()["model_listing_status"] == "failed"
+
+
+def test_oversized_catalog_is_retryable_with_existing_session(siwc):
+    c, r, issuer = siwc
+    original = issuer.__call__
+    def handler(request):
+        if str(request.url) == RESOURCE + "/models":
+            stream = CatalogChunks(b"x" * JSON_CHUNK_BYTES for _ in range(MAX_MODEL_CATALOG_BYTES // JSON_CHUNK_BYTES + 2))
+            return httpx.Response(200, stream=stream)
+        return original(request)
+    r.ai.chatgpt.http = ChatGPTTransport(httpx.MockTransport(handler))
+    login(siwc, False)
+    failed = r.ai.chatgpt.status()
+    assert failed["model_listing_status"] == "failed" and failed["status"] == "connected_authorized"
+    assert failed["last_error"]["code"] == "chatgpt_models_response_limit"
+    r.ai.chatgpt.http = ChatGPTTransport(httpx.MockTransport(issuer))
+    success = c.post("/api/ai/chatgpt/models/refresh").json()
+    assert success["last_error"] is None and success["model_listing_status"] == "ready"
+    assert success["connection_id"] == failed["connection_id"]
+    assert len([call for call in issuer.calls if call[1] == TOKEN]) == 1
+
+
+@pytest.mark.parametrize("rows", [None, {"unexpected": "not-a-list"}, [{"visibility": "hidden"}] * 1001])
+def test_invalid_or_excessive_catalog_does_not_become_an_empty_success(siwc, rows):
+    c, r, issuer = siwc
+    issuer.model_rows = rows
+    login(siwc, False)
+    status = r.ai.chatgpt.status()
+    assert status["status"] == "connected_authorized" and status["model_listing_status"] == "failed"
+    assert status["last_error"]["code"] == "chatgpt_models_invalid"
+    assert status["models"] == [] and r.ai.vault.get(TOKENS)["access_token"]
+
+
+def test_model_recovery_does_not_erase_an_unrelated_oauth_error(siwc):
+    from app.ai.chatgpt_diagnostics import OAUTH_DIAGNOSTIC
+    c, r, issuer = siwc
+    login(siwc, False)
+    r.ai.chatgpt._record_oauth_error("chatgpt_invalid_id_token", "id_token_validation", "audience_mismatch")
+    previous = r.ai.chatgpt.status()["last_error"]
+    assert c.post("/api/ai/chatgpt/models/refresh").status_code == 200
+    assert r.ai.chatgpt.status()["last_error"] == previous
+    assert r.ai.chatgpt._get(OAUTH_DIAGNOSTIC)["reason"] == "audience_mismatch"
+
+
+def test_model_network_diagnostic_does_not_instruct_relogin():
+    from app.ai.chatgpt_diagnostics import diagnostic
+    error = diagnostic("chatgpt_network", "model_listing")
+    assert "Lấy danh sách model ChatGPT" in error["detail"]
+    assert "đăng nhập mới" not in error["detail"]

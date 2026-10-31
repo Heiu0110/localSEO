@@ -59,12 +59,12 @@ export function ChatGPTConnectionPanel() {
     setMessage("");
     try {
       await fn();
-      await client.invalidateQueries({ queryKey: ["ai"] });
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Không hoàn tất kết nối ChatGPT.",
       );
     } finally {
+      await client.invalidateQueries({ queryKey: ["ai"] });
       setBusy(false);
     }
   }
@@ -76,6 +76,8 @@ export function ChatGPTConnectionPanel() {
       />
     );
   if (!data) return <p>Đang đọc trạng thái ChatGPT…</p>;
+  const modelListingFailed = data.model_listing_status === "failed" ||
+    data.last_error?.stage === "model_listing";
   return (
     <section
       className="card ai-panel chatgpt-connection"
@@ -121,6 +123,9 @@ export function ChatGPTConnectionPanel() {
         <div role="alert" className="report-warning">
           <div>
             <p>{error || data.last_error?.detail}</p>
+            {modelListingFailed && data.plan_usage_authorized && (
+              <p>Đã kết nối tài khoản; bước tải model chưa hoàn tất. Nhấn Lấy danh sách model ChatGPT để thử lại bằng phiên hiện tại.</p>
+            )}
             {data.last_error && <p>Mã lỗi: <code>{data.last_error.code}</code>
               {data.last_error.stage && <> · Bước: {stages[data.last_error.stage] || "Xử lý kết nối ChatGPT"}</>}
             </p>}
@@ -230,7 +235,9 @@ export function ChatGPTConnectionPanel() {
             void action(async () => {
               const result = await query.refetch({ throwOnError: true });
               const current = result.data;
-              if (current?.last_error || current?.authorization_status === "failed")
+              if (current?.last_error?.stage === "model_listing" && current?.plan_usage_authorized)
+                setMessage("Đã kiểm tra: tài khoản đã kết nối, nhưng chưa tải được danh sách model. Nhấn Lấy danh sách model ChatGPT để thử lại; không cần đăng nhập lại.");
+              else if (current?.last_error || current?.authorization_status === "failed")
                 setMessage("Đã kiểm tra: đăng nhập chưa hoàn tất. Xem mã lỗi và bước xử lý ở trên; dùng Continue with ChatGPT để bắt đầu lượt mới.");
               else if (current?.pending_authorization)
                 setMessage("Đã kiểm tra: đang chờ đăng nhập. Hoàn tất ở tab OpenAI trên cùng máy LocalSEO.");
@@ -299,8 +306,11 @@ export function ChatGPTConnectionPanel() {
           disabled={busy || !data.plan_usage_authorized}
           onClick={() =>
             void action(async () => {
-              await aiWrite("/chatgpt/models/refresh");
-              setMessage("Đã làm mới model do OpenAI công bố cho tài khoản.");
+              const refreshed = await aiWrite<ChatGPTStatus>("/chatgpt/models/refresh");
+              client.setQueryData(["ai", "/chatgpt/status"], refreshed);
+              setMessage(refreshed.models.length
+                ? `Đã tải ${refreshed.models.length} model ChatGPT khả dụng. Chọn model và nhấn Lưu model ChatGPT; chưa gửi inference.`
+                : "Đã tải danh sách model, nhưng OpenAI chưa trả model visibility=list cho tài khoản này.");
             })
           }
         >
@@ -318,7 +328,11 @@ export function ChatGPTConnectionPanel() {
           Lưu model ChatGPT
         </Button>
       </div>
-      {data.models.length === 0 && (
+      {data.models.length === 0 && modelListingFailed && data.plan_usage_authorized ? (
+        <p>Chưa tải được danh sách model; chưa thể kết luận tài khoản không có model khả dụng.</p>
+      ) : data.models.length === 0 && data.plan_usage_authorized && data.model_listing_status !== "empty" ? (
+        <p>Chưa tải danh sách model cho kết nối này. Nhấn Lấy danh sách model ChatGPT để đọc model được cấp quyền.</p>
+      ) : data.models.length === 0 && (
         <p>
           Chưa có model <code>visibility=list</code> cho kết nối này. Không dùng
           mặc định model của API Key Provider.
