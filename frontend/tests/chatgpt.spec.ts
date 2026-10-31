@@ -284,3 +284,50 @@ test("ChatGPT settings remain usable on mobile without OS vault", async ({
     ),
   ).toBe(true);
 });
+
+for (const failure of [
+  {
+    reason: "audience_mismatch",
+    detail: "Audience của ID token không khớp issued client ID của lượt đăng nhập.",
+  },
+  {
+    reason: "nonce_missing",
+    detail: "ID token không chứa nonce đã yêu cầu trong lượt OAuth.",
+  },
+  {
+    reason: "issued_in_future",
+    detail: "Thời điểm phát hành ID token vượt quá 60 giây so với đồng hồ backend. Trên Windows nhấn Sync now, rồi đăng nhập lại.",
+  },
+]) {
+  test(`ID token failure shows safe specific reason ${failure.reason} after refresh (mocked)`, async ({ page }) => {
+    let state: ChatGPTStatus = { ...base };
+    await page.route("**/api/ai/chatgpt/status", (route) =>
+      route.fulfill({ json: state }),
+    );
+    const commands: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() !== "GET" && request.url().includes("/api/ai/"))
+        commands.push(request.url());
+    });
+    await page.goto("/ai-workspace?project=xuong-may&tab=settings");
+    const panel = page.getByRole("region", { name: "ChatGPT Connection", exact: true });
+    await expect(panel).toContainText("Chưa kết nối");
+    state = {
+      ...base,
+      authorization_status: "failed",
+      last_error: {
+        code: "chatgpt_invalid_id_token",
+        stage: "id_token_validation",
+        reason: failure.reason,
+        detail: failure.detail,
+      },
+    };
+    await panel.getByRole("button", { name: "Làm mới trạng thái ChatGPT", exact: true }).click();
+    await expect(panel.getByRole("alert")).toContainText(failure.reason);
+    await expect(panel.getByRole("alert")).toContainText(failure.detail);
+    await expect(panel.getByRole("alert")).toContainText("Xác minh ID token");
+    await expect(panel).toContainText("Pending Live Verification");
+    await expect(panel.getByLabel("Model ChatGPT của tài khoản")).toBeDisabled();
+    expect(commands).toEqual([]);
+  });
+}

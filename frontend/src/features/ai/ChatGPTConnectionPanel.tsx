@@ -124,6 +124,7 @@ export function ChatGPTConnectionPanel() {
             {data.last_error && <p>Mã lỗi: <code>{data.last_error.code}</code>
               {data.last_error.stage && <> · Bước: {stages[data.last_error.stage] || "Xử lý kết nối ChatGPT"}</>}
             </p>}
+            {data.last_error?.reason && <p>Chi tiết kiểm tra: <code>{data.last_error.reason}</code></p>}
           </div>
         </div>
       )}

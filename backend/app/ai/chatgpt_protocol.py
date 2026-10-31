@@ -7,14 +7,17 @@ Full preview limitations and live eligibility still need local verification.
 import base64
 import json
 import math
+import re
 import secrets
 import time
 from urllib.parse import urlsplit
 import httpx
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes
 from .common import fail
-from .chatgpt_diagnostics import MESSAGES
+from .chatgpt_diagnostics import MESSAGES, ID_TOKEN_REASONS
+from app.gsc.errors import GSCError
 
 ISSUER = "https://auth.openai.com"
 AUTHORIZE = ISSUER + "/api/accounts/authorize"
@@ -25,6 +28,9 @@ RESOURCE = "https://api.openai.com/v1"
 DIRECT = "chatgpt.tokens.use.direct"
 SCOPES = "openid profile email offline_access resource.invoke " + DIRECT
 MAX_BYTES = 1024 * 1024
+# Bounded OIDC clock leeway, applied consistently to exp/iat/nbf. No expiry
+# bypass and no reliance on unverified claims or provider Date headers.
+ID_TOKEN_CLOCK_SKEW_SECONDS = 60
 
 
 def json_object(raw):
@@ -52,88 +58,151 @@ def b64(raw):
     return base64.b64decode(raw + "=" * (-len(raw) % 4), altchars=b"-_", validate=True)
 
 
-def validate_id_token(token, jwks, client_id, nonce=None, subject=None, clock=None):
-    """Strict JWS verification with already pinned JWKS, never unverified claims."""
+class _InvalidIDToken(ValueError):
+    def __init__(self, reason):
+        self.reason = reason
+
+
+def _require_token(condition, reason):
+    if not condition:
+        raise _InvalidIDToken(reason)
+
+
+def _verified_id_token(token, jwks, client_id, nonce, subject, current):
+    _require_token(isinstance(token, str) and bool(token), "missing_token")
+    _require_token(len(token) <= 32768, "malformed_token")
+    parts = token.split(".")
+    _require_token(
+        len(parts) == 3 and all(re.fullmatch(r"[A-Za-z0-9_-]+", p) for p in parts),
+        "malformed_token",
+    )
+    head, body, signature = parts
+    header = json_object(b64(head))
+    claims = json_object(b64(body))
+    _require_token(header.get("alg") == "RS256", "unsupported_algorithm")
+    _require_token(
+        not any(k in header for k in ("crit", "jku", "x5u", "b64")),
+        "unsupported_header",
+    )
+    kid = header.get("kid")
+    _require_token(isinstance(kid, str) and 1 <= len(kid) <= 200, "missing_key_id")
+    _require_token(
+        isinstance(jwks, dict)
+        and isinstance(jwks.get("keys"), list)
+        and len(jwks["keys"]) <= 50,
+        "signing_key_unavailable",
+    )
+    keys = [
+        k
+        for k in jwks["keys"]
+        if isinstance(k, dict)
+        and k.get("kid") == kid
+        and k.get("kty") == "RSA"
+        and k.get("use", "sig") == "sig"
+        and k.get("alg", "RS256") == "RS256"
+    ]
+    _require_token(len(keys) == 1, "signing_key_unavailable")
+    key = keys[0]
     try:
-        if not isinstance(token, str) or len(token) > 32768:
-            raise ValueError()
-        head, body, signature = token.split(".")
-        header = json_object(b64(head))
-        claims = json_object(b64(body))
-        if (
-            header.get("alg") != "RS256"
-            or header.get("crit")
-            or header.get("jku")
-            or header.get("x5u")
-        ):
-            raise ValueError()
-        kid = header.get("kid")
-        if not isinstance(kid, str) or not 1 <= len(kid) <= 200:
-            raise ValueError()
-        keys = [
-            k
-            for k in jwks.get("keys", [])
-            if k.get("kid") == kid
-            and k.get("kty") == "RSA"
-            and k.get("use", "sig") == "sig"
-            and k.get("alg", "RS256") == "RS256"
-        ]
-        if len(keys) != 1:
-            raise ValueError()
-        key = keys[0]
+        if "key_ops" in key:
+            _require_token(
+                isinstance(key["key_ops"], list) and "verify" in key["key_ops"],
+                "invalid_signing_key",
+            )
         n = int.from_bytes(b64(key["n"]), "big")
         e = int.from_bytes(b64(key["e"]), "big")
-        if not 2048 <= n.bit_length() <= 8192 or e < 3 or e % 2 == 0:
-            raise ValueError()
-        rsa.RSAPublicNumbers(e, n).public_key().verify(
+        _require_token(
+            2048 <= n.bit_length() <= 8192 and 3 <= e <= 2**32 and e % 2 == 1,
+            "invalid_signing_key",
+        )
+        public_key = rsa.RSAPublicNumbers(e, n).public_key()
+    except (ValueError, TypeError, KeyError):
+        raise _InvalidIDToken("invalid_signing_key") from None
+    try:
+        public_key.verify(
             b64(signature),
             (head + "." + body).encode("ascii"),
             padding.PKCS1v15(),
             hashes.SHA256(),
         )
-        current = time.time() if clock is None else clock
-        aud = claims.get("aud")
-        audiences = [aud] if isinstance(aud, str) else aud
-        if not isinstance(audiences, list) or client_id not in audiences:
-            raise ValueError()
-        if len(audiences) > 1 and claims.get("azp") != client_id:
-            raise ValueError()
-        if claims.get("azp") not in (None, client_id) or claims.get("iss") != ISSUER:
-            raise ValueError()
-        exp = claims.get("exp")
-        if type(exp) not in (int, float) or not math.isfinite(exp) or exp <= current:
-            raise ValueError()
-        for field in ("iat", "nbf"):
-            if field in claims and (
-                type(claims[field]) not in (int, float)
-                or not math.isfinite(claims[field])
-                or claims[field] > current + 30
-            ):
-                raise ValueError()
-        sub = claims.get("sub")
-        if (
-            not isinstance(sub, str)
-            or not 1 <= len(sub) <= 255
-            or subject is not None
-            and sub != subject
-        ):
-            raise ValueError()
-        if nonce is not None and (
-            not isinstance(claims.get("nonce"), str)
-            or not secrets.compare_digest(claims["nonce"], nonce)
-        ):
-            raise ValueError()
-        return {
-            k: claims[k]
-            for k in ("sub", "name", "email")
-            if k in claims and isinstance(claims[k], str) and len(claims[k]) <= 320
-        }
-    except Exception:
-        fail(
-            "chatgpt_invalid_id_token",
-            "ID token không vượt qua kiểm tra chữ ký, issuer, audience, thời gian, nonce hoặc tài khoản.",
-            401,
+    except InvalidSignature:
+        raise _InvalidIDToken("signature_mismatch") from None
+
+    # Interpret identity/claims only after verifying the signature.
+    _require_token(claims.get("iss") == ISSUER, "issuer_mismatch")
+    aud = claims.get("aud")
+    audiences = [aud] if isinstance(aud, str) else aud
+    _require_token(
+        isinstance(audiences, list)
+        and bool(audiences)
+        and all(isinstance(a, str) and bool(a) for a in audiences)
+        and client_id in audiences,
+        "audience_mismatch",
+    )
+    _require_token(
+        (len(audiences) <= 1 or claims.get("azp") == client_id)
+        and claims.get("azp") in (None, client_id),
+        "authorized_party_mismatch",
+    )
+    exp = claims.get("exp")
+    _require_token(
+        type(exp) in (int, float) and math.isfinite(exp), "invalid_timestamp"
+    )
+    _require_token(exp > current - ID_TOKEN_CLOCK_SKEW_SECONDS, "token_expired")
+    for field, reason in (("iat", "issued_in_future"), ("nbf", "not_yet_valid")):
+        if field in claims:
+            value = claims[field]
+            _require_token(
+                type(value) in (int, float) and math.isfinite(value),
+                "invalid_timestamp",
+            )
+            _require_token(value <= current + ID_TOKEN_CLOCK_SKEW_SECONDS, reason)
+    sub = claims.get("sub")
+    _require_token(
+        isinstance(sub, str)
+        and 1 <= len(sub) <= 255
+        and (subject is None or sub == subject),
+        "subject_mismatch",
+    )
+    if nonce is not None:
+        _require_token(isinstance(claims.get("nonce"), str), "nonce_missing")
+        # compare_digest(str, str) raises on non-ASCII provider input. Comparing
+        # UTF-8 bytes safely rejects that mismatch with a nonce diagnostic.
+        _require_token(
+            secrets.compare_digest(
+                claims["nonce"].encode("utf-8"), nonce.encode("utf-8")
+            ),
+            "nonce_mismatch",
         )
+    return {
+        k: claims[k]
+        for k in ("sub", "name", "email")
+        if k in claims and isinstance(claims[k], str) and len(claims[k]) <= 320
+    }
+
+
+def validate_id_token(token, jwks, client_id, nonce=None, subject=None, clock=None):
+    """Pinned RS256 verification; return only verified identity or static reason.
+
+    Keep the public error code stable for reauthorization handling. No token,
+    provider value or raw exception is copied into a diagnostic or its cause.
+    """
+    try:
+        return _verified_id_token(
+            token,
+            jwks,
+            client_id,
+            nonce,
+            subject,
+            time.time() if clock is None else clock,
+        )
+    except _InvalidIDToken as error:
+        reason = error.reason
+    except Exception:
+        reason = "malformed_token"
+    error = GSCError("chatgpt_invalid_id_token", ID_TOKEN_REASONS[reason], 401)
+    error.token_reason = reason
+    raise error from None
 
 
 def discovery_metadata(raw):

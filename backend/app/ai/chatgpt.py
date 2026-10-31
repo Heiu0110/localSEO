@@ -84,13 +84,19 @@ class ChatGPTConnection:
         with self.db.session.begin() as s:
             s.merge(Setting(key=key, value=json.dumps(value)))
 
-    def _record_oauth_error(self, code, stage):
-        self.last_error = diagnostic(code, stage)
+    def _record_oauth_error(self, code, stage, reason=None):
+        self.last_error = diagnostic(code, stage, reason)
         try:
             # Only static identifiers survive a backend restart, never query
             # parameters, provider response bodies, account data or tokens.
-            self._put(OAUTH_DIAGNOSTIC, {"code": self.last_error["code"],
-                                         "stage": self.last_error["stage"]})
+            self._put(
+                OAUTH_DIAGNOSTIC,
+                {
+                    k: self.last_error[k]
+                    for k in ("code", "stage", "reason")
+                    if k in self.last_error
+                },
+            )
         except Exception:
             pass  # Keep the original diagnostic if SQLite is itself unavailable.
 
@@ -151,7 +157,9 @@ class ChatGPTConnection:
             if not last_error and self.phase == "idle":
                 saved = self._get(OAUTH_DIAGNOSTIC, {})
                 if isinstance(saved, dict) and saved.get("code"):
-                    last_error = diagnostic(saved.get("code"), saved.get("stage"))
+                    last_error = diagnostic(
+                        saved.get("code"), saved.get("stage"), saved.get("reason")
+                    )
             secure = True
             try:
                 raw = self.vault.get(TOKENS) or {}
@@ -318,7 +326,11 @@ class ChatGPTConnection:
                         status = 200
                     except GSCError as error:
                         status = error.status
-                        failure = diagnostic(error.code, getattr(error, "oauth_stage", "callback_validation"))
+                        failure = diagnostic(
+                            error.code,
+                            getattr(error, "oauth_stage", "callback_validation"),
+                            getattr(error, "token_reason", None),
+                        )
                     except Exception:
                         status = 400
                     nonce = secrets.token_urlsafe(24)
@@ -343,8 +355,26 @@ class ChatGPTConnection:
                                 else "Chưa hoàn tất đăng nhập. Quay lại AI Settings để xem trạng thái và thử lại."
                             )
                             + "</h1>"
-                            + ("" if success else '<p><strong>Mã lỗi:</strong> <code>' + escape(failure["code"]) + '</code><br><strong>Bước:</strong> ' + escape(STAGES[failure["stage"]]) + '</p><p>' + escape(failure["detail"]) + '</p>')
-                            + '<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra; nếu thất bại, bắt đầu lại bằng <strong>Continue with ChatGPT</strong>.</p><p>Không tải lại callback cũ hoặc chia sẻ URL đăng nhập, code hay token.</p></main></html>'
+                            + (
+                                ""
+                                if success
+                                else "<p><strong>Mã lỗi:</strong> <code>"
+                                + escape(failure["code"])
+                                + "</code><br><strong>Bước:</strong> "
+                                + escape(STAGES[failure["stage"]])
+                                + "</p>"
+                                + (
+                                    "<p><strong>Chi tiết kiểm tra:</strong> <code>"
+                                    + escape(failure["reason"])
+                                    + "</code></p>"
+                                    if failure.get("reason")
+                                    else ""
+                                )
+                                + "<p>"
+                                + escape(failure["detail"])
+                                + "</p>"
+                            )
+                            + "<p>Quay lại tab LocalSEO → AI Workspace → AI Settings → ChatGPT Connection. Nhấn <strong>Làm mới trạng thái ChatGPT</strong> để kiểm tra; nếu thất bại, bắt đầu lại bằng <strong>Continue with ChatGPT</strong>.</p><p>Không tải lại callback cũ hoặc chia sẻ URL đăng nhập, code hay token.</p></main></html>"
                         ).encode()
                     )
                     if owner.phase not in ("waiting", "exchanging"):
@@ -497,7 +527,9 @@ class ChatGPTConnection:
             except GSCError as error:
                 self.phase = "failed"
                 error.oauth_stage = stage
-                self._record_oauth_error(error.code, stage)
+                self._record_oauth_error(
+                    error.code, stage, getattr(error, "token_reason", None)
+                )
                 raise
             except Exception:
                 self.phase = "failed"

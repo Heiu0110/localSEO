@@ -201,7 +201,7 @@ export interface ChatGPTStatus {
   models: { slug: string; display_name: string }[];
   selected_model: string | null;
   models_stale: boolean;
-  last_error: { code: string; detail: string; stage?: string } | null;
+  last_error: { code: string; detail: string; stage?: string; reason?: string } | null;
   eligibility: {
     status: string;
     repository_license_found: boolean;

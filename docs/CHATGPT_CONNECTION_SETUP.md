@@ -45,7 +45,26 @@ Bản sửa ngày 30/10/2026 bổ sung:
 | `chatgpt_invalid_client` · Xác nhận client đăng ký động | Callback không có issued client ID hợp lệ. Không tự tạo ID hoặc dùng `dynamic_agent_client` để exchange; cần đối chiếu contract/eligibility SIWC. |
 | `chatgpt_oauth_invalid_grant` · Đổi authorization code lấy token | Code/refresh token hết hạn, đã dùng, bị thu hồi hoặc không khớp PKCE/redirect. Tạo lượt đăng nhập mới; không dùng lại callback cũ. |
 | `chatgpt_invalid_state`, `chatgpt_oauth_interrupted` | Phiên cũ không còn khớp backend hiện tại. Bắt đầu lại trong AI Settings. |
-| `chatgpt_invalid_id_token` · Xác minh ID token | Dừng đăng nhập; không bỏ kiểm tra chữ ký, audience hoặc nonce để vượt lỗi. |
+| `chatgpt_invalid_id_token` · Xác minh ID token | Đọc thêm **Chi tiết kiểm tra** trên callback hoặc AI Settings theo bảng bên dưới. Không bỏ kiểm tra chữ ký, audience hoặc nonce để vượt lỗi. |
+
+### Chi tiết xác minh ID token · cập nhật 31/10/2026
+
+Mã `chatgpt_invalid_id_token` trước đây gộp nhiều lỗi nên không xác định được nhánh thất bại. Bản cập nhật hiển thị thêm **Chi tiết kiểm tra** trên callback và AI Settings; nhấn **Làm mới trạng thái ChatGPT** để đọc lại. Mã chi tiết được giữ sau restart. Chỉ lưu các identifier từ danh mục tĩnh, không lưu JWT, claims, client ID thực tế, nonce, exception hoặc phản hồi OpenAI vào chẩn đoán.
+
+| Chi tiết kiểm tra | Ý nghĩa và bước tiếp theo |
+|---|---|
+| `issued_in_future`, `not_yet_valid`, `token_expired` | Mốc thời gian không hợp lệ theo đồng hồ backend. Nếu giờ Windows bị lệch, bật Set time automatically, chọn đúng múi giờ và Sync now. Khi giờ đã đúng, không tự kết luận đây là nguyên nhân; đọc mã của lượt mới. |
+| `audience_mismatch`, `authorized_party_mismatch` | Client trong ID token không khớp issued client của lượt OAuth. Cần đối chiếu contract đăng ký động OpenAI; không đổi audience sang dynamic_agent_client hoặc thêm client tùy ý để vượt lỗi. |
+| `nonce_missing`, `nonce_mismatch` | Token thiếu/không khớp nonce của lượt đăng nhập hiện tại. Đóng callback cũ, bắt đầu lượt mới. Nếu lặp lại cần đối chiếu contract SIWC; không tắt nonce validation. |
+| `signing_key_unavailable`, `invalid_signing_key`, `signature_mismatch` | JWKS không có khóa phù hợp hoặc chữ ký không hợp lệ. Không dùng khóa/URL từ JWT để thay JWKS chính thức. |
+| `issuer_mismatch`, `unsupported_algorithm`, `unsupported_header` | Token không đáp ứng issuer/JOSE contract hiện được hỗ trợ (RS256). Không tự chấp nhận issuer/thuật toán mới. |
+| `missing_token`, `malformed_token`, `missing_key_id`, `invalid_timestamp`, `subject_mismatch` | Phản hồi thiếu hoặc không đáp ứng yêu cầu ID token/tài khoản. Không dùng access token làm ID token. |
+
+Sửa được tái hiện bằng test: code cũ từ chối token hợp lệ khi `iat` đi trước đồng hồ backend 31–60 giây. Giới hạn lệch giờ hiện là **60 giây**, áp dụng nhất quán cho `exp`, `iat`, `nbf`; token vượt giới hạn vẫn bị từ chối. JWKS có phần tử không hợp lệ không liên quan cũng không làm hỏng bước chọn khóa ký hợp lệ. Đây là các lỗi kiểm thử được, **chưa phải nguyên nhân đã xác nhận của ảnh người dùng**, nhất là khi người dùng xác nhận giờ Windows đang đúng.
+
+Sau cập nhật, dừng/chạy lại backend và frontend rồi tạo lượt **Continue with ChatGPT** mới. Nếu còn lỗi, chỉ cung cấp **mã lỗi + Chi tiết kiểm tra**; không gửi URL callback, code hoặc token. Lỗi cũ chỉ lưu mã chung nên không thể khôi phục chi tiết từ lượt trước.
+
+**Pending Live Verification:** chưa xác minh được lần OAuth thật trên máy người dùng. Truy cập lại official docs, Discovery và JWKS từ môi trường phát triển ngày 31/10/2026 vẫn bị Tunnel403; không có bằng chứng để nới audience/nonce/issuer/thuật toán. Kiểm thử dùng issuer và RSA keys mô phỏng, không chứng minh tài khoản live đã kết nối.
 
 Ảnh callback chung không đủ xác nhận nguyên nhân của một lần đăng nhập thực tế. Lỗi kích thước Windows đã được tái hiện bằng backend mô phỏng giới hạn 2560 byte; đăng nhập thật trên máy cá nhân vẫn **Pending Live Verification**. Nếu lỗi còn, chỉ gửi **mã lỗi và bước**, không gửi URL callback hay token.
 

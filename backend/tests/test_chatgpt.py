@@ -1015,3 +1015,155 @@ def test_missing_initial_granted_scopes_is_connected_but_not_plan_authorized(siw
         and status["granted_scopes"] == []
     )
     assert not any(x[1] == RESOURCE + "/models" for x in f.calls)
+
+
+@pytest.mark.parametrize("changes,reason", [
+    ({"iss": "https://not-openai.example/private-value"}, "issuer_mismatch"),
+    ({"aud": "private-client"}, "audience_mismatch"),
+    ({"aud": ["oaiapp_test", 123]}, "audience_mismatch"),
+    ({"aud": ["oaiapp_test", "other"]}, "authorized_party_mismatch"),
+    ({"azp": "private-client"}, "authorized_party_mismatch"),
+    ({"exp": 1}, "token_expired"),
+    ({"exp": True}, "invalid_timestamp"),
+    ({"iat": "private-time"}, "invalid_timestamp"),
+    ({"nbf": True}, "invalid_timestamp"),
+    ({"sub": ""}, "subject_mismatch"),
+    ({"nonce": None}, "nonce_missing"),
+    ({"nonce": "private-wrong-nonce"}, "nonce_mismatch"),
+    ({"nonce": "mã-không-khớp"}, "nonce_mismatch"),
+])
+def test_id_token_safe_specific_validation_reasons(private_key, changes, reason):
+    issuer = Issuer(private_key)
+    token = issuer.jwt({"nonce": "expected-nonce", **changes})
+    with pytest.raises(GSCError) as caught:
+        validate_id_token(token, issuer.keys, "oaiapp_test", "expected-nonce", clock=issuer.time)
+    error = caught.value
+    assert error.code == "chatgpt_invalid_id_token" and error.status == 401
+    assert error.token_reason == reason
+    assert token not in str(error) and "private-" not in str(error)
+    assert "expected-nonce" not in str(error)
+
+
+@pytest.mark.parametrize("field,offset,accepted,reason", [
+    ("iat", 30.001, True, None),
+    ("iat", 60, True, None),
+    ("iat", 60.001, False, "issued_in_future"),
+    ("nbf", 60, True, None),
+    ("nbf", 60.001, False, "not_yet_valid"),
+    ("exp", -59.999, True, None),
+    ("exp", -60, False, "token_expired"),
+    ("exp", -3600, False, "token_expired"),
+])
+def test_oidc_clock_leeway_is_bounded_and_consistent(private_key, field, offset, accepted, reason):
+    issuer = Issuer(private_key)
+    token = issuer.jwt({field: issuer.time + offset, "nonce": "expected-nonce"})
+    if accepted:
+        result = validate_id_token(token, issuer.keys, "oaiapp_test", "expected-nonce", clock=issuer.time)
+        assert result["sub"] == "test-account" and "nonce" not in result
+    else:
+        with pytest.raises(GSCError) as caught:
+            validate_id_token(token, issuer.keys, "oaiapp_test", "expected-nonce", clock=issuer.time)
+        assert caught.value.token_reason == reason
+
+
+@pytest.mark.parametrize("mutation,reason", [
+    ("missing", "missing_token"),
+    ("format", "malformed_token"),
+    ("algorithm", "unsupported_algorithm"),
+    ("header_url", "unsupported_header"),
+    ("kid", "missing_key_id"),
+    ("unknown_kid", "signing_key_unavailable"),
+    ("duplicate_key", "signing_key_unavailable"),
+    ("key_material", "invalid_signing_key"),
+    ("key_ops", "invalid_signing_key"),
+    ("signature", "signature_mismatch"),
+])
+def test_id_token_key_and_signature_diagnostics(private_key, mutation, reason):
+    issuer = Issuer(private_key)
+    token = issuer.jwt()
+    h, b, sig = token.split(".")
+    header = json.loads(b64(h))
+    if mutation == "missing":
+        token = None
+    elif mutation == "format":
+        token = "not.a.valid.jwt"
+    elif mutation in ("algorithm", "header_url", "kid", "unknown_kid"):
+        if mutation == "algorithm":
+            header["alg"] = "none"
+        elif mutation == "header_url":
+            header["jku"] = "https://not-openai.example/keys"
+        elif mutation == "kid":
+            header.pop("kid")
+        else:
+            header["kid"] = "not-in-jwks"
+        token = encoded(json.dumps(header).encode()) + "." + b + "." + sig
+    elif mutation == "duplicate_key":
+        issuer.keys["keys"] *= 2
+    elif mutation == "key_material":
+        issuer.keys["keys"][0]["n"] = "not-valid!"
+    elif mutation == "key_ops":
+        issuer.keys["keys"][0]["key_ops"] = ["sign"]
+    else:
+        token = h + "." + b + "." + encoded(b"invalid signature")
+    with pytest.raises(GSCError) as caught:
+        validate_id_token(token, issuer.keys, "oaiapp_test", clock=issuer.time)
+    assert caught.value.token_reason == reason
+    assert "not-openai.example" not in str(caught.value)
+
+
+def test_unrelated_malformed_jwks_entry_does_not_break_valid_signature(private_key):
+    issuer = Issuer(private_key)
+    issuer.keys["keys"] = [None, "unrelated", *issuer.keys["keys"], {"kty": "EC"}]
+    assert validate_id_token(issuer.jwt(), issuer.keys, "oaiapp_test", clock=issuer.time)["sub"] == "test-account"
+
+
+def test_small_clock_skew_completes_full_oauth_callback(siwc):
+    c, r, issuer = siwc
+    # Reproduces the old >30-second iat rejection even with a valid signature,
+    # issued client, nonce and an otherwise fresh token.
+    issuer.jwt_changes = {"iat": issuer.time + 45, "nbf": issuer.time + 45}
+    login(siwc)
+    assert c.get("/api/ai/chatgpt/status").json()["status"] == "connected_authorized"
+    assert len([call for call in issuer.calls if call[1] == TOKEN]) == 1
+
+
+@pytest.mark.parametrize("changes,reason", [
+    ({"aud": "private-audience-do-not-persist"}, "audience_mismatch"),
+    ({"iat": 99999999999}, "issued_in_future"),
+    ({"nonce": None}, "nonce_missing"),
+])
+def test_loopback_token_reason_survives_restart_without_sensitive_claims(siwc, changes, reason):
+    from app.ai.chatgpt_diagnostics import OAUTH_DIAGNOSTIC
+    c, r, issuer = siwc
+    started, pending = begin(siwc)
+    # The mocked issuer normally echoes nonce; override jwt after that step to
+    # exercise an actual missing nonce as well as claim mismatches.
+    original_jwt = issuer.jwt
+    issuer.jwt = lambda *args, **kwargs: original_jwt(changes, **kwargs) if "nonce" not in changes else original_jwt(changes)
+    with httpx.Client(trust_env=False, timeout=5) as local:
+        response = local.get(started["redirect_uri"], params={
+            "state": pending["state"], "code": "sensitive-code-do-not-persist",
+            "client_id": "oaiapp_test",
+        })
+    assert response.status_code == 401 and reason in response.text
+    assert "Chi tiết kiểm tra" in response.text
+    assert pending["state"] not in response.text and "private-audience" not in response.text
+    assert "sensitive-code-do-not-persist" not in response.text
+    expected = {"code": "chatgpt_invalid_id_token", "stage": "id_token_validation", "reason": reason}
+    assert r.ai.chatgpt._get(OAUTH_DIAGNOSTIC) == expected
+    status = c.get("/api/ai/chatgpt/status").json()
+    assert status["last_error"]["reason"] == reason
+    assert status["status"] == "not_connected" and not r.ai.vault.get(TOKENS)
+    assert not any(call[1] in (RESOURCE + "/models", RESOURCE + "/responses") for call in issuer.calls)
+    reopened = ChatGPTConnection(r.db, r.ai.vault, httpx.MockTransport(issuer), clock=lambda: issuer.time)
+    try:
+        assert reopened.status()["last_error"] == status["last_error"]
+    finally:
+        reopened.close()
+
+
+def test_unknown_token_diagnostic_is_never_persisted_or_echoed():
+    from app.ai.chatgpt_diagnostics import diagnostic
+    message = diagnostic("chatgpt_invalid_id_token", "id_token_validation", "sensitive-token-text")
+    assert "reason" not in message and "sensitive-token-text" not in json.dumps(message)
+    assert "reason" not in diagnostic("chatgpt_network", reason="nonce_missing")

@@ -1,3 +1,23 @@
+# Sửa xác minh ID token ChatGPT · 31/10/2026
+
+Ảnh người dùng xác nhận lỗi ở `chatgpt_invalid_id_token` / bước xác minh ID token. Người dùng xác nhận Windows tự động đồng bộ và hiển thị đúng giờ; **chưa xác nhận nguyên nhân của lần OAuth thật**, không gán lỗi chắc chắn cho lệch giờ.
+
+| Kiểm tra thực thi | Kết quả |
+|---|---|
+| Toàn bộ backend pytest | **440 passed** (403 trước đó +37 mới); một warning Starlette/httpx có sẵn |
+| ChatGPT + AI Workspace Playwright | **21 passed** (18 cũ +3 mới): audience/nonce/time reason hiển thị sau manual refresh, không tạo inference hoặc đổi provider |
+| TypeScript/Vite production build | **Passed**, Vite4,66giây; không thêm dependencies hoặc thay lockfile |
+| Tái hiện trước/sau bằng validator tại HEAD trước sửa | Token có chữ ký hợp lệ, iat/nbf đi trước45giây: code cũ từ chối, code mới chấp nhận. JWKS có phần tử không liên quan không phải object: code cũ từ chối, code mới xác minh khóa hợp lệ thành công |
+| OIDC và bảo mật | Kiểm tra RS256/JWKS/issuer/audience/azp/subject/nonce giữ nguyên; lỗi sai claim/chữ ký bị chặn; key_ops verify được kiểm tra; định dạng compact JWT và audience list được kiểm tra chặt chẽ |
+| Đồng hồ | Leeway cố định60giây cho exp/iat/nbf, test cả biên60giây và ngoài biên; không đổi đồng hồ hoặc dựa vào HTTP Date/claims chưa xác minh |
+| Callback thật với issuer mô phỏng | Lỗi401 có reason cụ thể, không chứa code/state/claims nhạy cảm; không lưu token hay gọi models/inference sau validation thất bại; diagnostic sống qua restart chỉ chứa code/stage/reason tĩnh |
+
+Lần gọi pytest đầu từ thư mục repo thiếu Python module path; đã chạy lại từ `backend/`. Lần Playwright đầu không có browser binary mặc định; dùng Chromium hệ thống qua cấu hình `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` hiện có, không đổi/bỏ test. Kết quả cuối không failed/skipped. Không sửa Dashboard/module SEO, database/vault storage hoặc API Key Provider; không paid/live auth/inference calls.
+
+**Pending Live Verification:** docs SIWC/Discovery/JWKS live vẫn Tunnel403 trong môi trường này. Chỉ sửa lỗi đã tái hiện và thêm chẩn đoán an toàn; không tuyên bố lần đăng nhập thật đã được sửa thành công. Cần cập nhật source, restart backend/frontend, bắt đầu lượt Continue mới và đọc **Chi tiết kiểm tra** nếu còn lỗi. Xem [hướng dẫn](docs/CHATGPT_CONNECTION_SETUP.md#chi-tiết-xác-minh-id-token--cập-nhật-31102026).
+
+---
+
 # v0.8.1 · OpenAI Web Search / GEO · 30/10/2026
 
 Baseline đã thực chạy:319 backend,79 Playwright,22 launcher passed, production build pass. Sau triển khai: **403 backend,86 Playwright,22 launcher passed**, TypeScript/Vite build pass; một warning Starlette/httpx giống baseline. Launcher dependency probe dùng lại node_modules/bỏ npm ci. Không paid calls trong tests. Focused provider→Observation→GEO→existing offline Agent→human review smoke trên test cuối cũng **1/1 pass**, giữ một usage entry duy nhất cho collection. Trên backend cuối, focused Visibility Core + live UI cũng **12/12 pass**.

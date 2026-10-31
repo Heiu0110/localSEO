@@ -1,6 +1,28 @@
 """Static OAuth diagnostics: never persist or render callback/provider payloads."""
 
 OAUTH_DIAGNOSTIC = "ai.chatgpt.oauth_diagnostic.v1"
+# Only these static reasons may cross the callback/API boundary. Never include
+# decoded claims, expected/actual values, JWT headers or cryptography exceptions.
+ID_TOKEN_REASONS = {
+    "missing_token": "OpenAI chưa trả ID token. Cần kiểm tra lại contract hoặc quyền đăng nhập; không dùng access token thay thế.",
+    "malformed_token": "ID token không đúng định dạng JWT được hỗ trợ.",
+    "unsupported_algorithm": "Thuật toán ký ID token chưa được adapter hỗ trợ; chỉ chấp nhận RS256.",
+    "unsupported_header": "ID token có JOSE header không được hỗ trợ; không tải khóa từ URL trong token.",
+    "missing_key_id": "ID token thiếu mã khóa ký hợp lệ.",
+    "signing_key_unavailable": "Không tìm thấy duy nhất khóa ký phù hợp trong JWKS chính thức. Thử lượt đăng nhập mới; nếu còn lỗi cần đối chiếu khóa/contract OpenAI.",
+    "invalid_signing_key": "Khóa ký trong JWKS không đáp ứng yêu cầu RSA xác minh chữ ký.",
+    "signature_mismatch": "Chữ ký ID token không khớp khóa OpenAI. Đăng nhập bị chặn.",
+    "issuer_mismatch": "Issuer của ID token không khớp issuer OpenAI được cấu hình cố định.",
+    "audience_mismatch": "Audience của ID token không khớp issued client ID của lượt đăng nhập. Cần đối chiếu contract đăng ký động; không chấp nhận audience thay thế.",
+    "authorized_party_mismatch": "Authorized party của ID token không khớp client đăng nhập.",
+    "invalid_timestamp": "ID token thiếu thời hạn hợp lệ hoặc có mốc thời gian không hợp lệ.",
+    "token_expired": "ID token đã hết hạn theo đồng hồ backend. Trên Windows bật Set time automatically, chọn đúng múi giờ và nhấn Sync now, rồi đăng nhập lại.",
+    "issued_in_future": "Thời điểm phát hành ID token vượt quá 60 giây so với đồng hồ backend. Trên Windows bật Set time automatically, chọn đúng múi giờ và nhấn Sync now, rồi đăng nhập lại.",
+    "not_yet_valid": "ID token chưa có hiệu lực theo đồng hồ backend. Trên Windows kiểm tra ngày giờ tự động và nhấn Sync now, rồi đăng nhập lại.",
+    "subject_mismatch": "ID token thiếu tài khoản hợp lệ hoặc tài khoản đã đổi khi refresh. Cần đăng nhập lại.",
+    "nonce_missing": "ID token không chứa nonce đã yêu cầu trong lượt OAuth. Không hoàn tất đăng nhập khi chưa xác minh được nonce.",
+    "nonce_mismatch": "Nonce của ID token không khớp lượt OAuth hiện tại. Đóng callback cũ và bắt đầu lượt đăng nhập mới.",
+}
 STAGES = {
     "callback_validation": "Kiểm tra callback",
     "client_registration": "Xác nhận client đăng ký động",
@@ -45,7 +67,24 @@ MESSAGES = {
 }
 
 
-def diagnostic(code, stage="callback_validation"):
-    code = code if isinstance(code, str) and code in MESSAGES else "chatgpt_oauth_failed"
-    return {"code": code, "detail": MESSAGES[code],
-            "stage": stage if isinstance(stage, str) and stage in STAGES else "callback_validation"}
+def diagnostic(code, stage="callback_validation", reason=None):
+    code = (
+        code if isinstance(code, str) and code in MESSAGES else "chatgpt_oauth_failed"
+    )
+    result = {
+        "code": code,
+        "detail": MESSAGES[code],
+        "stage": (
+            stage
+            if isinstance(stage, str) and stage in STAGES
+            else "callback_validation"
+        ),
+    }
+    if (
+        code == "chatgpt_invalid_id_token"
+        and isinstance(reason, str)
+        and reason in ID_TOKEN_REASONS
+    ):
+        result["reason"] = reason
+        result["detail"] = ID_TOKEN_REASONS[reason]
+    return result
